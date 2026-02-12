@@ -27,6 +27,10 @@ services:
     buildCommand: ""
     staticPublishPath: .
     pullRequestPreviewsEnabled: true
+    routes:
+      - type: redirect
+        source: /
+        destination: /login.html
     headers:
       - path: /*
         name: Cache-Control
