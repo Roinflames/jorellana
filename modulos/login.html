@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BCP - Acceso</title>
+  <style>
+    :root {
+      --bg1:#0b1b2f;
+      --bg2:#1f7a4c;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#e2e8f0;
+      --primary:#5b21b6;
+      --primary2:#2563eb;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:'Segoe UI',Tahoma,sans-serif;background:radial-gradient(circle at 15% 10%,#274f83 0%,var(--bg1) 48%),linear-gradient(130deg,var(--bg1),var(--bg2));display:grid;place-items:center;padding:18px}
+    .card{width:min(460px,100%);background:var(--card);border-radius:16px;padding:24px;border:1px solid #ffffff22;box-shadow:0 20px 45px #00000055}
+    h1{margin:0 0 6px;color:var(--text);font-size:28px}
+    p{margin:0 0 14px;color:var(--muted)}
+    label{display:block;font-size:13px;font-weight:600;color:#334155;margin-bottom:6px}
+    input{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:12px}
+    button{width:100%;padding:11px 12px;border:0;border-radius:10px;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary2));cursor:pointer}
+    .hint{margin-top:14px;padding:12px;border:1px dashed #cbd5e1;border-radius:10px;font-size:12px;color:#475569;background:#f8fafc}
+    .error,.ok{margin-top:10px;font-size:13px;font-weight:600;display:none}
+    .error{color:#b91c1c}
+    .ok{color:#065f46}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>BCP Acceso Unico</h1>
+    <p>Inicia sesion una vez para acceder a todos los modulos.</p>
+
+    <form id="loginForm">
+      <label for="u">Usuario</label>
+      <input id="u" type="text" autocomplete="username" required placeholder="usuario" />
+
+      <label for="p">Contrasena</label>
+      <input id="p" type="password" autocomplete="current-password" required placeholder="••••••••" />
+
+      <button type="submit">Entrar</button>
+      <div id="msgError" class="error"></div>
+      <div id="msgOk" class="ok"></div>
+    </form>
+
+    <div class="hint">
+      Credenciales legacy habilitadas: <b>solicitante/solicitante</b>, <b>laboratorio/laboratorio</b>, <b>master/master</b>.<br>
+      Tambien puedes usar usuario API (ej. <b>admin</b>).
+    </div>
+  </main>
+
+  <script>
+    const AUTH_KEY = 'bcp_portal_session';
+
+    function showError(msg) {
+      const e = document.getElementById('msgError');
+      const ok = document.getElementById('msgOk');
+      ok.style.display = 'none';
+      e.textContent = msg;
+      e.style.display = 'block';
+    }
+
+    function showOk(msg) {
+      const e = document.getElementById('msgError');
+      const ok = document.getElementById('msgOk');
+      e.style.display = 'none';
+      ok.textContent = msg;
+      ok.style.display = 'block';
+    }
+
+    function saveSession(session) {
+      localStorage.setItem(AUTH_KEY, JSON.stringify(session));
+    }
+
+    function nextPath() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('next') || '/Dashboard%20Principal.html';
+    }
+
+    function roleFromLegacy(user, pass) {
+      const u = user.toLowerCase();
+      if (u === 'solicitante' && pass === 'solicitante') return { role: 'solicitante', fullName: 'Solicitante BCP' };
+      if (u === 'laboratorio' && pass === 'laboratorio') return { role: 'laboratorio', fullName: 'Laboratorio BCP' };
+      if (u === 'master' && pass === 'master') return { role: 'master', fullName: 'Master BCP' };
+      return null;
+    }
+
+    async function loginApi(user, pass) {
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok || !j.access_token) return null;
+      localStorage.setItem('bcp_api_token', j.access_token);
+      return {
+        username: j.user?.username || user,
+        fullName: j.user?.full_name || user,
+        role: j.user?.role || 'api-user',
+        source: 'api',
+        at: new Date().toISOString()
+      };
+    }
+
+    document.getElementById('loginForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const user = document.getElementById('u').value.trim();
+      const pass = document.getElementById('p').value;
+      if (!user || !pass) return;
+
+      const legacy = roleFromLegacy(user, pass);
+      if (legacy) {
+        saveSession({ username: user.toLowerCase(), fullName: legacy.fullName, role: legacy.role, source: 'legacy', at: new Date().toISOString() });
+        showOk('Sesion iniciada');
+        setTimeout(() => { window.location.href = nextPath(); }, 250);
+        return;
+      }
+
+      try {
+        const apiSession = await loginApi(user, pass);
+        if (apiSession) {
+          saveSession(apiSession);
+          showOk('Sesion iniciada');
+          setTimeout(() => { window.location.href = nextPath(); }, 250);
+          return;
+        }
+      } catch (e) {
+      }
+
+      showError('Credenciales invalidas. Usa legacy o credenciales API.');
+    });
+
+    // Si ya hay sesion, evita login repetido
+    try {
+      const existing = localStorage.getItem(AUTH_KEY);
+      if (existing) {
+        window.location.href = nextPath();
+      }
+    } catch (e) {}
+  </script>
+</body>
+</html>

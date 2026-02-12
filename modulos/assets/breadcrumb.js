@@ -1,4 +1,21 @@
 (function () {
+  var AUTH_KEY = "bcp_portal_session";
+
+  function getSession() {
+    try {
+      var raw = localStorage.getItem(AUTH_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearSession() {
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem("bcp_api_token");
+  }
+
   function prettyName(pathname) {
     var file = pathname.split("/").pop() || "";
     file = decodeURIComponent(file);
@@ -17,7 +34,25 @@
     }
   }
 
+  function requireLogin() {
+    var currentPath = window.location.pathname || "";
+    var isLoginPage = /\/login\.html$/i.test(currentPath);
+    var session = getSession();
+
+    if (isLoginPage) return;
+
+    if (!session) {
+      var next = encodeURIComponent(currentPath + window.location.search);
+      window.location.replace("/login.html?next=" + next);
+    }
+  }
+
   function ensureBreadcrumb() {
+    requireLogin();
+
+    var currentPath = window.location.pathname || "";
+    if (/\/login\.html$/i.test(currentPath)) return;
+
     var host = document.body;
     if (!host) return;
 
@@ -72,6 +107,26 @@
       }
     };
     bar.appendChild(backBtn);
+
+    var session = getSession();
+    if (session) {
+      var userTag = document.createElement("span");
+      userTag.textContent = (session.fullName || session.username || "Usuario") + " (" + (session.role || "user") + ")";
+      userTag.style.cssText =
+        "background:#eef2ff;border:1px solid #c7d2fe;color:#3730a3;border-radius:999px;padding:4px 10px;font-size:12px";
+      bar.appendChild(userTag);
+
+      var logoutBtn = document.createElement("button");
+      logoutBtn.type = "button";
+      logoutBtn.textContent = "Salir";
+      logoutBtn.style.cssText =
+        "background:#fee2e2;border:1px solid #fecaca;border-radius:8px;padding:4px 10px;color:#991b1b;cursor:pointer";
+      logoutBtn.onclick = function () {
+        clearSession();
+        window.location.href = "/login.html";
+      };
+      bar.appendChild(logoutBtn);
+    }
 
     document.body.insertBefore(bar, document.body.firstChild);
   }

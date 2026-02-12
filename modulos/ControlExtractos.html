@@ -733,6 +733,7 @@ const STORAGE_KEYS = {
     MOVIMIENTOS: 'bcp_extractos_movimientos_v1',
     VERSION: 'bcp_extractos_version_v1',
     API_TOKEN: 'bcp_api_token',
+    PORTAL_SESSION: 'bcp_portal_session',
     // Claves del módulo de recepción (para integración)
     RECEPCION_SALIDAS: 'bcp_salidas_v82'
 };
@@ -936,6 +937,16 @@ function obtenerTokenApi() {
     return localStorage.getItem(STORAGE_KEYS.API_TOKEN) || '';
 }
 
+function obtenerSesionPortal() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEYS.PORTAL_SESSION);
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        return null;
+    }
+}
+
 function guardarTokenApi(token) {
     localStorage.setItem(STORAGE_KEYS.API_TOKEN, token);
 }
@@ -970,7 +981,14 @@ function actualizarAuthUI() {
 async function inicializarAuth() {
     const token = obtenerTokenApi();
     if (!token) {
-        currentUser = null;
+        const portal = obtenerSesionPortal();
+        currentUser = portal
+            ? {
+                username: portal.username || 'usuario',
+                full_name: portal.fullName || portal.username || 'Usuario',
+                role: portal.role || 'usuario'
+            }
+            : null;
         actualizarAuthUI();
         return;
     }
@@ -984,8 +1002,17 @@ async function inicializarAuth() {
         currentUser = data.user || null;
     } catch (error) {
         limpiarTokenApi();
-        currentUser = null;
-        mostrarNotificacion('Sesion API expirada. Inicie sesion nuevamente.', 'warning');
+        const portal = obtenerSesionPortal();
+        currentUser = portal
+            ? {
+                username: portal.username || 'usuario',
+                full_name: portal.fullName || portal.username || 'Usuario',
+                role: portal.role || 'usuario'
+            }
+            : null;
+        if (!currentUser) {
+            mostrarNotificacion('Sesion API expirada. Inicie sesion nuevamente.', 'warning');
+        }
     }
     actualizarAuthUI();
 }
@@ -1015,6 +1042,15 @@ async function loginExtractos(event) {
 
         guardarTokenApi(data.access_token);
         currentUser = data.user || null;
+        try {
+            localStorage.setItem(STORAGE_KEYS.PORTAL_SESSION, JSON.stringify({
+                username: currentUser?.username || username,
+                fullName: currentUser?.full_name || username,
+                role: currentUser?.role || 'api-user',
+                source: 'api',
+                at: new Date().toISOString()
+            }));
+        } catch (e) {}
         document.getElementById('authUsername').value = '';
         document.getElementById('authPassword').value = '';
         actualizarAuthUI();
@@ -1026,6 +1062,7 @@ async function loginExtractos(event) {
 
 function logoutExtractos() {
     limpiarTokenApi();
+    try { localStorage.removeItem(STORAGE_KEYS.PORTAL_SESSION); } catch (e) {}
     currentUser = null;
     actualizarAuthUI();
     mostrarNotificacion('Sesion cerrada', 'info');
@@ -1938,7 +1975,8 @@ function renderChartFracciones() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 1.35,
             cutout: '62%',
             animation: { duration: 700 },
             plugins: {
@@ -2011,7 +2049,8 @@ function renderChartProduccion() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true,
+            aspectRatio: 1.9,
             animation: { duration: 700 },
             plugins: {
                 legend: { display: false },

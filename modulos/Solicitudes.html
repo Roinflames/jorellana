@@ -1085,6 +1085,7 @@
 <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="procesarArchivoImportado(event)">
 
 <script>
+    const PORTAL_AUTH_KEY = 'bcp_portal_session';
     let ordenes = [];
     let contadorOrdenes = 1;
     let materiaPrimaCounter = 0;
@@ -1133,6 +1134,32 @@
     let chartEnviosTipo = null;
 
     // Login
+    function guardarSesionPortal(role, username) {
+        try {
+            localStorage.setItem(PORTAL_AUTH_KEY, JSON.stringify({
+                username: (username || role || '').toLowerCase(),
+                fullName: username || role,
+                role: role,
+                source: 'solicitudes',
+                at: new Date().toISOString()
+            }));
+        } catch (e) {}
+    }
+
+    function sincronizarSesionPortal() {
+        try {
+            const raw = localStorage.getItem(PORTAL_AUTH_KEY);
+            if (!raw) return;
+            const session = JSON.parse(raw);
+            const role = (session.role || '').toLowerCase();
+            if (!role) return;
+            if (['solicitante', 'laboratorio', 'master'].includes(role)) {
+                currentRole = role;
+                currentUsername = session.fullName || session.username || role;
+            }
+        } catch (e) {}
+    }
+
     function loginSistema(event) {
         event.preventDefault();
         const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
@@ -1154,6 +1181,7 @@
 
         document.getElementById('loginUsuario').value = '';
         document.getElementById('loginClave').value = '';
+        guardarSesionPortal(currentRole, currentUsername);
         actualizarBarraUsuario();
         renderizarOrdenes();
         actualizarMetricas();
@@ -1163,6 +1191,7 @@
     function cerrarSesion() {
         currentRole = null;
         currentUsername = null;
+        try { localStorage.removeItem(PORTAL_AUTH_KEY); } catch (e) {}
         actualizarBarraUsuario();
         renderizarOrdenes();
         actualizarMetricas();
@@ -1231,6 +1260,7 @@
 
     // Inicialización
     function inicializar() {
+        sincronizarSesionPortal();
         cargarDatos();
         if (ordenes.length === 0) {
             cargarDatosDemo();

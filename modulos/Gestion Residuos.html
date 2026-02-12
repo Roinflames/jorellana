@@ -1667,6 +1667,7 @@
     const STORAGE_KEY = "bcp_residuos_v4";
     const STORAGE_USER_KEY = "bcp_residuos_usuario_v4";
     const STORAGE_EXTRACCIONES_KEY = "bcp_extracciones";
+    const STORAGE_PORTAL_SESSION_KEY = "bcp_portal_session";
 
     const ROLES = {
         GENERADOR: "Generador",
@@ -1747,6 +1748,33 @@
         localStorage.setItem(STORAGE_KEY, JSON.stringify(residuos));
     }
 
+    function mapPortalRoleToResiduosRole(portalRole) {
+        const role = (portalRole || "").toLowerCase();
+        if (role === "master" || role === "admin" || role === "supervisor" || role === "administrador") return ROLES.ADMIN;
+        if (role === "laboratorio" || role === "recolector") return ROLES.RECOLECTOR;
+        return ROLES.GENERADOR;
+    }
+
+    function cargarSesionPortal() {
+        try {
+            const raw = localStorage.getItem(STORAGE_PORTAL_SESSION_KEY);
+            if (!raw) return false;
+            const session = JSON.parse(raw);
+            if (!session) return false;
+
+            usuarioActual = {
+                nombre: session.fullName || session.username || "Usuario",
+                rol: mapPortalRoleToResiduosRole(session.role)
+            };
+            localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(usuarioActual));
+            mostrarUsuarioLogueado();
+            return true;
+        } catch (e) {
+            console.error("Error cargando sesion portal:", e);
+            return false;
+        }
+    }
+
     function cargarDesdeStorage() {
         try {
             const data = localStorage.getItem(STORAGE_KEY);
@@ -1761,6 +1789,8 @@
             if (userData) {
                 usuarioActual = JSON.parse(userData);
                 mostrarUsuarioLogueado();
+            } else {
+                cargarSesionPortal();
             }
         } catch (e) {
             console.error("Error cargando usuario:", e);
@@ -1817,6 +1847,13 @@
 
         usuarioActual = { nombre, rol };
         localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(usuarioActual));
+        localStorage.setItem(STORAGE_PORTAL_SESSION_KEY, JSON.stringify({
+            username: nombre.toLowerCase().replace(/\s+/g, "."),
+            fullName: nombre,
+            role: rol.toLowerCase(),
+            source: "gestion-residuos",
+            at: new Date().toISOString()
+        }));
         mostrarUsuarioLogueado();
         actualizarPermisosTabs();
         mostrarToast(`Bienvenido/a, ${nombre}`, "success");
@@ -1825,6 +1862,7 @@
     function logout() {
         usuarioActual = null;
         localStorage.removeItem(STORAGE_USER_KEY);
+        localStorage.removeItem(STORAGE_PORTAL_SESSION_KEY);
         
         $("loginPanel").style.display = "flex";
         $("userPanel").style.display = "none";
