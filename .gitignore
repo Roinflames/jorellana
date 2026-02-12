@@ -1,6 +1,10 @@
 .env
 .env.*
 !.env.example
+render.env
+.render.env
+.render/
+render
 
 # OS/editor
 .DS_Store

@@ -64,7 +64,7 @@
       "display:flex;align-items:center;gap:8px;flex-wrap:wrap";
 
     var homeLink = document.createElement("a");
-    homeLink.href = "/Dashboard%20Principal.html";
+    homeLink.href = "/Dashboard-Principal.html";
     homeLink.textContent = "Dashboard";
     homeLink.style.cssText = "color:#1f4f8a;text-decoration:none";
     bar.appendChild(homeLink);
@@ -103,7 +103,7 @@
       if (window.history.length > 1) {
         window.history.back();
       } else {
-        window.location.href = "/Dashboard%20Principal.html";
+        window.location.href = "/Dashboard-Principal.html";
       }
     };
     bar.appendChild(backBtn);
