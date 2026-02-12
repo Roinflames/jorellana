@@ -2412,14 +2412,8 @@
       form.addEventListener("submit", (e) => {
         e.preventDefault();
 
-        if (
-          !currentUser ||
-          !(
-            currentUser.role === ROLES.SOLICITANTE ||
-            currentUser.role === ROLES.MASTER
-          )
-        ) {
-          alert("Solo los roles SOLICITANTE o MASTER pueden crear nuevas solicitudes.");
+        if (!currentUser) {
+          alert("Debe iniciar sesión para crear nuevas solicitudes.");
           return;
         }
 
@@ -2715,10 +2709,7 @@
       if (!formCard) return;
       const inputs = formCard.querySelectorAll("input, select, textarea, button");
 
-      if (
-        currentUser &&
-        (currentUser.role === ROLES.SOLICITANTE || currentUser.role === ROLES.MASTER)
-      ) {
+      if (currentUser) {
         formCard.style.opacity = "1";
         inputs.forEach((el) => (el.disabled = false));
       } else {

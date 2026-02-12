@@ -963,6 +963,36 @@
                 return countRecordsRaw('bcp_solicitudes_v1');
             }
 
+            if (key === 'bcp_equipos') {
+                const legacy = countRecordsRaw('bcp_equipos');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('bcp_equipment_module_v3');
+            }
+
+            if (key === 'bcp_insumos') {
+                const legacy = countRecordsRaw('bcp_insumos');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('bcp_fungibles_v1');
+            }
+
+            if (key === 'bcp_bitacora') {
+                const legacy = countRecordsRaw('bcp_bitacora');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('BCP_BITACORA_V1');
+            }
+
+            if (key === 'bcp_reactivos') {
+                const modern = getStorageData('bcp_reactivos_v1');
+                if (Array.isArray(modern)) return modern.length;
+                if (modern && Array.isArray(modern.reactivos)) return modern.reactivos.length;
+
+                const legacy = getStorageData('bcp_reactivos');
+                if (Array.isArray(legacy)) return legacy.length;
+                if (legacy && Array.isArray(legacy.reactivos)) return legacy.reactivos.length;
+
+                return 0;
+            }
+
             if (key === 'bcp_proveedores') {
                 const legacy = countRecordsRaw('bcp_proveedores');
                 if (legacy > 0) return legacy;

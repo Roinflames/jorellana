@@ -1785,12 +1785,14 @@
         }
 
         try {
-            const userData = localStorage.getItem(STORAGE_USER_KEY);
-            if (userData) {
-                usuarioActual = JSON.parse(userData);
-                mostrarUsuarioLogueado();
-            } else {
-                cargarSesionPortal();
+            // Prioridad: sesion global del portal > usuario local legacy
+            const fromPortal = cargarSesionPortal();
+            if (!fromPortal) {
+                const userData = localStorage.getItem(STORAGE_USER_KEY);
+                if (userData) {
+                    usuarioActual = JSON.parse(userData);
+                    mostrarUsuarioLogueado();
+                }
             }
         } catch (e) {
             console.error("Error cargando usuario:", e);

@@ -136,4 +136,12 @@
   } else {
     ensureBreadcrumb();
   }
+
+  // Al volver con el boton "Atras", algunos navegadores restauran desde bfcache.
+  // Forzamos recarga para reflejar datos recién guardados.
+  window.addEventListener("pageshow", function (event) {
+    if (event.persisted) {
+      window.location.reload();
+    }
+  });
 })();
