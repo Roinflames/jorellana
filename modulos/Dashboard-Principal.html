@@ -957,6 +957,18 @@
                 return countSolicitudRecords();
             }
 
+            if (key === 'bcp_compras') {
+                const legacy = countRecordsRaw('bcp_compras');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('bcp_solicitudes_v1');
+            }
+
+            if (key === 'bcp_proveedores') {
+                const legacy = countRecordsRaw('bcp_proveedores');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('BCP_proveedores_v2');
+            }
+
             return countRecordsRaw(key);
         }
 

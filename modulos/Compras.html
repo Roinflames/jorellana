@@ -1409,6 +1409,7 @@
     // -------------------------
     const STORAGE_KEY = "bcp_solicitudes_v1";
     const COUNTER_KEY = "bcp_counters_v1";
+    const PORTAL_SESSION_KEY = "bcp_portal_session";
 
     const ROLES = {
       SOLICITANTE: "solicitante",
@@ -1439,6 +1440,43 @@
 
     let solicitudes = [];
     let currentUser = null;
+
+    function mapPortalRoleToComprasRole(roleRaw) {
+      const role = (roleRaw || "").toLowerCase();
+      if (role === "master" || role === "admin" || role === "supervisor" || role === "administrador") return ROLES.MASTER;
+      if (role === "comprador" || role === "laboratorio" || role === "recolector") return ROLES.COMPRADOR;
+      return ROLES.SOLICITANTE;
+    }
+
+    function syncFromPortalSession() {
+      try {
+        const raw = localStorage.getItem(PORTAL_SESSION_KEY);
+        if (!raw) return false;
+        const session = JSON.parse(raw);
+        if (!session) return false;
+
+        currentUser = {
+          username: session.username || session.fullName || "usuario",
+          role: mapPortalRoleToComprasRole(session.role),
+        };
+        return true;
+      } catch (e) {
+        return false;
+      }
+    }
+
+    function savePortalSessionFromCurrentUser() {
+      if (!currentUser) return;
+      try {
+        localStorage.setItem(PORTAL_SESSION_KEY, JSON.stringify({
+          username: currentUser.username,
+          fullName: currentUser.username,
+          role: currentUser.role,
+          source: "compras",
+          at: new Date().toISOString(),
+        }));
+      } catch (e) {}
+    }
 
     // -------------------------
     //  UTILIDADES
@@ -2700,8 +2738,15 @@
       const loginForm = document.getElementById("login-form");
       const logoutBtn = document.getElementById("btn-logout");
 
-      appShell.style.display = "none";
-      loginScreen.style.display = "flex";
+      const hasPortalSession = syncFromPortalSession();
+      if (hasPortalSession) {
+        appShell.style.display = "block";
+        loginScreen.style.display = "none";
+        updateUIForUser();
+      } else {
+        appShell.style.display = "none";
+        loginScreen.style.display = "flex";
+      }
 
       loginForm.addEventListener("submit", (e) => {
         e.preventDefault();
@@ -2715,6 +2760,7 @@
         }
 
         currentUser = { username, role: def.role };
+        savePortalSessionFromCurrentUser();
         loginScreen.style.display = "none";
         appShell.style.display = "block";
         updateUIForUser();
@@ -2723,6 +2769,8 @@
 
       logoutBtn.addEventListener("click", () => {
         currentUser = null;
+        localStorage.removeItem(PORTAL_SESSION_KEY);
+        localStorage.removeItem("bcp_api_token");
         appShell.style.display = "none";
         loginScreen.style.display = "flex";
         document.getElementById("login-username").value = "";
