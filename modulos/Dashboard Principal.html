@@ -906,13 +906,13 @@
         // FUNCIONES DE NAVEGACIÓN
         // ============================================
         function navigateTo(url, moduleName) {
-            showToast(`Abriendo ${moduleName} en nueva pestaña...`, 'info');
+            showToast(`Abriendo ${moduleName}...`, 'info');
             
             // Registrar navegación en actividad
             logActivity(`Accedió al módulo: ${moduleName}`, 'navigation');
             
-            // Abrir en nueva pestaña
-            window.open(url, '_blank');
+            // Navegar en la misma pestaña para mantener flujo y breadcrumb
+            window.location.href = url;
         }
 
         // ============================================
@@ -1395,5 +1395,6 @@
             console.log('%cSistema de Gestión Integrado cargado correctamente', 'color: #3DB54A;');
         });
     </script>
+    <script src="assets/breadcrumb.js"></script>
 </body>
 </html>
