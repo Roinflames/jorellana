@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BCP API Explorer</title>
+  <style>
+    :root {
+      --bg:#0b1220;
+      --panel:#121a2b;
+      --panel-2:#1a243b;
+      --text:#e5ecff;
+      --muted:#a7b3d1;
+      --ok:#22c55e;
+      --line:#2d3a57;
+      --blue:#60a5fa;
+      --amber:#f59e0b;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,sans-serif;background:radial-gradient(circle at 20% 0%,#1b2c4d 0,#0b1220 55%);color:var(--text)}
+    .wrap{max-width:1200px;margin:0 auto;padding:24px}
+    .hero{background:linear-gradient(135deg,#2563eb,#0ea5e9);padding:18px;border-radius:14px;box-shadow:0 14px 30px rgba(0,0,0,.25)}
+    .hero h1{margin:0 0 8px;font-size:28px}
+    .hero p{margin:0;color:#eaf2ff}
+    .grid{display:grid;gap:14px;margin-top:16px}
+    .g2{grid-template-columns:2fr 1fr}
+    .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+    .card h2,.card h3{margin:0 0 10px}
+    .pill{display:inline-block;padding:2px 8px;border:1px solid #3f4f74;border-radius:999px;color:var(--muted);font-size:12px}
+    pre{background:#0a1020;border:1px solid #263454;border-radius:10px;padding:10px;overflow:auto;color:#c9d5f5;font-size:13px}
+    code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+    .endpoint{background:var(--panel-2);border:1px solid #334564;border-radius:10px;padding:10px;margin-bottom:10px}
+    .method{font-weight:700;margin-right:8px}
+    .get{color:#86efac}.post{color:#fcd34d}
+    button,.btn{background:#1f2f4d;color:#fff;border:1px solid #3d5482;padding:8px 10px;border-radius:8px;cursor:pointer;text-decoration:none;display:inline-block}
+    button:hover,.btn:hover{background:#29406a}
+    input{width:100%;background:#0f1830;color:#fff;border:1px solid #334564;border-radius:8px;padding:8px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .ok{color:var(--ok)}
+    .links a{display:block;color:var(--blue);text-decoration:none;margin:6px 0}
+    .warn{color:var(--amber)}
+    @media (max-width:900px){.g2,.g3,.row{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="hero">
+      <h1>BCP API Explorer</h1>
+      <p>Mapa arquitectonico + explorador funcional para validar API y navegar vistas del MVP.</p>
+    </header>
+
+    <section class="grid g2">
+      <article class="card">
+        <h2>Mapa de Arquitectura</h2>
+        <pre><code>Internet / TryCloudflare
+  -> cloudflared (tunnel)
+  -> nginx web:80
+      -> archivos HTML en /modulos
+      -> /api/* proxied to FastAPI api:8000
+          -> PostgreSQL Neon (DATABASE_URL)</code></pre>
+        <p><span class="pill">Frontend</span> HTML + JS + localStorage por modulo</p>
+        <p><span class="pill">Backend</span> FastAPI con JWT y roles (admin/supervisor/operador)</p>
+      </article>
+
+      <article class="card">
+        <h3>Links de Documentacion</h3>
+        <div class="links">
+          <a href="/Mapa%20Arquitectonico.html">Mapa Arquitectonico</a>
+          <a href="/Dashboard%20Principal.html">Dashboard Principal</a>
+          <a href="/Solicitudes.html">Solicitudes</a>
+          <a href="/Recepcion%20Flores.html">Recepcion Flores</a>
+          <a href="/mvp-recepcion.html">MVP Recepcion API</a>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid g3">
+      <article class="card">
+        <h3>Health</h3>
+        <div class="endpoint"><span class="method get">GET</span><code>/api/health</code></div>
+        <button onclick="runHealth()">Probar Health</button>
+      </article>
+
+      <article class="card">
+        <h3>Login</h3>
+        <div class="endpoint"><span class="method post">POST</span><code>/api/auth/login</code></div>
+        <div class="row">
+          <input id="u" value="admin" placeholder="usuario" />
+          <input id="p" value="Admin123!" placeholder="password" type="password" />
+        </div>
+        <div style="margin-top:8px">
+          <button onclick="runLogin()">Login y guardar token</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <h3>Auth Me</h3>
+        <div class="endpoint"><span class="method get">GET</span><code>/api/auth/me</code></div>
+        <button onclick="runMe()">Probar /auth/me</button>
+      </article>
+    </section>
+
+    <section class="card" style="margin-top:14px">
+      <h3>Salida</h3>
+      <p class="warn">Nota: este explorer usa el mismo origen del sitio. Si no hay token, <code>/auth/me</code> respondera 401.</p>
+      <pre id="out">Listo para pruebas...</pre>
+    </section>
+  </div>
+
+  <script>
+    const out = document.getElementById('out');
+    const setOut = (label, data) => {
+      out.textContent = `${label}\n\n${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`;
+    };
+
+    async function runHealth() {
+      try {
+        const r = await fetch('/api/health');
+        const j = await r.json();
+        setOut(`GET /api/health [${r.status}]`, j);
+      } catch (e) {
+        setOut('GET /api/health [error]', String(e));
+      }
+    }
+
+    async function runLogin() {
+      const username = document.getElementById('u').value.trim();
+      const password = document.getElementById('p').value;
+      try {
+        const r = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username, password})
+        });
+        const j = await r.json();
+        if (r.ok && j.access_token) {
+          localStorage.setItem('bcp_api_token', j.access_token);
+        }
+        setOut(`POST /api/auth/login [${r.status}]`, j);
+      } catch (e) {
+        setOut('POST /api/auth/login [error]', String(e));
+      }
+    }
+
+    async function runMe() {
+      const token = localStorage.getItem('bcp_api_token') || '';
+      try {
+        const r = await fetch('/api/auth/me', {
+          headers: token ? {Authorization: `Bearer ${token}`} : {}
+        });
+        const j = await r.json();
+        setOut(`GET /api/auth/me [${r.status}]`, j);
+      } catch (e) {
+        setOut('GET /api/auth/me [error]', String(e));
+      }
+    }
+  </script>
+</body>
+</html>

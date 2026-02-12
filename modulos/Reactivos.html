@@ -1,0 +1,2129 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BioCannaPharma (BCP) – Sistema de Gestión de Reactivos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        :root {
+            --bcp-dark: #103b2a;
+            --bcp-main: #1b5e20;
+            --bcp-main-soft: #2e7d32;
+            --bcp-accent: #8e24aa;
+            --bcp-accent-soft: #ba68c8;
+            --bcp-warning: #f9a825;
+            --bcp-danger: #c62828;
+            --bcp-bg: #f4f6f9;
+            --bcp-card: #ffffff;
+            --bcp-text: #1f2933;
+            --bcp-muted: #6b7280;
+            --radius: 10px;
+            --shadow-soft: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e8f5e9 0, #f4f6f9 40%, #f3e5f5 100%);
+            color: var(--bcp-text);
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(120deg, var(--bcp-dark), var(--bcp-main-soft));
+            color: #fff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #a5d6a7, #1b5e20);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.25);
+        }
+
+        .logo-circle span {
+            color: #e8f5e9;
+        }
+
+        .header-titles h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .header-titles p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            gap: 16px;
+            padding: 16px 16px 24px;
+        }
+
+        aside {
+            background: rgba(255,255,255,0.95);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--bcp-muted);
+            margin-bottom: 4px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 9px 12px;
+            text-align: left;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--bcp-text);
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        .nav-btn span.icon {
+            width: 20px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(120deg, var(--bcp-main-soft), var(--bcp-accent-soft));
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .nav-btn.active span.icon {
+            opacity: 1;
+        }
+
+        .nav-btn:hover:not(.active) {
+            background: #edf2ff;
+            transform: translateY(-1px);
+        }
+
+        .nav-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--bcp-muted);
+            border-top: 1px dashed rgba(148,163,184,0.5);
+            padding-top: 8px;
+        }
+
+        main {
+            min-width: 0;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .view-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--bcp-dark);
+        }
+
+        .view-header small {
+            font-size: 12px;
+            color: var(--bcp-muted);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--bcp-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 12px 14px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            color: var(--bcp-muted);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--bcp-muted);
+        }
+
+        .stat-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(76, 175, 80, 0.12);
+            color: var(--bcp-main);
+        }
+
+        .stat-badge.warn {
+            background: rgba(249, 168, 37, 0.12);
+            color: var(--bcp-warning);
+        }
+
+        .stat-badge.danger {
+            background: rgba(198, 40, 40, 0.12);
+            color: var(--bcp-danger);
+        }
+
+        .flex {
+            display: flex;
+            gap: 10px;
+        }
+
+        .flex-col {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px 10px;
+        }
+
+        label {
+            font-size: 11px;
+            color: var(--bcp-muted);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 7px 8px;
+            border-radius: 7px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            outline: none;
+            background: #f9fafb;
+            transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--bcp-main-soft);
+            background: #fff;
+            box-shadow: 0 0 0 1px rgba(27,94,32,0.18);
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, var(--bcp-main-soft), var(--bcp-accent));
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.22);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--bcp-text);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(148,163,184,0.12);
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+        }
+
+        .btn-danger {
+            background: var(--bcp-danger);
+            color: #fff;
+        }
+
+        .btn-tag {
+            border-radius: 999px;
+            background: #f1f5f9;
+            padding: 3px 8px;
+            font-size: 11px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .search-row input {
+            flex: 1;
+        }
+
+        .table-wrapper {
+            margin-top: 6px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        thead {
+            background: linear-gradient(120deg, #e8f5e9, #f3e5f5);
+        }
+
+        th, td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--bcp-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tbody tr:hover {
+            background: #eef2ff;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .tag-ok {
+            background: rgba(22,163,74,0.1);
+            color: #15803d;
+        }
+
+        .tag-low {
+            background: rgba(249,115,22,0.1);
+            color: #ea580c;
+        }
+
+        .tag-expired {
+            background: rgba(220,38,38,0.1);
+            color: #b91c1c;
+        }
+
+        .tag-inactive {
+            background: rgba(148,163,184,0.12);
+            color: #475569;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        .status-dot.green { background: #22c55e; }
+        .status-dot.orange { background: #f97316; }
+        .status-dot.red { background: #ef4444; }
+        .status-dot.gray { background: #9ca3af; }
+
+        .muted {
+            color: var(--bcp-muted);
+            font-size: 11px;
+        }
+
+        .badge-chip {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-chip.audit {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        footer {
+            font-size: 11px;
+            text-align: center;
+            color: var(--bcp-muted);
+            padding: 6px 12px 10px;
+        }
+
+        .hint {
+            font-size: 11px;
+            color: var(--bcp-muted);
+        }
+
+        .chips-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        /* Modal ficha de reactivo */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.4);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            border-radius: 14px;
+            max-width: 780px;
+            width: 96%;
+            max-height: 90vh;
+            overflow: auto;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+            padding: 14px 16px 18px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            border: none;
+            background: transparent;
+            font-size: 18px;
+            cursor: pointer;
+            color: var(--bcp-muted);
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .modal-block {
+            padding: 8px;
+            border-radius: 8px;
+            background: #f9fafb;
+        }
+
+        .modal-block h4 {
+            margin: 0 0 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        pre.export-area {
+            font-size: 11px;
+            max-height: 250px;
+            overflow: auto;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 8px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        @media (max-width: 880px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+            aside {
+                order: -1;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 8px;
+            }
+            .nav-btn {
+                white-space: nowrap;
+            }
+            .nav-footer {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div class="header-left">
+            <div class="logo-circle"><span>BCP</span></div>
+            <div class="header-titles">
+                <h1>BioCannaPharma – Sistema de Gestión de Reactivos</h1>
+                <p>Control de stock, trazabilidad y auditoría de uso en laboratorio</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="header-date"></div>
+            <div>Versión local • Datos almacenados en este navegador</div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside>
+            <div class="nav-title">Módulos</div>
+            <button class="nav-btn active" data-view="dashboard">
+                <span class="icon">📊</span>
+                <span>Resumen general</span>
+            </button>
+            <button class="nav-btn" data-view="reactivos">
+                <span class="icon">⚗️</span>
+                <span>Maestro de reactivos</span>
+            </button>
+            <button class="nav-btn" data-view="movimientos">
+                <span class="icon">📦</span>
+                <span>Movimientos y usos</span>
+            </button>
+            <button class="nav-btn" data-view="auditoria">
+                <span class="icon">🧾</span>
+                <span>Auditoría y exportación</span>
+            </button>
+
+            <div class="nav-footer">
+                <div><strong>BCP – BioCannaPharma</strong></div>
+                <div>ERP interno para gestión de reactivos, pensado para inspecciones y auditorías.</div>
+            </div>
+        </aside>
+
+        <main>
+            <!-- DASHBOARD -->
+            <section id="dashboard" class="view active">
+                <div class="view-header">
+                    <div>
+                        <h2>Panel general</h2>
+                        <small>Visión rápida del estado de los reactivos y riesgos de stock/vencimiento.</small>
+                    </div>
+                    <div class="pill">
+                        <span class="pill-dot"></span>
+                        <span id="pill-env">Laboratorio BCP – Operación interna</span>
+                    </div>
+                </div>
+
+                <div class="card-grid" style="margin-bottom: 10px;">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Reactivos registrados</div>
+                                <div class="card-subtitle">Activos / Totales</div>
+                            </div>
+                            <div class="badge-chip">Maestro de reactivos</div>
+                        </div>
+                        <div class="flex" style="align-items: baseline; gap: 10px;">
+                            <div class="stat-value" id="stat-reactivos-totales">0</div>
+                            <div class="stat-label">
+                                Activos: <span id="stat-reactivos-activos">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Alertas de stock</div>
+                                <div class="card-subtitle">Stock bajo mínimo definido</div>
+                            </div>
+                            <div class="stat-badge warn" id="badge-stock">Sin alertas</div>
+                        </div>
+                        <div class="flex" style="align-items: center; gap: 16px;">
+                            <div>
+                                <div class="stat-value" id="stat-stock-bajo">0</div>
+                                <div class="stat-label">Reactivos con reposición pendiente</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Vencimiento</div>
+                                <div class="card-subtitle">Reactivos vencidos o próximos a vencer</div>
+                            </div>
+                            <div class="stat-badge danger" id="badge-vencimiento">Sin riesgo</div>
+                        </div>
+                        <div class="flex" style="align-items: center; gap: 14px;">
+                            <div>
+                                <div class="stat-value" id="stat-vencidos">0</div>
+                                <div class="stat-label">Vencidos</div>
+                            </div>
+                            <div>
+                                <div class="stat-value" id="stat-por-vencer">0</div>
+                                <div class="stat-label">Por vencer (&lt; 60 días)</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Actividad reciente</div>
+                                <div class="card-subtitle">Últimos movimientos registrados</div>
+                            </div>
+                            <div class="badge-chip audit">Trazabilidad</div>
+                        </div>
+                        <div class="flex-col">
+                            <div class="stat-value" id="stat-movs-hoy">0</div>
+                            <div class="stat-label">Movimientos realizados hoy</div>
+                            <div class="hint" id="hint-ultimo-mov">Sin movimientos registrados.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Resumen de riesgos</div>
+                            <div class="card-subtitle">Reactivos críticos para seguimiento diario.</div>
+                        </div>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Estado</th>
+                                <th>Código interno</th>
+                                <th>Nombre comercial</th>
+                                <th>Stock actual</th>
+                                <th>Stock mínimo</th>
+                                <th>Vencimiento</th>
+                            </tr>
+                            </thead>
+                            <tbody id="dashboard-riesgos-body">
+                            <tr>
+                                <td colspan="6" class="muted">No hay reactivos cargados aún. Registre un reactivo en el módulo “Maestro de reactivos”.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- REACTIVOS -->
+            <section id="reactivos" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Maestro de reactivos</h2>
+                        <small>Registro único de cada reactivo con datos técnicos, stock mínimo y documentación (HDS, ficha técnica).</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip">Trazabilidad</span>
+                        <span class="badge-chip audit">Adjuntos: HDS y ficha técnica</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Nuevo reactivo</div>
+                                <div class="card-subtitle">Los campos marcados con * son obligatorios.</div>
+                            </div>
+                        </div>
+                        <form id="form-reactivo" class="flex-col">
+                            <div class="form-grid">
+                                <div>
+                                    <label for="codigoInterno">Código interno BCP *</label>
+                                    <input type="text" id="codigoInterno" required placeholder="BCP-REA-0001">
+                                </div>
+                                <div>
+                                    <label for="nombreComercial">Nombre comercial *</label>
+                                    <input type="text" id="nombreComercial" required placeholder="Ej: Etanol absoluto">
+                                </div>
+                                <div>
+                                    <label for="nombreQuimico">Nombre químico</label>
+                                    <input type="text" id="nombreQuimico" placeholder="Ej: Etanol">
+                                </div>
+                                <div>
+                                    <label for="cas">N° CAS</label>
+                                    <input type="text" id="cas" placeholder="Ej: 64-17-5">
+                                </div>
+                                <div>
+                                    <label for="proveedor">Proveedor</label>
+                                    <input type="text" id="proveedor" placeholder="Proveedor principal">
+                                </div>
+                                <div>
+                                    <label for="pureza">Pureza / grado</label>
+                                    <input type="text" id="pureza" placeholder="Ej: 99.8 %, grado HPLC">
+                                </div>
+                                <div>
+                                    <label for="unidad">Unidad de stock *</label>
+                                    <select id="unidad" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="kg">kg</option>
+                                        <option value="g">g</option>
+                                        <option value="L">L</option>
+                                        <option value="mL">mL</option>
+                                        <option value="unidades">unidades</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="stockInicial">Stock inicial *</label>
+                                    <input type="number" id="stockInicial" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="stockMinimo">Stock mínimo *</label>
+                                    <input type="number" id="stockMinimo" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="ubicacion">Ubicación física *</label>
+                                    <input type="text" id="ubicacion" required placeholder="Sala, gabinete, estante">
+                                </div>
+                                <div>
+                                    <label for="loteProveedor">Lote proveedor</label>
+                                    <input type="text" id="loteProveedor" placeholder="Lote / batch">
+                                </div>
+                                <div>
+                                    <label for="fechaRecepcion">Fecha de recepción</label>
+                                    <input type="date" id="fechaRecepcion">
+                                </div>
+                                <div>
+                                    <label for="fechaVencimiento">Fecha de vencimiento</label>
+                                    <input type="date" id="fechaVencimiento">
+                                </div>
+                                <div>
+                                    <label for="responsableIngreso">Responsable del ingreso *</label>
+                                    <input type="text" id="responsableIngreso" required placeholder="Nombre de quien registra">
+                                </div>
+                                <div>
+                                    <label for="estadoReactivo">Estado</label>
+                                    <select id="estadoReactivo">
+                                        <option value="ACTIVO">ACTIVO</option>
+                                        <option value="INACTIVO">INACTIVO</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <hr style="border: none; border-top: 1px dashed #e2e8f0; margin: 4px 0 6px;">
+
+                            <div class="form-grid">
+                                <div>
+                                    <label for="sdsFile">Hoja de datos de seguridad (HDS) – PDF/Imagen</label>
+                                    <input type="file" id="sdsFile" accept=".pdf,image/*">
+                                    <div class="hint">Se almacena localmente en el navegador como parte de la ficha del reactivo.</div>
+                                </div>
+                                <div>
+                                    <label for="specFile">Ficha técnica – PDF/Imagen</label>
+                                    <input type="file" id="specFile" accept=".pdf,image/*">
+                                    <div class="hint">Opcional pero recomendable para auditorías.</div>
+                                </div>
+                            </div>
+
+                            <div class="flex" style="justify-content: flex-end; margin-top: 4px;">
+                                <button type="reset" class="btn btn-ghost btn-small">Limpiar formulario</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <span>Guardar reactivo</span> <span>💾</span>
+                                </button>
+                            </div>
+                            <div class="hint">
+                                Al guardar el reactivo se genera automáticamente un movimiento de “Ingreso inicial” con el stock declarado,
+                                quedando todo trazado para fines de auditoría.
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Listado de reactivos</div>
+                                <div class="card-subtitle">Búsqueda rápida y acceso a ficha detallada.</div>
+                            </div>
+                        </div>
+
+                        <div class="search-row">
+                            <input type="text" id="busqueda-reactivos" placeholder="Buscar por código, nombre, CAS, proveedor o ubicación…">
+                            <button class="btn btn-ghost btn-small" id="btn-clear-search">Limpiar</button>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre comercial</th>
+                                    <th>Stock</th>
+                                    <th>Vence</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabla-reactivos-body">
+                                <tr>
+                                    <td colspan="6" class="muted">Sin reactivos registrados.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="hint" style="margin-top: 4px;">
+                            Para modificar datos del reactivo utilice “Ver ficha” y luego el botón “Actualizar estado/stock mínimo”.
+                            La eliminación completa no está permitida para preservar la trazabilidad histórica.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- MOVIMIENTOS -->
+            <section id="movimientos" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Movimientos y usos de reactivos</h2>
+                        <small>Registro de ingresos, consumos, ajustes y bajas con impacto directo en el stock actual.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip audit">Audit trail</span>
+                        <span class="badge-chip">No se permite borrar movimientos</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Nuevo movimiento</div>
+                                <div class="card-subtitle">Todo movimiento queda asociado a un reactivo y a un responsable.</div>
+                            </div>
+                        </div>
+
+                        <form id="form-movimiento" class="flex-col">
+                            <div class="form-grid">
+                                <div>
+                                    <label for="mov-reactivo">Reactivo *</label>
+                                    <select id="mov-reactivo" required></select>
+                                </div>
+                                <div>
+                                    <label for="mov-tipo">Tipo de movimiento *</label>
+                                    <select id="mov-tipo" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="INGRESO">Ingreso (compra, devolución)</option>
+                                        <option value="CONSUMO">Consumo (uso en proceso)</option>
+                                        <option value="AJUSTE_POS">Ajuste (+) corrección inventario</option>
+                                        <option value="AJUSTE_NEG">Ajuste (–) corrección inventario</option>
+                                        <option value="BAJA">Baja (vencimiento, derrame, descarte)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="mov-cantidad">Cantidad *</label>
+                                    <input type="number" id="mov-cantidad" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="mov-fecha">Fecha de movimiento *</label>
+                                    <input type="date" id="mov-fecha" required>
+                                </div>
+                                <div>
+                                    <label for="mov-responsable">Responsable *</label>
+                                    <input type="text" id="mov-responsable" required placeholder="Quien ejecuta/registra el movimiento">
+                                </div>
+                                <div>
+                                    <label for="mov-documento">Documento asociado</label>
+                                    <input type="text" id="mov-documento" placeholder="OC, orden de producción, bitácora, etc.">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="mov-nota">Motivo / nota de auditoría *</label>
+                                <textarea id="mov-nota" required placeholder="Describa brevemente el motivo del movimiento (ej. consumo en lote BCP-PROD-0005)."></textarea>
+                            </div>
+                            <div class="flex" style="justify-content: flex-end; margin-top: 4px;">
+                                <button type="reset" class="btn btn-ghost btn-small">Limpiar</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <span>Registrar movimiento</span> <span>✔️</span>
+                                </button>
+                            </div>
+                            <div class="hint">
+                                Para correcciones utilice <strong>ajustes (+/-)</strong>. Los movimientos no se eliminan; cualquier corrección debe quedar documentada.
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Historial de movimientos</div>
+                                <div class="card-subtitle">Ordenados del más reciente al más antiguo.</div>
+                            </div>
+                        </div>
+
+                        <div class="search-row">
+                            <input type="text" id="busqueda-movimientos" placeholder="Filtrar por reactivo, tipo, responsable, documento…">
+                            <button class="btn btn-ghost btn-small" id="btn-clear-search-mov">Limpiar</button>
+                        </div>
+
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Fecha/hora registro</th>
+                                    <th>Reactivo</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Stock antes / después</th>
+                                    <th>Responsable</th>
+                                    <th>Documento</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabla-movimientos-body">
+                                <tr>
+                                    <td colspan="7" class="muted">Sin movimientos registrados.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="hint">
+                            Este historial constituye el registro auditable de uso de reactivos en el laboratorio. En caso de inspección,
+                            puede filtrarse por reactivo, fecha, responsable o tipo de movimiento.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AUDITORÍA / EXPORTACIÓN -->
+            <section id="auditoria" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Auditoría y exportación</h2>
+                        <small>Herramientas de consulta y respaldo de la información almacenada localmente.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip audit">Datos locales (localStorage)</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Resumen de auditoría</div>
+                                <div class="card-subtitle">Filtros rápidos sobre movimientos.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-grid">
+                            <div>
+                                <label for="audit-reactivo">Filtrar por reactivo</label>
+                                <select id="audit-reactivo">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="audit-tipo">Filtrar por tipo de movimiento</label>
+                                <select id="audit-tipo">
+                                    <option value="">Todos</option>
+                                    <option value="INGRESO">Ingreso</option>
+                                    <option value="CONSUMO">Consumo</option>
+                                    <option value="AJUSTE_POS">Ajuste (+)</option>
+                                    <option value="AJUSTE_NEG">Ajuste (–)</option>
+                                    <option value="BAJA">Baja</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="audit-desde">Fecha desde</label>
+                                <input type="date" id="audit-desde">
+                            </div>
+                            <div>
+                                <label for="audit-hasta">Fecha hasta</label>
+                                <input type="date" id="audit-hasta">
+                            </div>
+                        </div>
+                        <div class="flex" style="margin-top: 6px; justify-content: flex-end;">
+                            <button class="btn btn-ghost btn-small" id="btn-audit-aplicar">Aplicar filtros</button>
+                            <button class="btn btn-ghost btn-small" id="btn-audit-limpiar">Limpiar filtros</button>
+                        </div>
+
+                        <div class="table-wrapper" style="margin-top: 8px;">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Reactivo</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Responsable</th>
+                                    <th>Motivo</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabla-audit-body">
+                                <tr>
+                                    <td colspan="6" class="muted">No hay movimientos que coincidan con los filtros seleccionados.</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Exportación de datos</div>
+                                <div class="card-subtitle">Respaldo en formato JSON para descarga o copia.</div>
+                            </div>
+                        </div>
+
+                        <div class="flex" style="margin-bottom: 6px; flex-wrap: wrap; gap:6px;">
+                            <button class="btn btn-primary btn-small" id="btn-exportar">
+                                <span>Generar JSON de respaldo</span> <span>⬇️</span>
+                            </button>
+                            <button class="btn btn-ghost btn-small" id="btn-limpiar-export">
+                                Limpiar área
+                            </button>
+                            <button class="btn btn-danger btn-small" id="btn-wipe-all-test" title="Eliminar todos los datos locales (solo pruebas)">
+                                🧨 Limpiar TODO (TEST)
+                            </button>
+                        </div>
+                        <pre id="export-area" class="export-area mono">// Presione “Generar JSON de respaldo” para ver el contenido actual de reactivos y movimientos.</pre>
+                        <div class="hint" style="margin-top: 4px;">
+                            Puede copiar este texto y guardarlo en un archivo <code>.json</code> como respaldo.
+                            Recuerde que toda la información se almacena <strong>solo en este navegador</strong>
+                            mediante <code>localStorage</code>.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        BioCannaPharma (BCP) – Sistema interno de gestión de reactivos de laboratorio. Este archivo HTML funciona en modo local (sin servidor) y está pensado para trabajar directamente en el navegador.
+    </footer>
+</div>
+
+<!-- MODAL FICHA REACTIVO -->
+<div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <div>
+                <div class="modal-title" id="modal-title">Ficha de reactivo</div>
+                <div class="muted" id="modal-subtitle"></div>
+            </div>
+            <button class="modal-close" id="modal-close" title="Cerrar">✕</button>
+        </div>
+
+        <div class="modal-grid" id="modal-content">
+            <!-- Contenido dinámico -->
+        </div>
+
+        <div class="flex" style="justify-content: space-between; margin-top: 10px; align-items: center;">
+            <div class="hint">
+                La ficha del reactivo incluye enlaces a la HDS y ficha técnica (si fueron cargadas).
+                Recuerde que los documentos se almacenan localmente en este navegador.
+            </div>
+            <button id="modal-toggle-estado" class="btn btn-ghost btn-small"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const LS_REAGENTS_KEY = 'bcp_reactivos_v1';
+    const LS_MOVEMENTS_KEY = 'bcp_movimientos_v1';
+
+    let reactivos = [];
+    let movimientos = [];
+
+    // -------- Utilidades --------
+    function hoyISO() {
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    }
+
+    function fechaHoraLegible(isoString) {
+        const d = new Date(isoString);
+        if (isNaN(d.getTime())) return '-';
+        return d.toLocaleString('es-CL', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function fechaLegible(isoDate) {
+        if (!isoDate) return '-';
+        const [y, m, d] = isoDate.split('-');
+        if (!y || !m || !d) return '-';
+        return `${d}/${m}/${y}`;
+    }
+
+    function diasHasta(fechaISO) {
+        if (!fechaISO) return null;
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+        const [y, m, d] = fechaISO.split('-').map(Number);
+        if (!y || !m || !d) return null;
+        const target = new Date(y, m - 1, d);
+        const diffMs = target - hoy;
+        return Math.round(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    function getNextId(arr) {
+        if (!arr.length) return 1;
+        return Math.max.apply(null, arr.map(x => x.id || 0)) + 1;
+    }
+
+    function readFileAsDataUrl(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) return resolve(null);
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                resolve({
+                    name: file.name,
+                    type: file.type,
+                    dataUrl: evt.target.result
+                });
+            };
+            reader.onerror = () => reject(new Error('Error leyendo archivo'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // -------- Persistencia --------
+    function loadData() {
+        try {
+            const r = localStorage.getItem(LS_REAGENTS_KEY);
+            const m = localStorage.getItem(LS_MOVEMENTS_KEY);
+            reactivos = r ? JSON.parse(r) : [];
+            movimientos = m ? JSON.parse(m) : [];
+        } catch (e) {
+            console.error('Error cargando datos', e);
+            reactivos = [];
+            movimientos = [];
+        }
+    }
+
+    function saveReactivos() {
+        localStorage.setItem(LS_REAGENTS_KEY, JSON.stringify(reactivos));
+    }
+
+    function saveMovimientos() {
+        localStorage.setItem(LS_MOVEMENTS_KEY, JSON.stringify(movimientos));
+    }
+
+    // -------- Vistas / Navegación --------
+    const navButtons = document.querySelectorAll('.nav-btn');
+    const views = document.querySelectorAll('.view');
+
+    function switchView(id) {
+        views.forEach(v => v.classList.toggle('active', v.id === id));
+        navButtons.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.view === id);
+        });
+        if (id === 'dashboard') renderDashboard();
+        if (id === 'reactivos') renderReactivos();
+        if (id === 'movimientos') renderMovimientos();
+        if (id === 'auditoria') renderAuditoria();
+    }
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => switchView(btn.dataset.view));
+    });
+
+    // -------- Render: Dashboard --------
+    function renderDashboard() {
+        const total = reactivos.length;
+        const activos = reactivos.filter(r => r.estado === 'ACTIVO').length;
+
+        let bajos = 0;
+        let vencidos = 0;
+        let porVencer = 0;
+
+        const riesgos = [];
+
+        const hoy = hoyISO();
+
+        reactivos.forEach(r => {
+            const stock = Number(r.stockActual || 0);
+            const stockMin = Number(r.stockMinimo || 0);
+            const dias = diasHasta(r.fechaVencimiento);
+
+            let riskType = null;
+            if (r.estado !== 'ACTIVO') {
+                // no contamos como riesgo “operativo” si está inactivo
+            } else {
+                if (stockMin > 0 && stock <= stockMin) {
+                    bajos++;
+                    riskType = 'stock';
+                }
+                if (typeof dias === 'number') {
+                    if (dias < 0) {
+                        vencidos++;
+                        riskType = 'vencido';
+                    } else if (dias <= 60 && riskType !== 'vencido') {
+                        porVencer++;
+                        riskType = 'porVencer';
+                    }
+                }
+            }
+
+            if (riskType) {
+                riesgos.push({ reactivo: r, riskType, dias, stock, stockMin });
+            }
+        });
+
+        document.getElementById('stat-reactivos-totales').textContent = total;
+        document.getElementById('stat-reactivos-activos').textContent = activos;
+        document.getElementById('stat-stock-bajo').textContent = bajos;
+        document.getElementById('stat-vencidos').textContent = vencidos;
+        document.getElementById('stat-por-vencer').textContent = porVencer;
+
+        const badgeStock = document.getElementById('badge-stock');
+        if (bajos === 0) {
+            badgeStock.textContent = 'Sin reactivos bajo mínimo';
+            badgeStock.className = 'stat-badge';
+        } else {
+            badgeStock.textContent = `${bajos} con stock bajo`;
+            badgeStock.className = 'stat-badge warn';
+        }
+
+        const badgeVenc = document.getElementById('badge-vencimiento');
+        if (vencidos === 0 && porVencer === 0) {
+            badgeVenc.textContent = 'Sin riesgo registrado';
+            badgeVenc.className = 'stat-badge';
+        } else {
+            badgeVenc.textContent = `${vencidos} vencidos / ${porVencer} por vencer`;
+            badgeVenc.className = 'stat-badge danger';
+        }
+
+        // Movimientos hoy
+        const hoyDate = hoy;
+        const movsHoy = movimientos.filter(m => (m.fechaMovimiento === hoyDate));
+        document.getElementById('stat-movs-hoy').textContent = movsHoy.length;
+        const ultimo = movimientos.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || '') )[0];
+        const hint = document.getElementById('hint-ultimo-mov');
+        if (ultimo) {
+            hint.textContent = `Último movimiento: ${fechaHoraLegible(ultimo.createdAt)} – ${ultimo.tipo} de ${ultimo.cantidad} ${ultimo.unidad} (${ultimo.nombreReactivo || 'Reactivo'}) por ${ultimo.responsable || '-'}`;
+        } else {
+            hint.textContent = 'Sin movimientos registrados.';
+        }
+
+        // Tabla de riesgos
+        const tbody = document.getElementById('dashboard-riesgos-body');
+        tbody.innerHTML = '';
+        if (!riesgos.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 6;
+            td.className = 'muted';
+            td.textContent = total === 0
+                ? 'No hay reactivos cargados aún. Registre un reactivo en el módulo “Maestro de reactivos”.'
+                : 'Actualmente no hay reactivos con stock bajo ni próximos a vencer.';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        riesgos.sort((a, b) => {
+            const order = { 'vencido': 0, 'stock': 1, 'porVencer': 2 };
+            const oa = order[a.riskType] ?? 3;
+            const ob = order[b.riskType] ?? 3;
+            if (oa !== ob) return oa - ob;
+            return (a.dias || 99999) - (b.dias || 99999);
+        });
+
+        riesgos.forEach(item => {
+            const r = item.reactivo;
+            const tr = document.createElement('tr');
+
+            const tdEstado = document.createElement('td');
+            let dotClass = 'green';
+            let label = 'OK';
+            if (item.riskType === 'stock') {
+                dotClass = 'orange';
+                label = 'Stock bajo';
+            } else if (item.riskType === 'vencido') {
+                dotClass = 'red';
+                label = 'Vencido';
+            } else if (item.riskType === 'porVencer') {
+                dotClass = 'orange';
+                label = 'Por vencer';
+            }
+            tdEstado.innerHTML = `<span class="status-dot ${dotClass}"></span>${label}`;
+            tr.appendChild(tdEstado);
+
+            const tdCod = document.createElement('td');
+            tdCod.textContent = r.codigoInterno || '-';
+            tr.appendChild(tdCod);
+
+            const tdNom = document.createElement('td');
+            tdNom.textContent = r.nombreComercial || '-';
+            tr.appendChild(tdNom);
+
+            const tdStock = document.createElement('td');
+            tdStock.textContent = `${Number(item.stock || 0)} ${r.unidad || ''}`;
+            tr.appendChild(tdStock);
+
+            const tdMin = document.createElement('td');
+            tdMin.textContent = `${Number(item.stockMin || 0)} ${r.unidad || ''}`;
+            tr.appendChild(tdMin);
+
+            const tdV = document.createElement('td');
+            let txt = fechaLegible(r.fechaVencimiento);
+            if (typeof item.dias === 'number') {
+                if (item.dias < 0) {
+                    txt += ` (vencido hace ${Math.abs(item.dias)} días)`;
+                } else {
+                    txt += ` (en ${item.dias} días)`;
+                }
+            }
+            tdV.textContent = txt || '-';
+            tr.appendChild(tdV);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // -------- Render: Reactivos --------
+    function renderReactivos() {
+        const tbody = document.getElementById('tabla-reactivos-body');
+        const filtro = (document.getElementById('busqueda-reactivos').value || '').toLowerCase().trim();
+
+        tbody.innerHTML = '';
+        let listado = reactivos.slice().sort((a, b) => (a.codigoInterno || '').localeCompare(b.codigoInterno || ''));
+
+        if (filtro) {
+            listado = listado.filter(r => {
+                return (r.codigoInterno || '').toLowerCase().includes(filtro) ||
+                    (r.nombreComercial || '').toLowerCase().includes(filtro) ||
+                    (r.nombreQuimico || '').toLowerCase().includes(filtro) ||
+                    (r.cas || '').toLowerCase().includes(filtro) ||
+                    (r.proveedor || '').toLowerCase().includes(filtro) ||
+                    (r.ubicacion || '').toLowerCase().includes(filtro);
+            });
+        }
+
+        if (!listado.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 6;
+            td.className = 'muted';
+            td.textContent = 'Sin reactivos registrados.';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        } else {
+            listado.forEach(r => {
+                const tr = document.createElement('tr');
+
+                const stock = Number(r.stockActual || 0);
+                const stockMin = Number(r.stockMinimo || 0);
+                const dias = diasHasta(r.fechaVencimiento);
+
+                const tdCod = document.createElement('td');
+                tdCod.textContent = r.codigoInterno || '-';
+                tr.appendChild(tdCod);
+
+                const tdNom = document.createElement('td');
+                tdNom.textContent = r.nombreComercial || '-';
+                tr.appendChild(tdNom);
+
+                const tdStock = document.createElement('td');
+                tdStock.textContent = `${stock} ${r.unidad || ''}`;
+                tr.appendChild(tdStock);
+
+                const tdV = document.createElement('td');
+                tdV.textContent = fechaLegible(r.fechaVencimiento);
+                tr.appendChild(tdV);
+
+                const tdEstado = document.createElement('td');
+                let tagClass = 'tag-ok';
+                let tagText = 'OK';
+
+                if (r.estado !== 'ACTIVO') {
+                    tagClass = 'tag-inactive';
+                    tagText = 'INACTIVO';
+                } else if (typeof dias === 'number' && dias < 0) {
+                    tagClass = 'tag-expired';
+                    tagText = 'VENCIDO';
+                } else if (stockMin > 0 && stock <= stockMin) {
+                    tagClass = 'tag-low';
+                    tagText = 'STOCK BAJO';
+                }
+
+                tdEstado.innerHTML = `<span class="tag ${tagClass}">${tagText}</span>`;
+                tr.appendChild(tdEstado);
+
+                const tdAcc = document.createElement('td');
+                const btnFicha = document.createElement('button');
+                btnFicha.className = 'btn btn-ghost btn-small';
+                btnFicha.textContent = 'Ver ficha';
+                btnFicha.addEventListener('click', () => abrirFichaReactivo(r.id));
+                tdAcc.appendChild(btnFicha);
+                tr.appendChild(tdAcc);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Combo de reactivos para movimientos y auditoría
+        refrescarCombosReactivos();
+    }
+
+    function refrescarCombosReactivos() {
+        const selMov = document.getElementById('mov-reactivo');
+        const selAudit = document.getElementById('audit-reactivo');
+
+        const opts = reactivos.slice().sort((a, b) => (a.codigoInterno || '').localeCompare(b.codigoInterno || ''));
+
+        // Movimientos
+        selMov.innerHTML = '';
+        if (!opts.length) {
+            const op = document.createElement('option');
+            op.value = '';
+            op.textContent = 'No hay reactivos cargados';
+            selMov.appendChild(op);
+            selMov.disabled = true;
+        } else {
+            const op0 = document.createElement('option');
+            op0.value = '';
+            op0.textContent = 'Seleccione un reactivo…';
+            selMov.appendChild(op0);
+            opts.forEach(r => {
+                const op = document.createElement('option');
+                op.value = String(r.id);
+                op.textContent = `${r.codigoInterno || ''} – ${r.nombreComercial || ''}`;
+                selMov.appendChild(op);
+            });
+            selMov.disabled = false;
+        }
+
+        // Auditoría
+        selAudit.innerHTML = '';
+        const opAll = document.createElement('option');
+        opAll.value = '';
+        opAll.textContent = 'Todos';
+        selAudit.appendChild(opAll);
+        opts.forEach(r => {
+            const op = document.createElement('option');
+            op.value = String(r.id);
+            op.textContent = `${r.codigoInterno || ''} – ${r.nombreComercial || ''}`;
+            selAudit.appendChild(op);
+        });
+    }
+
+    // -------- Ficha / Modal Reactivo --------
+    const modalBackdrop = document.getElementById('modal-backdrop');
+    const modalTitle = document.getElementById('modal-title');
+    const modalSubtitle = document.getElementById('modal-subtitle');
+    const modalContent = document.getElementById('modal-content');
+    const modalToggleEstado = document.getElementById('modal-toggle-estado');
+    let modalReactivoId = null;
+
+    function abrirFichaReactivo(id) {
+        const r = reactivos.find(x => x.id === id);
+        if (!r) return;
+
+        modalReactivoId = id;
+
+        modalTitle.textContent = `${r.nombreComercial || 'Reactivo'} (${r.codigoInterno || '-'})`;
+        modalSubtitle.textContent = `N° CAS: ${r.cas || '-'} • Proveedor: ${r.proveedor || '-'} • Estado: ${r.estado || 'ACTIVO'}`;
+
+        modalContent.innerHTML = '';
+
+        const bloque1 = document.createElement('div');
+        bloque1.className = 'modal-block';
+        bloque1.innerHTML = `
+            <h4>Identificación</h4>
+            <div><strong>Nombre químico:</strong> ${r.nombreQuimico || '-'}</div>
+            <div><strong>Pureza / grado:</strong> ${r.pureza || '-'}</div>
+            <div><strong>Código interno BCP:</strong> <span class="mono">${r.codigoInterno || '-'}</span></div>
+            <div><strong>Lote proveedor:</strong> <span class="mono">${r.loteProveedor || '-'}</span></div>
+        `;
+
+        const bloque2 = document.createElement('div');
+        bloque2.className = 'modal-block';
+        const dias = diasHasta(r.fechaVencimiento);
+        let infoVenc = fechaLegible(r.fechaVencimiento);
+        if (typeof dias === 'number') {
+            if (dias < 0) {
+                infoVenc += ` (vencido hace ${Math.abs(dias)} días)`;
+            } else {
+                infoVenc += ` (vencimiento en ${dias} días)`;
+            }
+        }
+        bloque2.innerHTML = `
+            <h4>Stock y fechas</h4>
+            <div><strong>Stock actual:</strong> ${Number(r.stockActual || 0)} ${r.unidad || ''}</div>
+            <div><strong>Stock mínimo:</strong> ${Number(r.stockMinimo || 0)} ${r.unidad || ''}</div>
+            <div><strong>Ubicación:</strong> ${r.ubicacion || '-'}</div>
+            <div><strong>Fecha recepción:</strong> ${fechaLegible(r.fechaRecepcion)}</div>
+            <div><strong>Fecha vencimiento:</strong> ${infoVenc || '-'}</div>
+        `;
+
+        const bloque3 = document.createElement('div');
+        bloque3.className = 'modal-block';
+        bloque3.innerHTML = `
+            <h4>Responsables y auditoría</h4>
+            <div><strong>Responsable de ingreso:</strong> ${r.responsableIngreso || '-'}</div>
+            <div><strong>Creado el:</strong> ${fechaHoraLegible(r.createdAt || '')}</div>
+            <div><strong>Última actualización:</strong> ${fechaHoraLegible(r.updatedAt || r.createdAt || '')}</div>
+        `;
+
+        const bloque4 = document.createElement('div');
+        bloque4.className = 'modal-block';
+        const hasSDS = !!(r.sdsFile && r.sdsFile.dataUrl);
+        const hasSpec = !!(r.specFile && r.specFile.dataUrl);
+
+        let linksHTML = '';
+        if (hasSDS) {
+            linksHTML += `<button class="btn btn-ghost btn-small" type="button" onclick="window.open('${r.sdsFile.dataUrl}', '_blank')">Ver HDS (${r.sdsFile.name || 'archivo'})</button> `;
+        } else {
+            linksHTML += `<div class="muted">No se ha cargado HDS para este reactivo.</div>`;
+        }
+        linksHTML += '<br>';
+        if (hasSpec) {
+            linksHTML += `<button class="btn btn-ghost btn-small" type="button" onclick="window.open('${r.specFile.dataUrl}', '_blank')">Ver ficha técnica (${r.specFile.name || 'archivo'})</button>`;
+        } else {
+            linksHTML += `<div class="muted">No se ha cargado ficha técnica para este reactivo.</div>`;
+        }
+
+        bloque4.innerHTML = `
+            <h4>Documentos asociados</h4>
+            ${linksHTML}
+            <div class="hint" style="margin-top: 4px;">
+                Los documentos se almacenan como datos en este navegador (localStorage). Para respaldo externo,
+                exporte los datos desde el módulo de Auditoría.
+            </div>
+            <hr style="border:none;border-top:1px dashed #e2e8f0;margin:6px 0;">
+            <div>
+                <div class="muted" style="margin-bottom:4px;">Adjuntar / actualizar documentos</div>
+                <div class="form-grid">
+                    <div>
+                        <label for="modal-sds-input">HDS (PDF/Imagen)</label>
+                        <input type="file" id="modal-sds-input" accept=".pdf,image/*">
+                    </div>
+                    <div>
+                        <label for="modal-spec-input">Ficha técnica (PDF/Imagen)</label>
+                        <input type="file" id="modal-spec-input" accept=".pdf,image/*">
+                    </div>
+                </div>
+                <div style="text-align:right;margin-top:6px;">
+                    <button type="button" class="btn btn-primary btn-small" id="modal-update-docs-btn">Guardar documentos</button>
+                </div>
+            </div>
+        `;
+
+        modalContent.appendChild(bloque1);
+        modalContent.appendChild(bloque2);
+        modalContent.appendChild(bloque3);
+        modalContent.appendChild(bloque4);
+
+        // Listener para actualizar documentos desde la ficha
+        const modalSdsInput = document.getElementById('modal-sds-input');
+        const modalSpecInput = document.getElementById('modal-spec-input');
+        const modalUpdateDocsBtn = document.getElementById('modal-update-docs-btn');
+
+        modalUpdateDocsBtn.addEventListener('click', async () => {
+            const sdsFile = modalSdsInput.files[0];
+            const specFile = modalSpecInput.files[0];
+            if (!sdsFile && !specFile) {
+                alert('Seleccione al menos un archivo para actualizar.');
+                return;
+            }
+            const r2 = reactivos.find(x => x.id === modalReactivoId);
+            if (!r2) {
+                alert('Reactivo no encontrado.');
+                return;
+            }
+            try {
+                if (sdsFile) {
+                    r2.sdsFile = await readFileAsDataUrl(sdsFile);
+                }
+                if (specFile) {
+                    r2.specFile = await readFileAsDataUrl(specFile);
+                }
+                r2.updatedAt = new Date().toISOString();
+                saveReactivos();
+                alert('Documentos actualizados correctamente.');
+                abrirFichaReactivo(r2.id); // recargar ficha
+            } catch (err) {
+                console.error(err);
+                alert('Ocurrió un error al cargar los documentos.');
+            }
+        });
+
+        modalToggleEstado.textContent = r.estado === 'ACTIVO' ? 'Marcar como INACTIVO' : 'Marcar como ACTIVO';
+        modalBackdrop.classList.add('active');
+    }
+
+    function cerrarModal() {
+        modalBackdrop.classList.remove('active');
+        modalReactivoId = null;
+    }
+
+    document.getElementById('modal-close').addEventListener('click', cerrarModal);
+    modalBackdrop.addEventListener('click', function (e) {
+        if (e.target === modalBackdrop) {
+            cerrarModal();
+        }
+    });
+
+    modalToggleEstado.addEventListener('click', function () {
+        if (!modalReactivoId) return;
+        const r = reactivos.find(x => x.id === modalReactivoId);
+        if (!r) return;
+        r.estado = r.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+        r.updatedAt = new Date().toISOString();
+        saveReactivos();
+        renderReactivos();
+        renderDashboard();
+        abrirFichaReactivo(r.id);
+    });
+
+    // -------- Manejo de formularios: Reactivos --------
+    const formReactivo = document.getElementById('form-reactivo');
+
+    formReactivo.addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const codigoInterno = document.getElementById('codigoInterno').value.trim();
+        const nombreComercial = document.getElementById('nombreComercial').value.trim();
+        const nombreQuimico = document.getElementById('nombreQuimico').value.trim();
+        const cas = document.getElementById('cas').value.trim();
+        const proveedor = document.getElementById('proveedor').value.trim();
+        const pureza = document.getElementById('pureza').value.trim();
+        const unidad = document.getElementById('unidad').value;
+        const stockInicial = parseFloat(document.getElementById('stockInicial').value || '0');
+        const stockMinimo = parseFloat(document.getElementById('stockMinimo').value || '0');
+        const ubicacion = document.getElementById('ubicacion').value.trim();
+        const loteProveedor = document.getElementById('loteProveedor').value.trim();
+        const fechaRecepcion = document.getElementById('fechaRecepcion').value || hoyISO();
+        const fechaVencimiento = document.getElementById('fechaVencimiento').value;
+        const responsableIngreso = document.getElementById('responsableIngreso').value.trim();
+        const estado = document.getElementById('estadoReactivo').value || 'ACTIVO';
+
+        if (!codigoInterno || !nombreComercial || !unidad || isNaN(stockInicial) || isNaN(stockMinimo) || !ubicacion || !responsableIngreso) {
+            alert('Por favor, complete todos los campos obligatorios (*).');
+            return;
+        }
+
+        if (reactivos.some(r => (r.codigoInterno || '').toLowerCase() === codigoInterno.toLowerCase())) {
+            const seguir = confirm('Ya existe un reactivo con este código interno. ¿Desea igualmente crear otro registro con el mismo código?');
+            if (!seguir) return;
+        }
+
+        const sdsInput = document.getElementById('sdsFile');
+        const specInput = document.getElementById('specFile');
+        const sdsFileObj = await readFileAsDataUrl(sdsInput.files[0]);
+        const specFileObj = await readFileAsDataUrl(specInput.files[0]);
+
+        const now = new Date().toISOString();
+        const id = getNextId(reactivos);
+
+        const nuevoReactivo = {
+            id: id,
+            codigoInterno,
+            nombreComercial,
+            nombreQuimico,
+            cas,
+            proveedor,
+            pureza,
+            unidad,
+            stockInicial: stockInicial,
+            stockActual: stockInicial,
+            stockMinimo: stockMinimo,
+            ubicacion,
+            loteProveedor,
+            fechaRecepcion,
+            fechaVencimiento,
+            responsableIngreso,
+            estado,
+            createdAt: now,
+            updatedAt: now,
+            sdsFile: sdsFileObj,
+            specFile: specFileObj
+        };
+
+        reactivos.push(nuevoReactivo);
+        saveReactivos();
+
+        // Generar movimiento de ingreso inicial (audit trail)
+        if (stockInicial > 0) {
+            const mov = {
+                id: getNextId(movimientos),
+                idReactivo: nuevoReactivo.id,
+                codigoReactivo: nuevoReactivo.codigoInterno,
+                nombreReactivo: nuevoReactivo.nombreComercial,
+                tipo: 'INGRESO',
+                cantidad: stockInicial,
+                unidad: unidad,
+                fechaMovimiento: fechaRecepcion,
+                createdAt: now,
+                responsable: responsableIngreso,
+                documento: 'Stock inicial al crear reactivo',
+                nota: 'Ingreso inicial de stock al crear el reactivo en el sistema.',
+                stockAntes: 0,
+                stockDespues: stockInicial
+            };
+            movimientos.push(mov);
+            saveMovimientos();
+        }
+
+        formReactivo.reset();
+        renderReactivos();
+        renderDashboard();
+        renderMovimientos();
+        renderAuditoria();
+
+        alert('Reactivo registrado correctamente. Se generó el ingreso inicial en el historial de movimientos.');
+    });
+
+    document.getElementById('btn-clear-search').addEventListener('click', function () {
+        document.getElementById('busqueda-reactivos').value = '';
+        renderReactivos();
+    });
+
+    document.getElementById('busqueda-reactivos').addEventListener('input', renderReactivos);
+
+    // -------- Manejo de formularios: Movimientos --------
+    const formMovimiento = document.getElementById('form-movimiento');
+
+    formMovimiento.addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const idReactivo = parseInt(document.getElementById('mov-reactivo').value || '0', 10);
+        const tipo = document.getElementById('mov-tipo').value;
+        const cantidad = parseFloat(document.getElementById('mov-cantidad').value || '0');
+        const fechaMovimiento = document.getElementById('mov-fecha').value || hoyISO();
+        const responsable = document.getElementById('mov-responsable').value.trim();
+        const documento = document.getElementById('mov-documento').value.trim();
+        const nota = document.getElementById('mov-nota').value.trim();
+
+        if (!idReactivo || !tipo || isNaN(cantidad) || cantidad <= 0 || !responsable || !nota) {
+            alert('Por favor, complete todos los campos obligatorios del movimiento.');
+            return;
+        }
+
+        const r = reactivos.find(x => x.id === idReactivo);
+        if (!r) {
+            alert('Reactivo no encontrado.');
+            return;
+        }
+
+        const stockAntes = Number(r.stockActual || 0);
+        let delta = 0;
+
+        if (tipo === 'INGRESO' || tipo === 'AJUSTE_POS') {
+            delta = cantidad;
+        } else if (tipo === 'CONSUMO' || tipo === 'AJUSTE_NEG' || tipo === 'BAJA') {
+            delta = -cantidad;
+        }
+
+        const stockDespues = stockAntes + delta;
+        if (stockDespues < 0) {
+            const confirmar = confirm('La operación dejaría el stock en negativo. ¿Desea continuar igualmente?');
+            if (!confirmar) return;
+        }
+
+        r.stockActual = stockDespues;
+        r.updatedAt = new Date().toISOString();
+        saveReactivos();
+
+        const mov = {
+            id: getNextId(movimientos),
+            idReactivo: r.id,
+            codigoReactivo: r.codigoInterno,
+            nombreReactivo: r.nombreComercial,
+            tipo,
+            cantidad,
+            unidad: r.unidad,
+            fechaMovimiento,
+            createdAt: new Date().toISOString(),
+            responsable,
+            documento,
+            nota,
+            stockAntes,
+            stockDespues
+        };
+
+        movimientos.push(mov);
+        saveMovimientos();
+
+        formMovimiento.reset();
+        document.getElementById('mov-fecha').value = hoyISO();
+
+        renderMovimientos();
+        renderDashboard();
+        renderAuditoria();
+
+        alert('Movimiento registrado correctamente.');
+    });
+
+    document.getElementById('btn-clear-search-mov').addEventListener('click', function () {
+        document.getElementById('busqueda-movimientos').value = '';
+        renderMovimientos();
+    });
+
+    document.getElementById('busqueda-movimientos').addEventListener('input', renderMovimientos);
+
+    function renderMovimientos() {
+        const tbody = document.getElementById('tabla-movimientos-body');
+        const filtro = (document.getElementById('busqueda-movimientos').value || '').toLowerCase().trim();
+
+        tbody.innerHTML = '';
+        let list = movimientos.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        if (filtro) {
+            list = list.filter(m => {
+                return (m.codigoReactivo || '').toLowerCase().includes(filtro) ||
+                    (m.nombreReactivo || '').toLowerCase().includes(filtro) ||
+                    (m.tipo || '').toLowerCase().includes(filtro) ||
+                    (m.responsable || '').toLowerCase().includes(filtro) ||
+                    (m.documento || '').toLowerCase().includes(filtro);
+            });
+        }
+
+        if (!list.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 7;
+            td.className = 'muted';
+            td.textContent = 'Sin movimientos registrados.';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        list.forEach(m => {
+            const tr = document.createElement('tr');
+
+            const tdF = document.createElement('td');
+            tdF.textContent = fechaHoraLegible(m.createdAt || '');
+            tr.appendChild(tdF);
+
+            const tdR = document.createElement('td');
+            tdR.textContent = `${m.codigoReactivo || '-'} – ${m.nombreReactivo || '-'}`;
+            tr.appendChild(tdR);
+
+            const tdT = document.createElement('td');
+            tdT.textContent = m.tipo || '-';
+            tr.appendChild(tdT);
+
+            const tdC = document.createElement('td');
+            tdC.textContent = `${m.cantidad} ${m.unidad || ''}`;
+            tr.appendChild(tdC);
+
+            const tdS = document.createElement('td');
+            tdS.textContent = `${m.stockAntes} → ${m.stockDespues}`;
+            tr.appendChild(tdS);
+
+            const tdResp = document.createElement('td');
+            tdResp.textContent = m.responsable || '-';
+            tr.appendChild(tdResp);
+
+            const tdDoc = document.createElement('td');
+            tdDoc.textContent = m.documento || '-';
+            tr.appendChild(tdDoc);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // -------- Auditoría --------
+    function renderAuditoria() {
+        aplicarFiltrosAuditoria();
+    }
+
+    function aplicarFiltrosAuditoria() {
+        const idReactivo = document.getElementById('audit-reactivo').value;
+        const tipo = document.getElementById('audit-tipo').value;
+        const desde = document.getElementById('audit-desde').value;
+        const hasta = document.getElementById('audit-hasta').value;
+
+        const tbody = document.getElementById('tabla-audit-body');
+        tbody.innerHTML = '';
+
+        let list = movimientos.slice().sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+        if (idReactivo) {
+            const idN = parseInt(idReactivo, 10);
+            list = list.filter(m => m.idReactivo === idN);
+        }
+        if (tipo) {
+            list = list.filter(m => m.tipo === tipo);
+        }
+        if (desde) {
+            list = list.filter(m => (m.fechaMovimiento || '') >= desde);
+        }
+        if (hasta) {
+            list = list.filter(m => (m.fechaMovimiento || '') <= hasta);
+        }
+
+        if (!list.length) {
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.colSpan = 6;
+            td.className = 'muted';
+            td.textContent = 'No hay movimientos que coincidan con los filtros seleccionados.';
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+            return;
+        }
+
+        list.forEach(m => {
+            const tr = document.createElement('tr');
+
+            const tdF = document.createElement('td');
+            tdF.textContent = fechaLegible(m.fechaMovimiento || '');
+            tr.appendChild(tdF);
+
+            const tdR = document.createElement('td');
+            tdR.textContent = `${m.codigoReactivo || '-'} – ${m.nombreReactivo || '-'}`;
+            tr.appendChild(tdR);
+
+            const tdT = document.createElement('td');
+            tdT.textContent = m.tipo || '-';
+            tr.appendChild(tdT);
+
+            const tdC = document.createElement('td');
+            tdC.textContent = `${m.cantidad} ${m.unidad || ''}`;
+            tr.appendChild(tdC);
+
+            const tdResp = document.createElement('td');
+            tdResp.textContent = m.responsable || '-';
+            tr.appendChild(tdResp);
+
+            const tdNota = document.createElement('td');
+            tdNota.textContent = m.nota || '-';
+            tr.appendChild(tdNota);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('btn-audit-aplicar').addEventListener('click', aplicarFiltrosAuditoria);
+    document.getElementById('btn-audit-limpiar').addEventListener('click', function () {
+        document.getElementById('audit-reactivo').value = '';
+        document.getElementById('audit-tipo').value = '';
+        document.getElementById('audit-desde').value = '';
+        document.getElementById('audit-hasta').value = '';
+        aplicarFiltrosAuditoria();
+    });
+
+    // -------- Exportación y limpieza total --------
+    document.getElementById('btn-exportar').addEventListener('click', function () {
+        const payload = {
+            exportadoEn: new Date().toISOString(),
+            reactivos: reactivos,
+            movimientos: movimientos
+        };
+        document.getElementById('export-area').textContent = JSON.stringify(payload, null, 2);
+    });
+
+    document.getElementById('btn-limpiar-export').addEventListener('click', function () {
+        document.getElementById('export-area').textContent = '// Presione “Generar JSON de respaldo” para ver el contenido actual de reactivos y movimientos.';
+    });
+
+    document.getElementById('btn-wipe-all-test').addEventListener('click', function () {
+        if (!confirm('Esta acción eliminará TODOS los reactivos y movimientos almacenados en este navegador. ¿Confirmar limpieza total (TEST)?')) {
+            return;
+        }
+        localStorage.removeItem(LS_REAGENTS_KEY);
+        localStorage.removeItem(LS_MOVEMENTS_KEY);
+        reactivos = [];
+        movimientos = [];
+        renderReactivos();
+        renderMovimientos();
+        renderDashboard();
+        renderAuditoria();
+        document.getElementById('export-area').textContent = '// Datos eliminados. No hay información que exportar.';
+        alert('Todos los datos fueron eliminados de este navegador (modo test).');
+    });
+
+    // -------- Inicialización --------
+    function init() {
+        loadData();
+
+        const ahora = new Date();
+        document.getElementById('header-date').textContent =
+            ahora.toLocaleString('es-CL', {
+                weekday: 'long',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+
+        if (document.getElementById('fechaRecepcion').value === '') {
+            document.getElementById('fechaRecepcion').value = hoyISO();
+        }
+        document.getElementById('mov-fecha').value = hoyISO();
+
+        renderReactivos();
+        renderMovimientos();
+        renderDashboard();
+        renderAuditoria();
+    }
+
+    init();
+})();
+</script>
+</body>
+</html>
+```

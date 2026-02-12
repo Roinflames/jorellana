@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BioCannaPharma – Bitácora de Laboratorio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        :root {
+            --bcp-green: #16a34a;
+            --bcp-green-soft: #dcfce7;
+            --bcp-purple: #7c3aed;
+            --bcp-blue: #2563eb;
+
+            --bg-main: #f4f5fb;
+            --bg-card: #ffffff;
+            --bg-soft: #e5e7f0;
+
+            --border-soft: #d1d5db;
+            --border-strong: #9ca3af;
+
+            --text-main: #111827;
+            --text-soft: #6b7280;
+
+            --shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e0f2fe 0, var(--bg-main) 40%, var(--bg-main) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        header {
+            background: linear-gradient(90deg, #0f766e, var(--bcp-blue), var(--bcp-purple));
+            color: #f9fafb;
+            box-shadow: 0 10px 25px rgba(15,23,42,0.4);
+        }
+
+        .header-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.9rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 16px;
+            background: radial-gradient(circle at 25% 20%, #bbf7d0, #22c55e);
+            border: 2px solid rgba(248,250,252,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+            letter-spacing: 0.05em;
+        }
+
+        .brand-text h1 {
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .brand-text p {
+            font-size: 0.78rem;
+            opacity: 0.9;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 0.78rem;
+        }
+
+        .header-meta-main {
+            font-weight: 600;
+        }
+
+        .header-meta-sub {
+            opacity: 0.9;
+        }
+
+        /* MAIN */
+        main {
+            max-width: 1200px;
+            margin: 1.5rem auto 2rem;
+            padding: 0 1.25rem 2rem;
+            flex: 1;
+        }
+
+        /* KPIs */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .kpi-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 640px) {
+            .kpi-row {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #ffffff, #f9fafb);
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            padding: 0.6rem 0.8rem;
+            box-shadow: var(--shadow-soft);
+            font-size: 0.8rem;
+        }
+
+        .kpi-label {
+            color: var(--text-soft);
+            font-size: 0.72rem;
+        }
+
+        .kpi-value {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-top: 0.1rem;
+        }
+
+        .kpi-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+            padding: 0.08rem 0.45rem;
+            border-radius: 999px;
+            border: 1px solid rgba(59,130,246,0.3);
+            font-size: 0.68rem;
+            color: var(--text-soft);
+            background: rgba(59,130,246,0.06);
+        }
+
+        .kpi-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            background: var(--bcp-green);
+        }
+
+        /* GRID PRINCIPAL */
+        .grid-main {
+            display: grid;
+            grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.9fr);
+            gap: 1rem;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-main {
+                grid-template-columns: minmax(0,1fr);
+            }
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 14px;
+            border: 1px solid var(--border-soft);
+            box-shadow: var(--shadow-soft);
+            padding: 1rem 1rem 1.15rem;
+        }
+
+        .card-header {
+            margin-bottom: 0.7rem;
+        }
+
+        .card-title {
+            font-size: 0.96rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .card-bar {
+            width: 6px;
+            height: 18px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--bcp-green), #22c55e);
+        }
+
+        .card-subtitle {
+            font-size: 0.78rem;
+            color: var(--text-soft);
+            margin-top: 0.15rem;
+        }
+
+        .badge {
+            font-size: 0.68rem;
+            border-radius: 999px;
+            padding: 0.08rem 0.45rem;
+            border: 1px solid rgba(22,163,74,0.6);
+            color: var(--bcp-green);
+            background: rgba(22,163,74,0.06);
+        }
+
+        /* FORM */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0,1fr));
+            gap: 0.6rem 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        .form-full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            display: block;
+            font-size: 0.76rem;
+            font-weight: 500;
+            margin-bottom: 0.15rem;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        input[type="time"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 0.42rem 0.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-soft);
+            background: #ffffff;
+            font-size: 0.8rem;
+            color: var(--text-main);
+            outline: none;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--bcp-blue);
+            box-shadow: 0 0 0 1px rgba(37,99,235,0.4);
+            transform: translateY(-0.5px);
+        }
+
+        textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        .hint {
+            font-size: 0.7rem;
+            color: var(--text-soft);
+            margin-top: 0.2rem;
+        }
+
+        .btn-row {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.6rem;
+            margin-top: 0.8rem;
+        }
+
+        button {
+            border-radius: 999px;
+            border: none;
+            padding: 0.4rem 0.95rem;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            white-space: nowrap;
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease,
+                        border-color 0.1s ease, color 0.1s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--bcp-green), #22c55e);
+            color: #f9fafb;
+            box-shadow: 0 8px 20px rgba(22,163,74,0.5);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(22,163,74,0.6);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--border-soft);
+            color: var(--text-soft);
+        }
+        .btn-secondary:hover {
+            background: rgba(148,163,184,0.12);
+        }
+
+        .btn-danger {
+            background: transparent;
+            border: 1px solid #ef4444;
+            color: #b91c1c;
+        }
+        .btn-danger:hover {
+            background: rgba(248,113,113,0.12);
+        }
+
+        /* LISTA / FILTROS */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            margin-bottom: 0.7rem;
+        }
+
+        .filter-item {
+            flex: 1;
+            min-width: 160px;
+        }
+
+        .filter-label {
+            font-size: 0.72rem;
+            color: var(--text-soft);
+            margin-bottom: 0.18rem;
+        }
+
+        .list-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.78rem;
+            color: var(--text-soft);
+        }
+
+        .entries {
+            max-height: 520px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.6rem;
+            padding-right: 0.2rem;
+        }
+
+        .entry {
+            border-radius: 12px;
+            border: 1px solid var(--border-soft);
+            background: radial-gradient(circle at top right,
+                        rgba(37,99,235,0.08),
+                        transparent 60%),
+                        var(--bg-card);
+            box-shadow: 0 8px 20px rgba(15,23,42,0.15);
+            padding: 0.7rem 0.85rem;
+            font-size: 0.8rem;
+        }
+
+        .entry-top {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.6rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .entry-title {
+            font-weight: 600;
+        }
+
+        .entry-meta {
+            font-size: 0.72rem;
+            color: var(--text-soft);
+        }
+
+        .entry-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin: 0.25rem 0 0.35rem;
+        }
+
+        .tag {
+            font-size: 0.68rem;
+            padding: 0.08rem 0.5rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-strong);
+        }
+
+        .tag-area {
+            border-color: rgba(52,211,153,0.9);
+            color: var(--bcp-green);
+            background: rgba(22,163,74,0.06);
+        }
+
+        .tag-tipo {
+            border-color: rgba(129,140,248,0.9);
+            color: #4f46e5;
+            background: rgba(129,140,248,0.06);
+        }
+
+        .tag-lote {
+            border-color: rgba(56,189,248,0.9);
+            color: #0369a1;
+            background: rgba(56,189,248,0.06);
+        }
+
+        .tag-hash {
+            font-style: italic;
+        }
+
+        .entry-body {
+            margin-top: 0.1rem;
+        }
+
+        .entry-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0.45rem;
+            gap: 0.5rem;
+        }
+
+        .pill {
+            font-size: 0.68rem;
+            border-radius: 999px;
+            padding: 0.06rem 0.5rem;
+            border: 1px solid var(--border-strong);
+        }
+
+        .pill-important {
+            border-color: #ef4444;
+            color: #b91c1c;
+            background: rgba(254,202,202,0.25);
+        }
+
+        .empty {
+            border-radius: 10px;
+            border: 1px dashed var(--border-soft);
+            padding: 1rem 0.75rem;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-soft);
+        }
+
+        /* FOOTER */
+        footer {
+            border-top: 1px solid var(--border-soft);
+            background: rgba(248,250,252,0.85);
+            font-size: 0.72rem;
+            color: var(--text-soft);
+            padding: 0.8rem 1.25rem 1rem;
+        }
+
+        .footer-inner {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            gap: 0.7rem;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+
+<body>
+<div class="app">
+    <header>
+        <div class="header-inner">
+            <div class="brand">
+                <div class="brand-logo">BCP</div>
+                <div class="brand-text">
+                    <h1>Bitácora de Laboratorio · BioCannaPharma</h1>
+                    <p>ERP interno para registrar actividades, hitos e incidencias auditables.</p>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="header-meta-main" id="headerFecha">—</div>
+                <div class="header-meta-sub" id="headerHora">—</div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- KPIs -->
+        <section class="kpi-row">
+            <article class="kpi-card">
+                <div class="kpi-label">Registros totales</div>
+                <div class="kpi-value" id="kpiTotal">0</div>
+                <div class="kpi-chip">
+                    <span class="kpi-dot"></span>Bitácora general
+                </div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Registros de hoy</div>
+                <div class="kpi-value" id="kpiHoy">0</div>
+                <div class="kpi-chip">
+                    <span class="kpi-dot"></span>Actividad diaria
+                </div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Registros últimos 7 días</div>
+                <div class="kpi-value" id="kpiSemana">0</div>
+                <div class="kpi-chip">
+                    <span class="kpi-dot"></span>Seguimiento semanal
+                </div>
+            </article>
+            <article class="kpi-card">
+                <div class="kpi-label">Hitos marcados</div>
+                <div class="kpi-value" id="kpiHitos">0</div>
+                <div class="kpi-chip">
+                    <span class="kpi-dot"></span>Eventos relevantes
+                </div>
+            </article>
+        </section>
+
+        <section class="grid-main">
+            <!-- FORMULARIO -->
+            <section class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-bar"></span>
+                        Nuevo registro en bitácora
+                        <span class="badge">Uso interno · BCP</span>
+                    </div>
+                    <div class="card-subtitle">
+                        Registre de forma estructurada las actividades e incidencias del laboratorio.
+                    </div>
+                </div>
+
+                <form id="formBitacora">
+                    <div class="form-grid">
+                        <div>
+                            <label for="fecha">Fecha</label>
+                            <input type="date" id="fecha" name="fecha" required>
+                        </div>
+
+                        <div>
+                            <label for="hora">Hora</label>
+                            <input type="time" id="hora" name="hora" required>
+                        </div>
+
+                        <div>
+                            <label for="responsable">Responsable / quien registra</label>
+                            <input type="text" id="responsable" name="responsable"
+                                   placeholder="Ej.: Responsable de laboratorio" required>
+                        </div>
+
+                        <div>
+                            <label for="area">Área</label>
+                            <select id="area" name="area" required>
+                                <option value="">Seleccione área…</option>
+                                <option value="Extracción">Extracción</option>
+                                <option value="Formulación / Envasado">Formulación / Envasado</option>
+                                <option value="Control de Calidad">Control de Calidad</option>
+                                <option value="Mantención / Equipos">Mantención / Equipos</option>
+                                <option value="Logística / Bodega">Logística / Bodega</option>
+                                <option value="Administrativo">Administrativo</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="tipo">Tipo de registro</label>
+                            <select id="tipo" name="tipo" required>
+                                <option value="">Seleccione tipo…</option>
+                                <option value="Actividad">Actividad rutinaria</option>
+                                <option value="Hito">Hito relevante</option>
+                                <option value="Incidencia">Incidencia / desvío</option>
+                                <option value="Entrega / Recepción">Entrega / recepción</option>
+                                <option value="Mantención">Mantención / calibración</option>
+                                <option value="Reunión / Visita">Reunión / visita</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label for="importante">Marcar como hito / relevante</label>
+                            <select id="importante" name="importante">
+                                <option value="no">No</option>
+                                <option value="si">Sí</option>
+                            </select>
+                        </div>
+
+                        <div class="form-full">
+                            <label for="resumen">Resumen breve</label>
+                            <input type="text" id="resumen" name="resumen"
+                                   placeholder="Ej.: Recepción de equipos críticos y rellenado de gas"
+                                   required>
+                        </div>
+
+                        <div class="form-full">
+                            <label for="detalle">Detalle / descripción</label>
+                            <textarea id="detalle" name="detalle"
+                                      placeholder="Describa brevemente lo realizado, áreas/lotes involucrados, resultados preliminares, incidencias, acuerdos, etc."
+                                      required></textarea>
+                            <div class="hint">
+                                Ejemplo: Se recibieron equipos para extracción, se verificó integridad, se registraron en el sistema y se rellenó gas sin incidentes.
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="lotes">Lotes / equipos asociados (opcional)</label>
+                            <input type="text" id="lotes" name="lotes"
+                                   placeholder="Ej.: Lote MP-2025-001, EQ-EXT-01">
+                        </div>
+
+                        <div>
+                            <label for="tags">Etiquetas (opcional)</label>
+                            <input type="text" id="tags" name="tags"
+                                   placeholder="Ej.: recepción, equipos, gas, insumos">
+                            <div class="hint">Separe con coma ( , ) · Mejora la búsqueda posterior.</div>
+                        </div>
+                    </div>
+
+                    <div class="btn-row">
+                        <button type="button" class="btn-secondary" id="btnLimpiarForm">Limpiar formulario</button>
+                        <button type="submit" class="btn-primary">Registrar en bitácora</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- LISTADO -->
+            <section class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <span class="card-bar"></span>
+                        Registros de bitácora
+                    </div>
+                    <div class="card-subtitle">
+                        Listado ordenado por fecha de registro (los más recientes primero).
+                    </div>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-item">
+                        <div class="filter-label">Área</div>
+                        <select id="filtroArea">
+                            <option value="">Todas</option>
+                            <option value="Extracción">Extracción</option>
+                            <option value="Formulación / Envasado">Formulación / Envasado</option>
+                            <option value="Control de Calidad">Control de Calidad</option>
+                            <option value="Mantención / Equipos">Mantención / Equipos</option>
+                            <option value="Logística / Bodega">Logística / Bodega</option>
+                            <option value="Administrativo">Administrativo</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <div class="filter-label">Tipo de registro</div>
+                        <select id="filtroTipo">
+                            <option value="">Todos</option>
+                            <option value="Actividad">Actividad rutinaria</option>
+                            <option value="Hito">Hito relevante</option>
+                            <option value="Incidencia">Incidencia / desvío</option>
+                            <option value="Entrega / Recepción">Entrega / recepción</option>
+                            <option value="Mantención">Mantención / calibración</option>
+                            <option value="Reunión / Visita">Reunión / visita</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-item">
+                        <div class="filter-label">Texto libre</div>
+                        <input type="text" id="filtroTexto" placeholder="Buscar en resumen, detalle, etiquetas, lotes…">
+                    </div>
+
+                    <div class="filter-item" style="max-width: 160px;">
+                        <div class="filter-label">&nbsp;</div>
+                        <button type="button" class="btn-secondary" id="btnLimpiarFiltros">
+                            Limpiar filtros
+                        </button>
+                    </div>
+                </div>
+
+                <div class="list-header">
+                    <div>
+                        Registros almacenados: <strong id="lblTotal">0</strong> · Mostrando: <strong id="lblMostrando">0</strong>
+                    </div>
+                    <div>
+                        <button type="button" class="btn-danger" id="btnBorrarTodo">
+                            Borrar toda la bitácora (local)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="entries" id="listaRegistros">
+                    <div class="empty" id="estadoVacio">
+                        Aún no hay registros en la bitácora. Use el formulario para crear el primero.
+                    </div>
+                </div>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <div>© <span id="footerYear"></span> BioCannaPharma (BCP). Bitácora interna de laboratorio.</div>
+            <div>Datos guardados en este navegador (localStorage). No reemplaza el sistema documental oficial.</div>
+        </div>
+    </footer>
+</div>
+
+<script>
+(function() {
+    "use strict";
+
+    // --------- CONSTANTES ---------
+    const STORAGE_KEY = "BCP_BITACORA_V1";
+
+    // --------- ELEMENTOS DOM ---------
+    const headerFecha  = document.getElementById("headerFecha");
+    const headerHora   = document.getElementById("headerHora");
+    const footerYear   = document.getElementById("footerYear");
+
+    const kpiTotal   = document.getElementById("kpiTotal");
+    const kpiHoy     = document.getElementById("kpiHoy");
+    const kpiSemana  = document.getElementById("kpiSemana");
+    const kpiHitos   = document.getElementById("kpiHitos");
+
+    const form       = document.getElementById("formBitacora");
+    const fechaInput = document.getElementById("fecha");
+    const horaInput  = document.getElementById("hora");
+
+    const filtroArea   = document.getElementById("filtroArea");
+    const filtroTipo   = document.getElementById("filtroTipo");
+    const filtroTexto  = document.getElementById("filtroTexto");
+
+    const btnLimpiarForm   = document.getElementById("btnLimpiarForm");
+    const btnLimpiarFiltros= document.getElementById("btnLimpiarFiltros");
+    const btnBorrarTodo    = document.getElementById("btnBorrarTodo");
+
+    const lblTotal     = document.getElementById("lblTotal");
+    const lblMostrando = document.getElementById("lblMostrando");
+
+    const listaRegistros = document.getElementById("listaRegistros");
+    const estadoVacio    = document.getElementById("estadoVacio");
+
+    // --------- UTILIDADES FECHA/HORA ---------
+    function actualizarCabecera() {
+        const ahora = new Date();
+        const fecha = ahora.toLocaleDateString("es-CL", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+        const hora = ahora.toLocaleTimeString("es-CL", {
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+        });
+        const mayus = fecha.charAt(0).toUpperCase() + fecha.slice(1);
+
+        headerFecha.textContent = mayus;
+        headerHora.textContent  = "Hora del sistema: " + hora;
+        footerYear.textContent  = ahora.getFullYear();
+    }
+
+    function initFechaHoraFormulario() {
+        const ahora = new Date();
+        // Fecha actual
+        fechaInput.valueAsDate = ahora;
+
+        // Hora actual (hh:mm)
+        const hh = String(ahora.getHours()).padStart(2,"0");
+        const mm = String(ahora.getMinutes()).padStart(2,"0");
+        horaInput.value = hh + ":" + mm;
+    }
+
+    // --------- LOCALSTORAGE ---------
+    function cargarRegistros() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return [];
+            const arr = JSON.parse(raw);
+            if (!Array.isArray(arr)) return [];
+            return arr;
+        } catch (e) {
+            console.error("Error al cargar registros:", e);
+            return [];
+        }
+    }
+
+    function guardarRegistros(registros) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(registros));
+    }
+
+    // --------- MODELO DE DATOS ---------
+    function crearRegistroDesdeForm() {
+        const data = new FormData(form);
+
+        const fecha       = data.get("fecha");
+        const hora        = data.get("hora");
+        const responsable = (data.get("responsable") || "").trim();
+        const area        = data.get("area") || "";
+        const tipo        = data.get("tipo") || "";
+        const importante  = (data.get("importante") === "si");
+        const resumen     = (data.get("resumen") || "").trim();
+        const detalle     = (data.get("detalle") || "").trim();
+        const lotes       = (data.get("lotes") || "").trim();
+        const tags        = (data.get("tags") || "").trim();
+
+        const timestamp   = Date.now();
+
+        return {
+            id: "BCP_" + timestamp + "_" + Math.random().toString(16).slice(2),
+            fecha,
+            hora,
+            responsable,
+            area,
+            tipo,
+            importante,
+            resumen,
+            detalle,
+            lotes,
+            tags,
+            creadoEn: timestamp
+        };
+    }
+
+    // --------- FILTROS ---------
+    function aplicarFiltros(registros) {
+        const area = filtroArea.value;
+        const tipo = filtroTipo.value;
+        const texto = filtroTexto.value.trim().toLowerCase();
+
+        return registros.filter(r => {
+            if (area && r.area !== area) return false;
+            if (tipo && r.tipo !== tipo) return false;
+
+            if (texto) {
+                const combinado = [
+                    r.resumen,
+                    r.detalle,
+                    r.lotes,
+                    r.tags,
+                    r.responsable,
+                    r.area,
+                    r.tipo,
+                    r.id
+                ].join(" ").toLowerCase();
+                if (!combinado.includes(texto)) return false;
+            }
+            return true;
+        });
+    }
+
+    // --------- KPIs ---------
+    function actualizarKPIs(registros) {
+        const total = registros.length;
+        kpiTotal.textContent = String(total);
+
+        const hoy = new Date();
+        const hoyStr = hoy.toISOString().slice(0,10);
+
+        const hace7 = new Date(hoy);
+        hace7.setDate(hoy.getDate() - 6); // rango: hoy y 6 días hacia atrás
+        const inicioSemana = new Date(hace7.toISOString().slice(0,10));
+
+        let countHoy = 0;
+        let countSemana = 0;
+        let countHitos = 0;
+
+        registros.forEach(r => {
+            if (r.fecha === hoyStr) countHoy++;
+
+            if (r.fecha) {
+                const fechaReg = new Date(r.fecha + "T00:00:00");
+                if (fechaReg >= inicioSemana && fechaReg <= hoy) {
+                    countSemana++;
+                }
+            }
+
+            if (r.importante) countHitos++;
+        });
+
+        kpiHoy.textContent    = String(countHoy);
+        kpiSemana.textContent = String(countSemana);
+        kpiHitos.textContent  = String(countHitos);
+    }
+
+    // --------- RENDER ---------
+    function renderRegistros() {
+        const registros = cargarRegistros()
+            .slice()
+            .sort((a,b) => b.creadoEn - a.creadoEn); // más nuevos primero
+
+        lblTotal.textContent = String(registros.length);
+        actualizarKPIs(registros);
+
+        const filtrados = aplicarFiltros(registros);
+        lblMostrando.textContent = String(filtrados.length);
+
+        listaRegistros.innerHTML = "";
+        if (filtrados.length === 0) {
+            listaRegistros.appendChild(estadoVacio);
+            estadoVacio.style.display = "block";
+            return;
+        } else {
+            estadoVacio.style.display = "none";
+        }
+
+        filtrados.forEach(r => {
+            const entry = document.createElement("article");
+            entry.className = "entry";
+            entry.dataset.id = r.id;
+
+            // Top
+            const top = document.createElement("div");
+            top.className = "entry-top";
+
+            const left = document.createElement("div");
+            const title = document.createElement("div");
+            title.className = "entry-title";
+            title.textContent = r.resumen || "(Sin resumen)";
+
+            const meta = document.createElement("div");
+            meta.className = "entry-meta";
+            meta.textContent = `${r.fecha || "—"} · ${r.hora || "—"} · ${r.responsable || ""}`;
+
+            left.appendChild(title);
+            left.appendChild(meta);
+
+            const right = document.createElement("div");
+            right.className = "entry-meta";
+            const creado = new Date(r.creadoEn);
+            right.textContent = "Creado: " + creado.toLocaleString("es-CL");
+
+            top.appendChild(left);
+            top.appendChild(right);
+
+            entry.appendChild(top);
+
+            // Tags
+            const tagsDiv = document.createElement("div");
+            tagsDiv.className = "entry-tags";
+
+            const tagArea = document.createElement("span");
+            tagArea.className = "tag tag-area";
+            tagArea.textContent = r.area || "Sin área";
+            tagsDiv.appendChild(tagArea);
+
+            const tagTipo = document.createElement("span");
+            tagTipo.className = "tag tag-tipo";
+            tagTipo.textContent = r.tipo || "Sin tipo";
+            tagsDiv.appendChild(tagTipo);
+
+            if (r.lotes) {
+                const tagLote = document.createElement("span");
+                tagLote.className = "tag tag-lote";
+                tagLote.textContent = "Lotes/equipos: " + r.lotes;
+                tagsDiv.appendChild(tagLote);
+            }
+
+            if (r.tags) {
+                const arrTags = r.tags.split(",").map(t => t.trim()).filter(Boolean);
+                arrTags.forEach(t => {
+                    const tag = document.createElement("span");
+                    tag.className = "tag tag-hash";
+                    tag.textContent = "#" + t;
+                    tagsDiv.appendChild(tag);
+                });
+            }
+
+            entry.appendChild(tagsDiv);
+
+            // Cuerpo
+            const body = document.createElement("div");
+            body.className = "entry-body";
+            const p = document.createElement("p");
+            p.textContent = r.detalle || "";
+            body.appendChild(p);
+            entry.appendChild(body);
+
+            // Acciones + info extra
+            const actions = document.createElement("div");
+            actions.className = "entry-actions";
+
+            const leftInfo = document.createElement("div");
+            leftInfo.className = "entry-meta";
+            leftInfo.textContent = "ID registro: " + r.id;
+
+            const rightBtns = document.createElement("div");
+            rightBtns.style.display = "flex";
+            rightBtns.style.gap = "0.4rem";
+            rightBtns.style.alignItems = "center";
+
+            if (r.importante) {
+                const pill = document.createElement("span");
+                pill.className = "pill pill-important";
+                pill.textContent = "Hito / importante";
+                rightBtns.appendChild(pill);
+            }
+
+            const btnEliminar = document.createElement("button");
+            btnEliminar.type = "button";
+            btnEliminar.className = "btn-secondary";
+            btnEliminar.textContent = "Eliminar";
+            btnEliminar.addEventListener("click", () => {
+                const ok = confirm("¿Eliminar este registro de la bitácora? Esta acción no se puede deshacer.");
+                if (!ok) return;
+                eliminarRegistro(r.id);
+            });
+
+            rightBtns.appendChild(btnEliminar);
+
+            actions.appendChild(leftInfo);
+            actions.appendChild(rightBtns);
+            entry.appendChild(actions);
+
+            listaRegistros.appendChild(entry);
+        });
+    }
+
+    // --------- CRUD ---------
+    function agregarRegistro(registro) {
+        const registros = cargarRegistros();
+        registros.push(registro);
+        guardarRegistros(registros);
+        renderRegistros();
+    }
+
+    function eliminarRegistro(id) {
+        const registros = cargarRegistros();
+        const nuevos = registros.filter(r => r.id !== id);
+        guardarRegistros(nuevos);
+        renderRegistros();
+    }
+
+    function borrarTodo() {
+        const ok = confirm("Esto borrará TODOS los registros de la bitácora en este navegador. ¿Desea continuar?");
+        if (!ok) return;
+        localStorage.removeItem(STORAGE_KEY);
+        renderRegistros();
+    }
+
+    // --------- EVENTOS ---------
+    form.addEventListener("submit", function(ev) {
+        ev.preventDefault();
+        const registro = crearRegistroDesdeForm();
+        agregarRegistro(registro);
+        form.reset();
+        initFechaHoraFormulario();
+    });
+
+    btnLimpiarForm.addEventListener("click", function() {
+        const ok = confirm("¿Limpiar el formulario? Los datos no guardados se perderán.");
+        if (!ok) return;
+        form.reset();
+        initFechaHoraFormulario();
+    });
+
+    btnLimpiarFiltros.addEventListener("click", function() {
+        filtroArea.value  = "";
+        filtroTipo.value  = "";
+        filtroTexto.value = "";
+        renderRegistros();
+    });
+
+    filtroArea.addEventListener("change", renderRegistros);
+    filtroTipo.addEventListener("change", renderRegistros);
+    filtroTexto.addEventListener("input", renderRegistros);
+
+    btnBorrarTodo.addEventListener("click", borrarTodo);
+
+    // --------- INICIALIZACIÓN ---------
+    function init() {
+        actualizarCabecera();
+        initFechaHoraFormulario();
+        renderRegistros();
+        setInterval(actualizarCabecera, 1000);
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>

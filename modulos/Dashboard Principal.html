@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioCannaPhrama - Sistema de Gestión Integrado ERP</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --bcp-purple-dark: #5A2CA0;
+            --bcp-purple-medium: #7B4BC4;
+            --bcp-purple-light: #9B6DD4;
+            --bcp-green-dark: #2D5F3F;
+            --bcp-green-medium: #3DB54A;
+            --bcp-green-light: #E8F5E9;
+            --bcp-gold: #D4AF37;
+            --bcp-amber: #F59E0B;
+            --bcp-blue: #3B82F6;
+            --bcp-red: #EF4444;
+        }
+        
+        * { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            min-height: 100vh;
+        }
+        
+        /* Animaciones */
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(20px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes slideInLeft { 
+            from { transform: translateX(-30px); opacity: 0; } 
+            to { transform: translateX(0); opacity: 1; } 
+        }
+        @keyframes pulse { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.02); } 
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes countUp {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .slide-in-left { animation: slideInLeft 0.4s ease-out forwards; }
+        .float-animation { animation: float 3s ease-in-out infinite; }
+        
+        /* Header */
+        .header-gradient {
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-purple-medium) 50%, var(--bcp-green-medium) 100%);
+            background-size: 200% 200%;
+            animation: gradientMove 8s ease infinite;
+        }
+        
+        /* Cards de módulos */
+        .module-card {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--bcp-purple-dark), var(--bcp-green-medium));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+        
+        .module-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(90, 44, 160, 0.2);
+            border-color: var(--bcp-purple-light);
+        }
+        
+        .module-card:active {
+            transform: translateY(-4px) scale(0.98);
+        }
+        
+        .module-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
+            transition: transform 0.3s ease;
+        }
+        
+        .module-card:hover .module-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+        
+        /* Categorías de colores */
+        .cat-produccion { background: linear-gradient(135deg, #7C3AED 0%, #A78BFA 100%); }
+        .cat-inventario { background: linear-gradient(135deg, #3DB54A 0%, #6EE7B7 100%); }
+        .cat-adquisiciones { background: linear-gradient(135deg, #F59E0B 0%, #FCD34D 100%); }
+        .cat-operaciones { background: linear-gradient(135deg, #3B82F6 0%, #93C5FD 100%); }
+        .cat-ambiente { background: linear-gradient(135deg, #10B981 0%, #6EE7B7 100%); }
+        .cat-laboratorio { background: linear-gradient(135deg, #EC4899 0%, #F9A8D4 100%); }
+        
+        /* Stats cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            opacity: 0.1;
+            transform: translate(20px, -20px);
+        }
+        
+        .stat-purple::after { background: var(--bcp-purple-dark); }
+        .stat-green::after { background: var(--bcp-green-medium); }
+        .stat-gold::after { background: var(--bcp-gold); }
+        .stat-blue::after { background: var(--bcp-blue); }
+        
+        /* Sidebar */
+        .sidebar {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+        }
+        
+        /* Quick action buttons */
+        .quick-action {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .quick-action:hover {
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-green-medium) 100%);
+            color: white;
+            transform: translateX(8px);
+            box-shadow: 0 8px 20px rgba(90, 44, 160, 0.3);
+        }
+        
+        .quick-action:hover .qa-icon {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .qa-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-purple-medium) 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        /* Toast notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+        
+        .toast {
+            background: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            margin-bottom: 10px;
+            animation: slideInLeft 0.3s ease-out;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-left: 4px solid var(--bcp-green-medium);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--bcp-purple-medium); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--bcp-purple-dark); }
+        
+        /* Category headers */
+        .category-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        
+        .category-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: white;
+        }
+        
+        /* Charts container */
+        .chart-container {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        /* Status indicators */
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        
+        .status-active { background: #10B981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+        .status-warning { background: #F59E0B; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        .status-error { background: #EF4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+        
+        /* Module badge count */
+        .module-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: var(--bcp-red);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        /* Footer wave */
+        .footer-wave {
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-green-medium) 100%);
+        }
+        
+        /* Responsive grid */
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        /* User avatar */
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--bcp-purple-dark), var(--bcp-green-medium));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        /* Search box */
+        .search-box {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 12px 20px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .search-box:focus {
+            outline: none;
+            background: rgba(255,255,255,0.25);
+            border-color: rgba(255,255,255,0.4);
+        }
+        
+        /* Activity timeline */
+        .activity-item {
+            display: flex;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+        
+        .activity-item:hover {
+            background: #f8fafc;
+            margin: 0 -16px;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        
+        .activity-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        /* Logo styling */
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-img {
+            height: 55px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.2));
+            transition: transform 0.3s ease;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.05);
+        }
+
+        /* Clock */
+        .digital-clock {
+            font-family: 'Inter', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.95);
+            background: rgba(0,0,0,0.2);
+            padding: 8px 16px;
+            border-radius: 10px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Header -->
+    <header class="header-gradient text-white shadow-2xl">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo y título -->
+                <div class="logo-container">
+                    <img src="BCP3.png" alt="BioCannaPhrama Logo" class="logo-img" onerror="this.style.display='none'">
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">BioCannaPhrama</h1>
+                        <p class="text-sm opacity-80">Sistema de Gestión Integrado ERP v2.0</p>
+                    </div>
+                </div>
+                
+                <!-- Búsqueda -->
+                <div class="hidden md:flex items-center flex-1 max-w-md mx-8">
+                    <div class="relative w-full">
+                        <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-white opacity-60">🔍</span>
+                        <input type="text" id="searchModules" placeholder="Buscar módulos..." 
+                               class="search-box w-full pl-12 pr-4" onkeyup="filterModules(this.value)">
+                    </div>
+                </div>
+                
+                <!-- Info y usuario -->
+                <div class="flex items-center gap-6">
+                    <div class="digital-clock" id="digitalClock">--:--:--</div>
+                    <div class="hidden md:flex items-center gap-3 bg-white/10 rounded-xl px-4 py-2">
+                        <div class="text-right">
+                            <p class="text-sm font-semibold">Administrador</p>
+                            <p class="text-xs opacity-75">BCP Chile</p>
+                        </div>
+                        <div class="user-avatar">AD</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sub-header con stats rápidas -->
+        <div class="bg-black/10 py-3">
+            <div class="container mx-auto px-6">
+                <div class="flex items-center justify-between text-sm">
+                    <div class="flex items-center gap-8">
+                        <span class="flex items-center gap-2">
+                            <span class="status-dot status-active"></span>
+                            Sistema Operativo
+                        </span>
+                        <span class="opacity-80">📅 <span id="currentDate">--</span></span>
+                        <span class="opacity-80">🏭 Laboratorio Principal</span>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-medium">
+                            🔔 <span id="pendingAlerts">0</span> alertas
+                        </span>
+                        <span class="bg-white/20 px-3 py-1 rounded-full text-xs font-medium">
+                            📊 <span id="totalRecords">0</span> registros
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            
+            <!-- Main Content Area (3 cols) -->
+            <div class="lg:col-span-3 space-y-8">
+                
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 fade-in">
+                    <div class="stat-card stat-purple">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-2xl">📦</span>
+                            <span class="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded">HOY</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statRecepciones">0</h3>
+                        <p class="text-sm text-gray-500 mt-1">Recepciones MP</p>
+                        <div class="mt-3 flex items-center text-xs text-green-600">
+                            <span>↑ 12%</span>
+                            <span class="text-gray-400 ml-2">vs ayer</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-green">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-2xl">🧪</span>
+                            <span class="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded">ACTIVOS</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statExtractos">0</h3>
+                        <p class="text-sm text-gray-500 mt-1">Lotes en Proceso</p>
+                        <div class="mt-3 flex items-center text-xs text-blue-600">
+                            <span>→ En curso</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-gold">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-2xl">🛒</span>
+                            <span class="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded">PENDIENTES</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statSolicitudes">0</h3>
+                        <p class="text-sm text-gray-500 mt-1">Solicitudes</p>
+                        <div class="mt-3 flex items-center text-xs text-amber-600">
+                            <span>⏳ Por aprobar</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card stat-blue">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-2xl">⚙️</span>
+                            <span class="text-xs font-medium text-gray-400 bg-gray-100 px-2 py-1 rounded">TOTAL</span>
+                        </div>
+                        <h3 class="text-3xl font-bold text-gray-800" id="statEquipos">0</h3>
+                        <p class="text-sm text-gray-500 mt-1">Equipos Activos</p>
+                        <div class="mt-3 flex items-center text-xs text-green-600">
+                            <span>✓ Operativos</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Producción -->
+                <section class="fade-in" style="animation-delay: 0.1s">
+                    <div class="category-header">
+                        <span class="category-badge cat-produccion">🏭 PRODUCCIÓN</span>
+                        <span class="text-gray-400 text-sm">Control y seguimiento de procesos productivos</span>
+                    </div>
+                    <div class="modules-grid">
+                        <div class="module-card" onclick="navigateTo('ControlExtractos.html', 'Control de Extractos')">
+                            <div class="module-icon cat-produccion text-white">🧪</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Control de Extractos</h3>
+                            <p class="text-sm text-gray-500 mb-4">Gestión de procesos RSO y BHO, fracciones y rendimientos</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-purple-600 font-medium bg-purple-50 px-3 py-1 rounded-full">
+                                    <span id="extractosCount">0</span> lotes activos
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección: Inventario -->
+                <section class="fade-in" style="animation-delay: 0.2s">
+                    <div class="category-header">
+                        <span class="category-badge cat-inventario">📦 INVENTARIO</span>
+                        <span class="text-gray-400 text-sm">Control de materiales, insumos y reactivos</span>
+                    </div>
+                    <div class="modules-grid">
+                        <div class="module-card" onclick="navigateTo('Recepcion Flores.html', 'Recepción de Materia Prima')">
+                            <div class="module-icon cat-inventario text-white">🌿</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Recepción Materia Prima</h3>
+                            <p class="text-sm text-gray-500 mb-4">Registro y trazabilidad de cannabis recibido</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full">
+                                    <span id="mpCount">0</span> recepciones
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="module-card" onclick="navigateTo('Insumos.html', 'Gestión de Insumos')">
+                            <div class="module-icon cat-inventario text-white">📋</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Gestión de Insumos</h3>
+                            <p class="text-sm text-gray-500 mb-4">Control de stock de insumos y materiales</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-green-600 font-medium bg-green-50 px-3 py-1 rounded-full">
+                                    <span id="insumosCount">0</span> items
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="module-card" onclick="navigateTo('Reactivos.html', 'Gestión de Reactivos')">
+                            <div class="module-icon cat-laboratorio text-white">⚗️</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Reactivos Químicos</h3>
+                            <p class="text-sm text-gray-500 mb-4">Control de reactivos y sustancias de laboratorio</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-pink-600 font-medium bg-pink-50 px-3 py-1 rounded-full">
+                                    <span id="reactivosCount">0</span> reactivos
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección: Adquisiciones -->
+                <section class="fade-in" style="animation-delay: 0.3s">
+                    <div class="category-header">
+                        <span class="category-badge cat-adquisiciones">🛒 ADQUISICIONES</span>
+                        <span class="text-gray-400 text-sm">Compras, proveedores y solicitudes</span>
+                    </div>
+                    <div class="modules-grid">
+                        <div class="module-card" onclick="navigateTo('Compras.html', 'Sistema de Compras')">
+                            <div class="module-icon cat-adquisiciones text-white">🛍️</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Sistema de Compras</h3>
+                            <p class="text-sm text-gray-500 mb-4">Gestión de órdenes de compra y seguimiento</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full">
+                                    <span id="comprasCount">0</span> órdenes
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="module-card" onclick="navigateTo('Proveedores.html', 'Gestión de Proveedores')">
+                            <div class="module-icon cat-adquisiciones text-white">🏢</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Proveedores</h3>
+                            <p class="text-sm text-gray-500 mb-4">Registro y evaluación de proveedores</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full">
+                                    <span id="proveedoresCount">0</span> proveedores
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="module-card" onclick="navigateTo('Solicitudes.html', 'Solicitudes de Compra')">
+                            <span class="module-badge" id="solicitudesBadge" style="display:none">0</span>
+                            <div class="module-icon cat-adquisiciones text-white">📝</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Solicitudes</h3>
+                            <p class="text-sm text-gray-500 mb-4">Gestión de solicitudes y aprobaciones</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-amber-600 font-medium bg-amber-50 px-3 py-1 rounded-full">
+                                    <span id="solicitudesCount">0</span> solicitudes
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección: Operaciones -->
+                <section class="fade-in" style="animation-delay: 0.4s">
+                    <div class="category-header">
+                        <span class="category-badge cat-operaciones">⚙️ OPERACIONES</span>
+                        <span class="text-gray-400 text-sm">Equipos, mantenimiento y control operacional</span>
+                    </div>
+                    <div class="modules-grid">
+                        <div class="module-card" onclick="navigateTo('Equipos.html', 'Gestión de Equipos')">
+                            <div class="module-icon cat-operaciones text-white">🔧</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Equipos y Mantenimiento</h3>
+                            <p class="text-sm text-gray-500 mb-4">Control de equipos, calibraciones y mantenimientos</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full">
+                                    <span id="equiposCount">0</span> equipos
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="module-card" onclick="navigateTo('Aseo.html', 'Control de Aseo')">
+                            <div class="module-icon cat-operaciones text-white">🧹</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Control de Aseo</h3>
+                            <p class="text-sm text-gray-500 mb-4">Registros de limpieza y sanitización</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full">
+                                    <span id="aseoCount">0</span> registros
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                        
+                        <div class="module-card" onclick="navigateTo('Bitacora.html', 'Bitácora de Laboratorio')">
+                            <div class="module-icon cat-operaciones text-white">📔</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Bitácora</h3>
+                            <p class="text-sm text-gray-500 mb-4">Registro de actividades y eventos del laboratorio</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full">
+                                    <span id="bitacoraCount">0</span> entradas
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Sección: Medio Ambiente -->
+                <section class="fade-in" style="animation-delay: 0.5s">
+                    <div class="category-header">
+                        <span class="category-badge cat-ambiente">♻️ MEDIO AMBIENTE</span>
+                        <span class="text-gray-400 text-sm">Gestión ambiental y residuos</span>
+                    </div>
+                    <div class="modules-grid">
+                        <div class="module-card" onclick="navigateTo('Gestion Residuos.html', 'Gestión de Residuos')">
+                            <div class="module-icon cat-ambiente text-white">🗑️</div>
+                            <h3 class="text-lg font-bold text-gray-800 mb-2">Gestión de Residuos</h3>
+                            <p class="text-sm text-gray-500 mb-4">Control de residuos peligrosos y no peligrosos</p>
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs text-emerald-600 font-medium bg-emerald-50 px-3 py-1 rounded-full">
+                                    <span id="residuosCount">0</span> registros
+                                </span>
+                                <span class="text-gray-400 text-lg">→</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+            
+            <!-- Sidebar (1 col) -->
+            <div class="lg:col-span-1 space-y-6">
+                
+                <!-- Acciones Rápidas -->
+                <div class="sidebar p-6 fade-in">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        ⚡ Acciones Rápidas
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="quick-action" onclick="navigateTo('Recepcion Flores.html', 'Nueva Recepción')">
+                            <div class="qa-icon">📥</div>
+                            <div>
+                                <p class="font-semibold text-sm">Nueva Recepción MP</p>
+                                <p class="text-xs text-gray-400">Registrar ingreso</p>
+                            </div>
+                        </div>
+                        <div class="quick-action" onclick="navigateTo('ControlExtractos.html', 'Nuevo Extracto')">
+                            <div class="qa-icon">🧪</div>
+                            <div>
+                                <p class="font-semibold text-sm">Nuevo Lote Extracto</p>
+                                <p class="text-xs text-gray-400">Iniciar proceso</p>
+                            </div>
+                        </div>
+                        <div class="quick-action" onclick="navigateTo('Solicitudes.html', 'Nueva Solicitud')">
+                            <div class="qa-icon">📝</div>
+                            <div>
+                                <p class="font-semibold text-sm">Nueva Solicitud</p>
+                                <p class="text-xs text-gray-400">Crear pedido</p>
+                            </div>
+                        </div>
+                        <div class="quick-action" onclick="navigateTo('Bitacora.html', 'Nueva Entrada')">
+                            <div class="qa-icon">📔</div>
+                            <div>
+                                <p class="font-semibold text-sm">Entrada Bitácora</p>
+                                <p class="text-xs text-gray-400">Registrar evento</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actividad Reciente -->
+                <div class="sidebar p-6 fade-in" style="animation-delay: 0.2s">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        📊 Actividad Reciente
+                    </h3>
+                    <div id="activityList" class="space-y-2">
+                        <!-- Se llena dinámicamente -->
+                        <p class="text-gray-400 text-sm text-center py-4">Cargando actividad...</p>
+                    </div>
+                </div>
+                
+                <!-- Gráfico Circular -->
+                <div class="sidebar p-6 fade-in" style="animation-delay: 0.3s">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        📈 Distribución de Módulos
+                    </h3>
+                    <div class="chart-container">
+                        <canvas id="moduleChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Info Sistema -->
+                <div class="sidebar p-6 fade-in" style="animation-delay: 0.4s">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        ℹ️ Sistema
+                    </h3>
+                    <div class="space-y-3 text-sm">
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-500">Versión</span>
+                            <span class="font-medium text-gray-700">2.0.0</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-500">Módulos</span>
+                            <span class="font-medium text-gray-700">11 activos</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2 border-b border-gray-100">
+                            <span class="text-gray-500">Almacenamiento</span>
+                            <span class="font-medium text-gray-700" id="storageUsed">Calculando...</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-gray-500">Estado</span>
+                            <span class="flex items-center gap-2 font-medium text-green-600">
+                                <span class="status-dot status-active"></span>
+                                Operativo
+                            </span>
+                        </div>
+                    </div>
+                    <button onclick="showSystemInfo()" class="w-full mt-4 py-2 px-4 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-all">
+                        Ver detalles del sistema
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer-wave text-white py-8 mt-12">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-4">
+                    <img src="BCP3.png" alt="BCP" class="h-10 opacity-90" onerror="this.style.display='none'">
+                    <div>
+                        <p class="font-semibold">BioCannaPhrama Chile</p>
+                        <p class="text-sm opacity-75">Laboratorio Farmacéutico de Cannabis</p>
+                    </div>
+                </div>
+                <div class="text-center md:text-right text-sm opacity-75">
+                    <p>Sistema de Gestión Integrado ERP © 2024-2025</p>
+                    <p>Cumplimiento BPM • ISO 9001 • D.S. 594, 148, 43, 108</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal de Información del Sistema -->
+    <div id="systemModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="bg-gradient-to-r from-purple-600 to-green-500 p-6 rounded-t-2xl">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-white">Información del Sistema</h2>
+                    <button onclick="closeSystemModal()" class="text-white/80 hover:text-white text-2xl">&times;</button>
+                </div>
+            </div>
+            <div class="p-6 space-y-6" id="systemModalContent">
+                <!-- Contenido dinámico -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURACIÓN DE MÓDULOS
+        // ============================================
+        const MODULES_CONFIG = {
+            'ControlExtractos.html': {
+                name: 'Control de Extractos',
+                icon: '🧪',
+                storageKey: 'bcp_extractos_lotes',
+                countField: 'extractosCount'
+            },
+            'Recepcion Flores.html': {
+                name: 'Recepción MP',
+                icon: '🌿',
+                storageKey: 'bcp_recepciones_mp',
+                countField: 'mpCount'
+            },
+            'Gestion Residuos.html': {
+                name: 'Gestión de Residuos',
+                icon: '🗑️',
+                storageKey: 'bcp_residuos',
+                countField: 'residuosCount'
+            },
+            'Compras.html': {
+                name: 'Sistema de Compras',
+                icon: '🛍️',
+                storageKey: 'bcp_compras',
+                countField: 'comprasCount'
+            },
+            'Insumos.html': {
+                name: 'Gestión de Insumos',
+                icon: '📋',
+                storageKey: 'bcp_insumos',
+                countField: 'insumosCount'
+            },
+            'Aseo.html': {
+                name: 'Control de Aseo',
+                icon: '🧹',
+                storageKey: 'bcp_aseo_registros',
+                countField: 'aseoCount'
+            },
+            'Bitacora.html': {
+                name: 'Bitácora',
+                icon: '📔',
+                storageKey: 'bcp_bitacora',
+                countField: 'bitacoraCount'
+            },
+            'Equipos.html': {
+                name: 'Equipos',
+                icon: '🔧',
+                storageKey: 'bcp_equipos',
+                countField: 'equiposCount'
+            },
+            'Proveedores.html': {
+                name: 'Proveedores',
+                icon: '🏢',
+                storageKey: 'bcp_proveedores',
+                countField: 'proveedoresCount'
+            },
+            'Reactivos.html': {
+                name: 'Reactivos',
+                icon: '⚗️',
+                storageKey: 'bcp_reactivos',
+                countField: 'reactivosCount'
+            },
+            'Solicitudes.html': {
+                name: 'Solicitudes',
+                icon: '📝',
+                storageKey: 'bcp_solicitudes',
+                countField: 'solicitudesCount'
+            }
+        };
+
+        // ============================================
+        // FUNCIONES DE NAVEGACIÓN
+        // ============================================
+        function navigateTo(url, moduleName) {
+            showToast(`Abriendo ${moduleName} en nueva pestaña...`, 'info');
+            
+            // Registrar navegación en actividad
+            logActivity(`Accedió al módulo: ${moduleName}`, 'navigation');
+            
+            // Abrir en nueva pestaña
+            window.open(url, '_blank');
+        }
+
+        // ============================================
+        // FUNCIONES DE DATOS
+        // ============================================
+        function getStorageData(key) {
+            try {
+                const data = localStorage.getItem(key);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error(`Error leyendo ${key}:`, e);
+                return [];
+            }
+        }
+
+        function countRecordsRaw(key) {
+            const data = getStorageData(key);
+            return Array.isArray(data) ? data.length : Object.keys(data).length;
+        }
+
+        function countSolicitudRecords() {
+            const modern = getStorageData('bcpOrdenesProduccionV3_4');
+            if (modern && Array.isArray(modern.ordenes)) return modern.ordenes.length;
+            return countRecordsRaw('bcp_solicitudes');
+        }
+
+        function countRecords(key) {
+            // Compatibilidad entre versiones de módulos (legacy vs actuales)
+            if (key === 'bcp_recepciones_mp') {
+                const legacy = countRecordsRaw('bcp_recepciones_mp');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('bcp_ingresos_v82');
+            }
+
+            if (key === 'bcp_extractos_lotes') {
+                const legacy = countRecordsRaw('bcp_extractos_lotes');
+                if (legacy > 0) return legacy;
+                return countRecordsRaw('bcp_salidas_v82');
+            }
+
+            if (key === 'bcp_solicitudes') {
+                return countSolicitudRecords();
+            }
+
+            return countRecordsRaw(key);
+        }
+
+        function loadAllCounts() {
+            let totalRecords = 0;
+            let pendingAlerts = 0;
+
+            // Cargar conteos de cada módulo
+            Object.entries(MODULES_CONFIG).forEach(([url, config]) => {
+                const count = countRecords(config.storageKey);
+                const element = document.getElementById(config.countField);
+                if (element) {
+                    element.textContent = count;
+                }
+                totalRecords += count;
+            });
+
+            // Estadísticas principales
+            const recepciones = countRecords('bcp_recepciones_mp');
+            const extractos = countRecords('bcp_extractos_lotes');
+            const solicitudes = countRecords('bcp_solicitudes');
+            const equipos = countRecords('bcp_equipos');
+
+            document.getElementById('statRecepciones').textContent = recepciones;
+            document.getElementById('statExtractos').textContent = extractos;
+            document.getElementById('statSolicitudes').textContent = solicitudes;
+            document.getElementById('statEquipos').textContent = equipos;
+            
+            document.getElementById('totalRecords').textContent = totalRecords;
+
+            // Verificar solicitudes pendientes para badge
+            let pending = 0;
+            const solicitudesModern = getStorageData('bcpOrdenesProduccionV3_4');
+            if (solicitudesModern && Array.isArray(solicitudesModern.ordenes)) {
+                pending = solicitudesModern.ordenes.filter(s => {
+                    const estado = (s.estado || '').toLowerCase();
+                    return estado === 'solicitada' || estado === 'pendiente';
+                }).length;
+            } else {
+                const solicitudesData = getStorageData('bcp_solicitudes');
+                if (Array.isArray(solicitudesData)) {
+                    pending = solicitudesData.filter(s => {
+                        const estado = (s.estado || '').toLowerCase();
+                        return estado === 'pendiente' || estado === 'solicitada';
+                    }).length;
+                }
+            }
+
+            const badge = document.getElementById('solicitudesBadge');
+            if (badge && pending > 0) {
+                badge.style.display = 'block';
+                badge.textContent = pending;
+                pendingAlerts += pending;
+            } else if (badge) {
+                badge.style.display = 'none';
+                badge.textContent = '0';
+            }
+
+            document.getElementById('pendingAlerts').textContent = pendingAlerts;
+
+            return { totalRecords, pendingAlerts };
+        }
+
+        function calculateStorageUsed() {
+            let totalSize = 0;
+            for (let key in localStorage) {
+                if (localStorage.hasOwnProperty(key)) {
+                    totalSize += localStorage[key].length * 2; // UTF-16
+                }
+            }
+            const sizeKB = (totalSize / 1024).toFixed(2);
+            const sizeMB = (totalSize / 1024 / 1024).toFixed(2);
+            
+            document.getElementById('storageUsed').textContent = 
+                sizeMB > 1 ? `${sizeMB} MB` : `${sizeKB} KB`;
+            
+            return { totalSize, sizeKB, sizeMB };
+        }
+
+        // ============================================
+        // ACTIVIDAD RECIENTE
+        // ============================================
+        function logActivity(message, type = 'info') {
+            const activities = getStorageData('bcp_dashboard_activity');
+            activities.unshift({
+                message,
+                type,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Mantener solo últimas 50 actividades
+            if (activities.length > 50) activities.pop();
+            
+            localStorage.setItem('bcp_dashboard_activity', JSON.stringify(activities));
+        }
+
+        function loadRecentActivity() {
+            const activities = getStorageData('bcp_dashboard_activity');
+            const container = document.getElementById('activityList');
+            
+            if (activities.length === 0) {
+                container.innerHTML = `
+                    <p class="text-gray-400 text-sm text-center py-4">
+                        No hay actividad reciente
+                    </p>
+                `;
+                return;
+            }
+
+            const recentActivities = activities.slice(0, 5);
+            container.innerHTML = recentActivities.map(activity => {
+                const date = new Date(activity.timestamp);
+                const timeStr = date.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+                const dateStr = date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short' });
+                
+                const iconMap = {
+                    'navigation': '🔗',
+                    'create': '➕',
+                    'update': '✏️',
+                    'delete': '🗑️',
+                    'info': 'ℹ️'
+                };
+                
+                const colorMap = {
+                    'navigation': 'bg-blue-100 text-blue-600',
+                    'create': 'bg-green-100 text-green-600',
+                    'update': 'bg-amber-100 text-amber-600',
+                    'delete': 'bg-red-100 text-red-600',
+                    'info': 'bg-gray-100 text-gray-600'
+                };
+
+                return `
+                    <div class="activity-item">
+                        <div class="activity-icon ${colorMap[activity.type] || colorMap.info}">
+                            ${iconMap[activity.type] || iconMap.info}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm text-gray-700 truncate">${activity.message}</p>
+                            <p class="text-xs text-gray-400">${dateStr} ${timeStr}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================
+        // GRÁFICO
+        // ============================================
+        function initChart() {
+            const ctx = document.getElementById('moduleChart').getContext('2d');
+            
+            const data = {
+                labels: ['Producción', 'Inventario', 'Adquisiciones', 'Operaciones', 'Ambiente'],
+                datasets: [{
+                    data: [
+                        countRecords('bcp_extractos_lotes'),
+                        countRecords('bcp_recepciones_mp') + countRecords('bcp_insumos') + countRecords('bcp_reactivos'),
+                        countRecords('bcp_compras') + countRecords('bcp_proveedores') + countRecords('bcp_solicitudes'),
+                        countRecords('bcp_equipos') + countRecords('bcp_aseo_registros') + countRecords('bcp_bitacora'),
+                        countRecords('bcp_residuos')
+                    ],
+                    backgroundColor: [
+                        '#7C3AED',
+                        '#3DB54A',
+                        '#F59E0B',
+                        '#3B82F6',
+                        '#10B981'
+                    ],
+                    borderWidth: 0
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    cutout: '65%'
+                }
+            });
+        }
+
+        // ============================================
+        // BÚSQUEDA DE MÓDULOS
+        // ============================================
+        function filterModules(searchTerm) {
+            const term = searchTerm.toLowerCase();
+            const cards = document.querySelectorAll('.module-card');
+            
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent.toLowerCase();
+                const description = card.querySelector('p').textContent.toLowerCase();
+                
+                if (title.includes(term) || description.includes(term)) {
+                    card.style.display = 'block';
+                    card.classList.add('fade-in');
+                } else {
+                    card.style.display = term ? 'none' : 'block';
+                }
+            });
+        }
+
+        // ============================================
+        // RELOJ Y FECHA
+        // ============================================
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('es-CL', { 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            document.getElementById('digitalClock').textContent = timeStr;
+        }
+
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = now.toLocaleDateString('es-CL', options);
+            document.getElementById('currentDate').textContent = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+        }
+
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const colors = {
+                success: 'border-green-500',
+                error: 'border-red-500',
+                info: 'border-blue-500',
+                warning: 'border-amber-500'
+            };
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️',
+                warning: '⚠️'
+            };
+
+            toast.className = `toast ${colors[type]}`;
+            toast.innerHTML = `
+                <span class="text-xl">${icons[type]}</span>
+                <span class="text-sm font-medium text-gray-700">${message}</span>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ============================================
+        // MODAL DE SISTEMA
+        // ============================================
+        function showSystemInfo() {
+            const modal = document.getElementById('systemModal');
+            const content = document.getElementById('systemModalContent');
+            
+            const storage = calculateStorageUsed();
+            const counts = loadAllCounts();
+            
+            // Obtener todas las claves de localStorage relacionadas con BCP
+            const bcpKeys = Object.keys(localStorage).filter(key => key.startsWith('bcp_'));
+            
+            content.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-gradient-to-r from-purple-50 to-green-50 rounded-xl p-4">
+                        <h3 class="font-bold text-gray-800 mb-3">📊 Estadísticas Generales</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <p class="text-2xl font-bold text-purple-600">${counts.totalRecords}</p>
+                                <p class="text-xs text-gray-500">Registros Totales</p>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <p class="text-2xl font-bold text-green-600">11</p>
+                                <p class="text-xs text-gray-500">Módulos Activos</p>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <p class="text-2xl font-bold text-amber-600">${storage.sizeKB} KB</p>
+                                <p class="text-xs text-gray-500">Almacenamiento Usado</p>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <p class="text-2xl font-bold text-blue-600">${bcpKeys.length}</p>
+                                <p class="text-xs text-gray-500">Claves de Datos</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-gray-800 mb-3">💾 Datos por Módulo</h3>
+                        <div class="space-y-2 max-h-60 overflow-y-auto">
+                            ${Object.entries(MODULES_CONFIG).map(([url, config]) => {
+                                const count = countRecords(config.storageKey);
+                                return `
+                                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-xl">${config.icon}</span>
+                                            <span class="text-sm font-medium text-gray-700">${config.name}</span>
+                                        </div>
+                                        <span class="text-sm font-bold text-gray-600">${count} registros</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h3 class="font-bold text-gray-800 mb-3">🔧 Acciones de Mantenimiento</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="exportAllData()" class="p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-sm font-medium text-blue-700 transition-all">
+                                📤 Exportar Datos
+                            </button>
+                            <button onclick="confirmClearActivity()" class="p-3 bg-amber-50 hover:bg-amber-100 rounded-lg text-sm font-medium text-amber-700 transition-all">
+                                🗑️ Limpiar Actividad
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="border-t pt-4">
+                        <h3 class="font-bold text-gray-800 mb-3">📋 Información de Compliance</h3>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <p>✅ <strong>BPM:</strong> Buenas Prácticas de Manufactura</p>
+                            <p>✅ <strong>ISO 9001:</strong> Sistema de Gestión de Calidad</p>
+                            <p>✅ <strong>D.S. 594:</strong> Condiciones Sanitarias y Ambientales</p>
+                            <p>✅ <strong>D.S. 148:</strong> Manejo de Residuos Peligrosos</p>
+                            <p>✅ <strong>D.S. 43:</strong> Sustancias Peligrosas</p>
+                            <p>✅ <strong>D.S. 108:</strong> Reglamento Cannabis</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeSystemModal() {
+            const modal = document.getElementById('systemModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function exportAllData() {
+            const exportData = {};
+            
+            Object.keys(localStorage).forEach(key => {
+                if (key.startsWith('bcp_')) {
+                    try {
+                        exportData[key] = JSON.parse(localStorage.getItem(key));
+                    } catch (e) {
+                        exportData[key] = localStorage.getItem(key);
+                    }
+                }
+            });
+            
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const date = new Date().toISOString().split('T')[0];
+            a.href = url;
+            a.download = `BCP_Export_${date}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showToast('Datos exportados correctamente', 'success');
+            logActivity('Exportación de datos realizada', 'info');
+        }
+
+        function confirmClearActivity() {
+            if (confirm('¿Está seguro de limpiar el historial de actividad?')) {
+                localStorage.setItem('bcp_dashboard_activity', '[]');
+                loadRecentActivity();
+                showToast('Historial de actividad limpiado', 'success');
+            }
+        }
+
+        // ============================================
+        // INICIALIZACIÓN
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            // Actualizar reloj cada segundo
+            updateClock();
+            setInterval(updateClock, 1000);
+            
+            // Actualizar fecha
+            updateDate();
+            
+            // Cargar conteos
+            loadAllCounts();
+            
+            // Calcular almacenamiento
+            calculateStorageUsed();
+            
+            // Cargar actividad reciente
+            loadRecentActivity();
+            
+            // Inicializar gráfico
+            initChart();
+            
+            // Registrar visita al dashboard
+            logActivity('Ingresó al Dashboard Principal', 'navigation');
+            
+            // Cerrar modal con Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeSystemModal();
+                }
+            });
+            
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('systemModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeSystemModal();
+                }
+            });
+            
+            console.log('%c🌿 BioCannaPhrama ERP v2.0', 'font-size: 20px; font-weight: bold; color: #5A2CA0;');
+            console.log('%cSistema de Gestión Integrado cargado correctamente', 'color: #3DB54A;');
+        });
+    </script>
+</body>
+</html>

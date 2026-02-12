@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BCP – ERP de Insumos Fungibles, Productos y Recetas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        :root {
+            --bcp-dark: #103b2a;
+            --bcp-main: #1b5e20;
+            --bcp-main-soft: #2e7d32;
+            --bcp-accent: #8e24aa;
+            --bcp-accent-soft: #ba68c8;
+            --bcp-warning: #f9a825;
+            --bcp-danger: #c62828;
+            --bcp-bg: #f4f6f9;
+            --bcp-card: #ffffff;
+            --bcp-text: #1f2933;
+            --bcp-muted: #6b7280;
+            --radius: 10px;
+            --shadow-soft: 0 4px 16px rgba(0,0,0,0.08);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: radial-gradient(circle at top left, #e8f5e9 0, #f4f6f9 40%, #f3e5f5 100%);
+            color: var(--bcp-text);
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(120deg, var(--bcp-dark), var(--bcp-main-soft));
+            color: #fff;
+            padding: 14px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #a5d6a7, #1b5e20);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.25);
+        }
+
+        .logo-circle span { color: #e8f5e9; }
+
+        .header-titles h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        .header-titles p {
+            margin: 0;
+            font-size: 12px;
+            opacity: 0.85;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+            opacity: 0.9;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .layout {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 230px minmax(0, 1fr);
+            gap: 16px;
+            padding: 16px 16px 24px;
+        }
+
+        aside {
+            background: rgba(255,255,255,0.95);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .nav-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--bcp-muted);
+            margin-bottom: 4px;
+        }
+
+        .nav-btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 9px 12px;
+            text-align: left;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            background: transparent;
+            color: var(--bcp-text);
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+        }
+
+        .nav-btn span.icon {
+            width: 20px;
+            text-align: center;
+            opacity: 0.9;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(120deg, var(--bcp-main-soft), var(--bcp-accent-soft));
+            color: #fff;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+
+        .nav-btn.active span.icon { opacity: 1; }
+
+        .nav-btn:hover:not(.active) {
+            background: #edf2ff;
+            transform: translateY(-1px);
+        }
+
+        .nav-footer {
+            margin-top: auto;
+            font-size: 11px;
+            color: var(--bcp-muted);
+            border-top: 1px dashed rgba(148,163,184,0.5);
+            padding-top: 8px;
+        }
+
+        main { min-width: 0; }
+        .view { display: none; }
+        .view.active { display: block; }
+
+        .view-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            gap: 8px;
+        }
+
+        .view-header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--bcp-dark);
+        }
+
+        .view-header small {
+            font-size: 12px;
+            color: var(--bcp-muted);
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.8);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+        }
+
+        .pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        .card {
+            background: var(--bcp-card);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-soft);
+            padding: 12px 14px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .card-subtitle {
+            font-size: 11px;
+            color: var(--bcp-muted);
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: var(--bcp-muted);
+        }
+
+        .stat-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(76, 175, 80, 0.12);
+            color: var(--bcp-main);
+        }
+
+        .stat-badge.warn {
+            background: rgba(249, 168, 37, 0.12);
+            color: var(--bcp-warning);
+        }
+
+        .flex { display: flex; gap: 10px; }
+        .flex-col { display: flex; flex-direction: column; gap: 8px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px 10px;
+        }
+
+        label {
+            font-size: 11px;
+            color: var(--bcp-muted);
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 7px 8px;
+            border-radius: 7px;
+            border: 1px solid #cbd5e1;
+            font-size: 12px;
+            outline: none;
+            background: #f9fafb;
+            transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--bcp-main-soft);
+            background: #fff;
+            box-shadow: 0 0 0 1px rgba(27,94,32,0.18);
+        }
+
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 8px 14px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.15s, transform 0.1s, box-shadow 0.15s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, var(--bcp-main-soft), var(--bcp-accent));
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.18);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.22);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--bcp-text);
+        }
+
+        .btn-ghost:hover {
+            background: rgba(148,163,184,0.12);
+        }
+
+        .btn-danger {
+            background: linear-gradient(120deg, #b71c1c, #e53935);
+            color: #fff;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        .btn-small { padding: 4px 8px; font-size: 11px; }
+
+        .search-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+            align-items: center;
+        }
+
+        .search-row input { flex: 1; }
+
+        .table-wrapper {
+            margin-top: 6px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        thead { background: linear-gradient(120deg, #e8f5e9, #f3e5f5); }
+
+        th, td {
+            padding: 6px 8px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--bcp-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 10px;
+            white-space: nowrap;
+        }
+
+        tbody tr:nth-child(even) { background: #f9fafb; }
+        tbody tr:hover { background: #eef2ff; }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .tag-ok { background: rgba(22,163,74,0.1); color: #15803d; }
+        .tag-low { background: rgba(249,115,22,0.1); color: #ea580c; }
+        .tag-inactive { background: rgba(148,163,184,0.12); color: #475569; }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .status-dot.orange { background: #f97316; }
+
+        .muted { color: var(--bcp-muted); font-size: 11px; }
+
+        .badge-chip {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            background: #e0f2fe;
+            color: #0369a1;
+        }
+
+        .badge-chip.audit {
+            background: #ede9fe;
+            color: #5b21b6;
+        }
+
+        .chips-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .mono {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        pre.export-area {
+            font-size: 11px;
+            max-height: 250px;
+            overflow: auto;
+            background: #0f172a;
+            color: #e5e7eb;
+            padding: 8px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        footer {
+            font-size: 11px;
+            text-align: center;
+            color: var(--bcp-muted);
+            padding: 6px 12px 10px;
+        }
+
+        @media (max-width: 880px) {
+            .layout { grid-template-columns: 1fr; }
+            aside {
+                order: -1;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 8px;
+            }
+            .nav-btn { white-space: nowrap; }
+            .nav-footer { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <header>
+        <div class="header-left">
+            <div class="logo-circle"><span>BCP</span></div>
+            <div class="header-titles">
+                <h1>BioCannaPharma – ERP Packaging y Recetas</h1>
+                <p>Gestión de insumos fungibles, productos y relación producto–insumos</p>
+            </div>
+        </div>
+        <div class="header-right">
+            <div id="header-date"></div>
+            <div>Datos guardados localmente en este navegador</div>
+            <button id="btn-reset-erp" class="btn btn-danger btn-small">
+                🧨 Limpieza maestra ERP (TEST)
+            </button>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside>
+            <div class="nav-title">Módulos</div>
+            <button class="nav-btn active" data-view="insumos">
+                <span class="icon">📦</span><span>Insumos fungibles</span>
+            </button>
+            <button class="nav-btn" data-view="productos">
+                <span class="icon">🧴</span><span>Productos</span>
+            </button>
+            <button class="nav-btn" data-view="recetas">
+                <span class="icon">🧬</span><span>Relación producto–insumos</span>
+            </button>
+            <button class="nav-btn" data-view="produccion">
+                <span class="icon">⚙️</span><span>Producción / Consumo</span>
+            </button>
+            <button class="nav-btn" data-view="auditoria">
+                <span class="icon">🧾</span><span>Auditoría / Exportación</span>
+            </button>
+
+            <div class="nav-footer">
+                <div><strong>BCP – BioCannaPharma</strong></div>
+                <div>Relación auditable de insumos y productos.</div>
+            </div>
+        </aside>
+
+        <main>
+
+            <!-- INSUMOS -->
+            <section id="insumos" class="view active">
+                <div class="view-header">
+                    <div>
+                        <h2>Insumos fungibles y packaging</h2>
+                        <small>Envases, tapas, etiquetas, cajas, bolsas y otros fungibles.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip">Control de stock</span>
+                        <span class="badge-chip audit">Trazabilidad de movimientos</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Nuevo insumo</div>
+                                <div class="card-subtitle">Los campos marcados con * son obligatorios.</div>
+                            </div>
+                        </div>
+                        <form id="form-insumo" class="flex-col">
+                            <div class="form-grid">
+                                <div>
+                                    <label for="ins-codigo">Código interno BCP *</label>
+                                    <input type="text" id="ins-codigo" required placeholder="BCP-PACK-0001">
+                                </div>
+                                <div>
+                                    <label for="ins-nombre">Nombre del insumo *</label>
+                                    <input type="text" id="ins-nombre" required placeholder="Frasco vidrio 30 mL ámbar">
+                                </div>
+                                <div>
+                                    <label for="ins-tipo">Tipo *</label>
+                                    <select id="ins-tipo" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="ENVASE_PRIMARIO">Envase primario</option>
+                                        <option value="TAPA_DOSIFICADOR">Tapa / dosificador</option>
+                                        <option value="ETIQUETA">Etiqueta</option>
+                                        <option value="CAJA">Caja</option>
+                                        <option value="BOLSA">Bolsa</option>
+                                        <option value="OTRO">Otro fungible</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="ins-unidad">Unidad de stock *</label>
+                                    <select id="ins-unidad" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="unidades">unidades</option>
+                                        <option value="rollos">rollos</option>
+                                        <option value="m">m</option>
+                                        <option value="kg">kg</option>
+                                        <option value="g">g</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="ins-stock-inicial">Stock inicial *</label>
+                                    <input type="number" id="ins-stock-inicial" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="ins-stock-minimo">Stock mínimo *</label>
+                                    <input type="number" id="ins-stock-minimo" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="ins-ubicacion">Ubicación física *</label>
+                                    <input type="text" id="ins-ubicacion" required placeholder="Bodega / rack / estante">
+                                </div>
+                                <div>
+                                    <label for="ins-proveedor">Proveedor</label>
+                                    <input type="text" id="ins-proveedor" placeholder="Proveedor principal">
+                                </div>
+                                <div>
+                                    <label for="ins-estado">Estado</label>
+                                    <select id="ins-estado">
+                                        <option value="ACTIVO">ACTIVO</option>
+                                        <option value="INACTIVO">INACTIVO</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="ins-responsable">Responsable del ingreso *</label>
+                                    <input type="text" id="ins-responsable" required placeholder="Nombre de quien registra">
+                                </div>
+                            </div>
+                            <div class="flex" style="justify-content:flex-end;margin-top:4px;">
+                                <button type="reset" class="btn btn-ghost btn-small">Limpiar</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <span>Guardar insumo</span><span>💾</span>
+                                </button>
+                            </div>
+                            <div class="muted">
+                                Se genera automáticamente un movimiento de “Ingreso inicial” con el stock declarado.
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Listado de insumos</div>
+                                <div class="card-subtitle">Búsqueda rápida y estado de stock.</div>
+                            </div>
+                        </div>
+                        <div class="search-row">
+                            <input type="text" id="busqueda-insumos" placeholder="Buscar por código, nombre, tipo, proveedor o ubicación…">
+                            <button class="btn btn-ghost btn-small" id="btn-clear-search-ins">Limpiar</button>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Tipo</th>
+                                    <th>Stock</th>
+                                    <th>Stock mín.</th>
+                                    <th>Estado</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabla-insumos-body">
+                                <tr><td colspan="6" class="muted">Sin insumos registrados.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRODUCTOS -->
+            <section id="productos" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Productos</h2>
+                        <small>Definición de productos finales que utilizarán packaging.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip">Maestro de productos</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Nuevo producto</div>
+                                <div class="card-subtitle">Código, nombre y datos generales.</div>
+                            </div>
+                        </div>
+                        <form id="form-producto" class="flex-col">
+                            <div class="form-grid">
+                                <div>
+                                    <label for="prod-codigo">Código de producto *</label>
+                                    <input type="text" id="prod-codigo" required placeholder="BCP-PROD-0001">
+                                </div>
+                                <div>
+                                    <label for="prod-nombre">Nombre del producto *</label>
+                                    <input type="text" id="prod-nombre" required placeholder="Aceite CBD 30 mL">
+                                </div>
+                                <div>
+                                    <label for="prod-categoria">Categoría</label>
+                                    <input type="text" id="prod-categoria" placeholder="Aceites, gummies, extractos…">
+                                </div>
+                                <div>
+                                    <label for="prod-presentacion">Presentación / descripción</label>
+                                    <input type="text" id="prod-presentacion" placeholder="Frasco 30 mL con gotario">
+                                </div>
+                                <div>
+                                    <label for="prod-unidad">Unidad de producto *</label>
+                                    <select id="prod-unidad" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="unidades">unidades</option>
+                                        <option value="frasco">frasco</option>
+                                        <option value="caja">caja</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="prod-estado">Estado</label>
+                                    <select id="prod-estado">
+                                        <option value="ACTIVO">ACTIVO</option>
+                                        <option value="INACTIVO">INACTIVO</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="flex" style="justify-content:flex-end;margin-top:4px;">
+                                <button type="reset" class="btn btn-ghost btn-small">Limpiar</button>
+                                <button type="submit" class="btn btn-primary">
+                                    <span>Guardar producto</span><span>💾</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Listado de productos</div>
+                                <div class="card-subtitle">Cantidad de ítems de receta asociados.</div>
+                            </div>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Código</th>
+                                    <th>Nombre</th>
+                                    <th>Categoría</th>
+                                    <th>Unidad</th>
+                                    <th>Estado</th>
+                                    <th>Ítems receta</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabla-productos-body">
+                                <tr><td colspan="6" class="muted">Sin productos registrados.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RECETAS: MÓDULO INDEPENDIENTE -->
+            <section id="recetas" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Relación producto–insumos</h2>
+                        <small>Receta de packaging por producto. Módulo independiente.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip">Relación producto–insumos</span>
+                        <span class="badge-chip audit">Base para consumo automático</span>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Receta de packaging por producto</div>
+                            <div class="card-subtitle">Insumos consumidos por cada unidad de producto.</div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div>
+                            <label for="rec-prod">Producto *</label>
+                            <select id="rec-prod"></select>
+                        </div>
+                        <div>
+                            <label for="rec-insumo">Insumo *</label>
+                            <select id="rec-insumo"></select>
+                        </div>
+                        <div>
+                            <label for="rec-cantidad">Cantidad por unidad de producto *</label>
+                            <input type="number" id="rec-cantidad" step="0.0001" min="0" placeholder="Ej: 1 frasco por unidad">
+                        </div>
+                    </div>
+
+                    <div class="flex" style="justify-content:flex-end;margin-top:4px;">
+                        <button class="btn btn-ghost btn-small" id="btn-rec-limpiar">Limpiar</button>
+                        <button class="btn btn-primary btn-small" id="btn-rec-agregar">
+                            <span>Agregar / actualizar ítem</span><span>➕</span>
+                        </button>
+                    </div>
+
+                    <div class="table-wrapper" style="margin-top:8px;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>INSUMO</th>
+                                <th>TIPO</th>
+                                <th>CANTIDAD POR UNIDAD</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-recetas-body">
+                            <tr><td colspan="3" class="muted">Seleccione un producto para ver su receta.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="muted" style="margin-top:4px;">
+                        Esta receta se utilizará para calcular automáticamente el consumo de insumos al registrar producción.
+                    </div>
+                </div>
+            </section>
+
+            <!-- PRODUCCIÓN Y MOVIMIENTOS -->
+            <section id="produccion" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Producción y consumo automático</h2>
+                        <small>Genera consumo de insumos según la receta del producto.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip">Consumo automático</span>
+                        <span class="badge-chip audit">Movimientos no editables</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Registrar producción</div>
+                                <div class="card-subtitle">Consumo de insumos por producción.</div>
+                            </div>
+                        </div>
+                        <form id="form-produccion" class="flex-col">
+                            <div class="form-grid">
+                                <div>
+                                    <label for="prod-prod">Producto *</label>
+                                    <select id="prod-prod" required></select>
+                                </div>
+                                <div>
+                                    <label for="prod-unidades">Unidades producidas *</label>
+                                    <input type="number" id="prod-unidades" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="prod-fecha">Fecha de producción *</label>
+                                    <input type="date" id="prod-fecha" required>
+                                </div>
+                                <div>
+                                    <label for="prod-resp">Responsable *</label>
+                                    <input type="text" id="prod-resp" required>
+                                </div>
+                                <div>
+                                    <label for="prod-doc">Documento / lote</label>
+                                    <input type="text" id="prod-doc" placeholder="Orden de producción, lote, etc.">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="prod-nota">Nota / destino *</label>
+                                <textarea id="prod-nota" required placeholder="Ej: Producción lote BCP-PROD-0001-2025-01 para cliente X."></textarea>
+                            </div>
+                            <div class="flex" style="justify-content:flex-end;margin-top:4px;">
+                                <button type="reset" class="btn btn-ghost btn-small">Limpiar</button>
+                                <button type="submit" class="btn btn-primary btn-small">
+                                    <span>Registrar producción y consumo</span><span>⚙️</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Movimientos manuales de insumos</div>
+                                <div class="card-subtitle">Ingresos por compras, ajustes y bajas.</div>
+                            </div>
+                        </div>
+                        <form id="form-mov-manual" class="flex-col">
+                            <div class="form-grid">
+                                <div>
+                                    <label for="mov-insumo">Insumo *</label>
+                                    <select id="mov-insumo" required></select>
+                                </div>
+                                <div>
+                                    <label for="mov-tipo">Tipo de movimiento *</label>
+                                    <select id="mov-tipo" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="INGRESO">Ingreso (compra, ajuste +)</option>
+                                        <option value="CONSUMO">Consumo directo</option>
+                                        <option value="AJUSTE_POS">Ajuste (+) inventario</option>
+                                        <option value="AJUSTE_NEG">Ajuste (–) inventario</option>
+                                        <option value="BAJA">Baja (daño, vencimiento, descarte)</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="mov-cantidad">Cantidad *</label>
+                                    <input type="number" id="mov-cantidad" step="0.0001" min="0" required>
+                                </div>
+                                <div>
+                                    <label for="mov-fecha">Fecha de movimiento *</label>
+                                    <input type="date" id="mov-fecha" required>
+                                </div>
+                                <div>
+                                    <label for="mov-resp">Responsable *</label>
+                                    <input type="text" id="mov-resp" required>
+                                </div>
+                                <div>
+                                    <label for="mov-doc">Documento asociado</label>
+                                    <input type="text" id="mov-doc" placeholder="OC, factura, acta, etc.">
+                                </div>
+                            </div>
+                            <div>
+                                <label for="mov-nota">Motivo / nota de auditoría *</label>
+                                <textarea id="mov-nota" required></textarea>
+                            </div>
+                            <div class="flex" style="justify-content:flex-end;margin-top:4px;">
+                                <button type="reset" class="btn btn-ghost btn-small">Limpiar</button>
+                                <button type="submit" class="btn btn-primary btn-small">
+                                    <span>Registrar movimiento</span><span>✔️</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top:12px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Historial de movimientos</div>
+                            <div class="card-subtitle">Del más reciente al más antiguo.</div>
+                        </div>
+                    </div>
+                    <div class="search-row">
+                        <input type="text" id="busqueda-movs" placeholder="Filtrar por insumo, tipo, producto, responsable, documento…">
+                        <button class="btn btn-ghost btn-small" id="btn-clear-search-movs">Limpiar</button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Fecha/hora registro</th>
+                                <th>Insumo</th>
+                                <th>Tipo</th>
+                                <th>Cantidad</th>
+                                <th>Stock antes / después</th>
+                                <th>Origen</th>
+                                <th>Producto asociado</th>
+                                <th>Responsable</th>
+                            </tr>
+                            </thead>
+                            <tbody id="tabla-movs-body">
+                            <tr><td colspan="8" class="muted">Sin movimientos registrados.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AUDITORÍA -->
+            <section id="auditoria" class="view">
+                <div class="view-header">
+                    <div>
+                        <h2>Auditoría y exportación</h2>
+                        <small>Filtros de auditoría y respaldo JSON.</small>
+                    </div>
+                    <div class="chips-row">
+                        <span class="badge-chip audit">Datos locales (localStorage)</span>
+                    </div>
+                </div>
+
+                <div class="card-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Filtros de auditoría</div>
+                                <div class="card-subtitle">Movimientos por insumo, producto, tipo y fechas.</div>
+                            </div>
+                        </div>
+                        <div class="form-grid">
+                            <div>
+                                <label for="audit-insumo">Insumo</label>
+                                <select id="audit-insumo">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="audit-producto">Producto asociado</label>
+                                <select id="audit-producto">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="audit-tipo">Tipo de movimiento</label>
+                                <select id="audit-tipo">
+                                    <option value="">Todos</option>
+                                    <option value="INGRESO">Ingreso</option>
+                                    <option value="CONSUMO">Consumo</option>
+                                    <option value="AJUSTE_POS">Ajuste (+)</option>
+                                    <option value="AJUSTE_NEG">Ajuste (–)</option>
+                                    <option value="BAJA">Baja</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="audit-desde">Fecha desde</label>
+                                <input type="date" id="audit-desde">
+                            </div>
+                            <div>
+                                <label for="audit-hasta">Fecha hasta</label>
+                                <input type="date" id="audit-hasta">
+                            </div>
+                        </div>
+                        <div class="flex" style="margin-top:6px;justify-content:flex-end;">
+                            <button class="btn btn-ghost btn-small" id="btn-audit-limpiar">Limpiar filtros</button>
+                            <button class="btn btn-ghost btn-small" id="btn-audit-aplicar">Aplicar filtros</button>
+                        </div>
+
+                        <div class="table-wrapper" style="margin-top:8px;">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Insumo</th>
+                                    <th>Producto</th>
+                                    <th>Tipo</th>
+                                    <th>Cantidad</th>
+                                    <th>Responsable</th>
+                                    <th>Motivo</th>
+                                </tr>
+                                </thead>
+                                <tbody id="tabla-audit-body">
+                                <tr><td colspan="7" class="muted">No hay movimientos que mostrar.</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <div>
+                                <div class="card-title">Exportación de datos</div>
+                                <div class="card-subtitle">Respaldo JSON completo.</div>
+                            </div>
+                        </div>
+                        <div class="flex" style="margin-bottom:6px;">
+                            <button class="btn btn-primary btn-small" id="btn-exportar">
+                                <span>Generar JSON de respaldo</span><span>⬇️</span>
+                            </button>
+                            <button class="btn btn-ghost btn-small" id="btn-limpiar-export">Limpiar área</button>
+                        </div>
+                        <pre id="export-area" class="export-area mono">// Presione “Generar JSON de respaldo” para ver el contenido actual.</pre>
+                        <div class="muted" style="margin-top:4px;">
+                            Puede copiar el texto y guardarlo como archivo <code>.json</code>.
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <footer>
+        BioCannaPharma (BCP) – Módulo de insumos, productos y relación producto–insumos. Archivo HTML autónomo.
+    </footer>
+</div>
+
+<script>
+(function(){
+    const LS_INSUMOS_KEY   = 'bcp_fungibles_v1';
+    const LS_PROD_KEY      = 'bcp_productos_v1';
+    const LS_RECETAS_KEY   = 'bcp_recetas_v1';
+    const LS_MOVS_KEY      = 'bcp_mov_fungibles_v1';
+    const LS_PRODREG_KEY   = 'bcp_producciones_v1';
+
+    let insumos = [];
+    let productos = [];
+    let recetas = [];
+    let movimientos = [];
+    let producciones = [];
+
+    function hoyISO(){
+        const d = new Date();
+        const y = d.getFullYear();
+        const m = String(d.getMonth()+1).padStart(2,'0');
+        const day = String(d.getDate()).padStart(2,'0');
+        return `${y}-${m}-${day}`;
+    }
+    function fechaHoraLegible(iso){
+        const d = new Date(iso);
+        if(isNaN(d.getTime())) return '-';
+        return d.toLocaleString('es-CL',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    }
+    function fechaLegible(dateIso){
+        if(!dateIso) return '-';
+        const [y,m,d] = dateIso.split('-');
+        if(!y||!m||!d) return '-';
+        return `${d}/${m}/${y}`;
+    }
+    function getNextId(arr){ return !arr.length ? 1 : Math.max.apply(null,arr.map(x=>x.id||0))+1; }
+
+    function loadData(){
+        try{
+            insumos      = JSON.parse(localStorage.getItem(LS_INSUMOS_KEY) || '[]');
+            productos    = JSON.parse(localStorage.getItem(LS_PROD_KEY) || '[]');
+            recetas      = JSON.parse(localStorage.getItem(LS_RECETAS_KEY) || '[]');
+            movimientos  = JSON.parse(localStorage.getItem(LS_MOVS_KEY) || '[]');
+            producciones = JSON.parse(localStorage.getItem(LS_PRODREG_KEY) || '[]');
+        }catch(e){
+            console.error(e);
+            insumos = []; productos = []; recetas = []; movimientos = []; producciones = [];
+        }
+    }
+    function saveInsumos(){ localStorage.setItem(LS_INSUMOS_KEY,JSON.stringify(insumos)); }
+    function saveProductos(){ localStorage.setItem(LS_PROD_KEY,JSON.stringify(productos)); }
+    function saveRecetas(){ localStorage.setItem(LS_RECETAS_KEY,JSON.stringify(recetas)); }
+    function saveMovs(){ localStorage.setItem(LS_MOVS_KEY,JSON.stringify(movimientos)); }
+    function saveProds(){ localStorage.setItem(LS_PRODREG_KEY,JSON.stringify(producciones)); }
+
+    // Navegación
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const views   = document.querySelectorAll('.view');
+    function switchView(id){
+        views.forEach(v=>v.classList.toggle('active',v.id===id));
+        navBtns.forEach(b=>b.classList.toggle('active',b.dataset.view===id));
+        if(id==='insumos') renderInsumos();
+        if(id==='productos') renderProductos();
+        if(id==='recetas')  { refreshCombosRecetas(); renderRecetasUI(); }
+        if(id==='produccion'){ renderMovimientos(); refreshCombosProduccion(); }
+        if(id==='auditoria'){ refreshCombosAuditoria(); aplicarFiltrosAuditoria(); }
+    }
+    navBtns.forEach(btn=>btn.addEventListener('click',()=>switchView(btn.dataset.view)));
+
+    // INSUMOS
+    const formInsumo = document.getElementById('form-insumo');
+    formInsumo.addEventListener('submit',function(e){
+        e.preventDefault();
+        const codigo = document.getElementById('ins-codigo').value.trim();
+        const nombre = document.getElementById('ins-nombre').value.trim();
+        const tipo = document.getElementById('ins-tipo').value;
+        const unidad = document.getElementById('ins-unidad').value;
+        const stockIni = parseFloat(document.getElementById('ins-stock-inicial').value || '0');
+        const stockMin = parseFloat(document.getElementById('ins-stock-minimo').value || '0');
+        const ubicacion = document.getElementById('ins-ubicacion').value.trim();
+        const proveedor = document.getElementById('ins-proveedor').value.trim();
+        const estado = document.getElementById('ins-estado').value || 'ACTIVO';
+        const responsable = document.getElementById('ins-responsable').value.trim();
+
+        if(!codigo || !nombre || !tipo || !unidad || isNaN(stockIni) || isNaN(stockMin) || !ubicacion || !responsable){
+            alert('Complete todos los campos obligatorios del insumo.');
+            return;
+        }
+
+        const now = new Date().toISOString();
+        const id = getNextId(insumos);
+        const ins = {
+            id,codigo,nombre,tipo,unidad,
+            stockInicial:stockIni,
+            stockActual:stockIni,
+            stockMinimo:stockMin,
+            ubicacion,proveedor,estado,
+            responsableIngreso:responsable,
+            createdAt:now,updatedAt:now
+        };
+        insumos.push(ins); saveInsumos();
+
+        if(stockIni>0){
+            const mov = {
+                id:getNextId(movimientos),
+                idInsumo:id,
+                codigoInsumo:codigo,
+                nombreInsumo:nombre,
+                tipo:'INGRESO',
+                cantidad:stockIni,
+                unidad,
+                fechaMovimiento:hoyISO(),
+                createdAt:now,
+                responsable,
+                documento:'Stock inicial al crear insumo',
+                nota:'Ingreso inicial de stock al crear insumo.',
+                stockAntes:0,
+                stockDespues:stockIni,
+                origen:'Manual',
+                productoAsociado:''
+            };
+            movimientos.push(mov); saveMovs();
+        }
+
+        formInsumo.reset();
+        renderInsumos();
+        refreshCombosProduccion();
+        refreshCombosAuditoria();
+        refreshCombosRecetas();
+        alert('Insumo registrado correctamente.');
+    });
+
+    document.getElementById('btn-clear-search-ins').addEventListener('click',()=>{
+        document.getElementById('busqueda-insumos').value='';
+        renderInsumos();
+    });
+    document.getElementById('busqueda-insumos').addEventListener('input',renderInsumos);
+
+    function renderInsumos(){
+        const tbody = document.getElementById('tabla-insumos-body');
+        const filtro = (document.getElementById('busqueda-insumos').value||'').toLowerCase().trim();
+        tbody.innerHTML='';
+        let list = insumos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||''));
+        if(filtro){
+            list = list.filter(i =>
+                (i.codigo||'').toLowerCase().includes(filtro) ||
+                (i.nombre||'').toLowerCase().includes(filtro) ||
+                (i.tipo||'').toLowerCase().includes(filtro) ||
+                (i.proveedor||'').toLowerCase().includes(filtro) ||
+                (i.ubicacion||'').toLowerCase().includes(filtro)
+            );
+        }
+        if(!list.length){
+            const tr=document.createElement('tr'); const td=document.createElement('td');
+            td.colSpan=6; td.className='muted'; td.textContent='Sin insumos registrados.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        list.forEach(i=>{
+            const tr=document.createElement('tr');
+            const stock=Number(i.stockActual||0); const min=Number(i.stockMinimo||0);
+
+            let td=document.createElement('td'); td.textContent=i.codigo||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=i.nombre||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=i.tipo||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${stock} ${i.unidad||''}`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${min} ${i.unidad||''}`; tr.appendChild(td);
+
+            td=document.createElement('td');
+            let tagClass='tag-ok', tagText='OK';
+            if(i.estado!=='ACTIVO'){ tagClass='tag-inactive'; tagText='INACTIVO'; }
+            else if(min>0 && stock<=min){ tagClass='tag-low'; tagText='STOCK BAJO'; }
+            td.innerHTML=`<span class="tag ${tagClass}">${tagText}</span>`;
+            tr.appendChild(td);
+
+            tbody.appendChild(tr);
+        });
+        refreshCombosProduccion();
+        refreshCombosAuditoria();
+        refreshCombosRecetas();
+    }
+
+    // PRODUCTOS
+    const formProducto = document.getElementById('form-producto');
+    formProducto.addEventListener('submit',function(e){
+        e.preventDefault();
+        const codigo=document.getElementById('prod-codigo').value.trim();
+        const nombre=document.getElementById('prod-nombre').value.trim();
+        const cat=document.getElementById('prod-categoria').value.trim();
+        const pres=document.getElementById('prod-presentacion').value.trim();
+        const unidad=document.getElementById('prod-unidad').value;
+        const estado=document.getElementById('prod-estado').value||'ACTIVO';
+        if(!codigo||!nombre||!unidad){ alert('Complete los campos obligatorios del producto.'); return; }
+
+        const now=new Date().toISOString();
+        const id=getNextId(productos);
+        productos.push({
+            id,codigo,nombre,categoria:cat,presentacion:pres,
+            unidadProducto:unidad,estado,createdAt:now,updatedAt:now
+        });
+        saveProductos();
+        formProducto.reset();
+        renderProductos();
+        refreshCombosProduccion();
+        refreshCombosAuditoria();
+        refreshCombosRecetas();
+        alert('Producto registrado correctamente.');
+    });
+
+    function renderProductos(){
+        const tbody=document.getElementById('tabla-productos-body');
+        tbody.innerHTML='';
+        if(!productos.length){
+            const tr=document.createElement('tr'); const td=document.createElement('td');
+            td.colSpan=6; td.className='muted'; td.textContent='Sin productos registrados.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        const counts={};
+        recetas.forEach(r=>{counts[r.idProducto]=(counts[r.idProducto]||0)+1;});
+        productos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).forEach(p=>{
+            const tr=document.createElement('tr');
+            let td=document.createElement('td'); td.textContent=p.codigo||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=p.nombre||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=p.categoria||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=p.unidadProducto||'-'; tr.appendChild(td);
+            td=document.createElement('td');
+            const tagClass=p.estado==='ACTIVO'?'tag-ok':'tag-inactive';
+            const txt=p.estado==='ACTIVO'?'ACTIVO':'INACTIVO';
+            td.innerHTML=`<span class="tag ${tagClass}">${txt}</span>`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=counts[p.id]||0; tr.appendChild(td);
+            tbody.appendChild(tr);
+        });
+        refreshCombosRecetas();
+        refreshCombosProduccion();
+        refreshCombosAuditoria();
+    }
+
+    // RECETAS – MÓDULO INDEPENDIENTE
+    function refreshCombosRecetas(){
+        const selProd=document.getElementById('rec-prod');
+        const selIns=document.getElementById('rec-insumo');
+        if(!selProd || !selIns) return;
+
+        // productos
+        selProd.innerHTML='';
+        if(!productos.length){
+            selProd.innerHTML='<option value="">No hay productos registrados</option>';
+            selProd.disabled=false;
+        }else{
+            selProd.disabled=false;
+            selProd.innerHTML='<option value="">Seleccione producto…</option>';
+            productos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||''))
+                .forEach(p=>{
+                    const op=document.createElement('option');
+                    op.value=String(p.id);
+                    op.textContent=`${p.codigo} – ${p.nombre}`;
+                    selProd.appendChild(op);
+                });
+        }
+
+        // insumos
+        selIns.innerHTML='';
+        if(!insumos.length){
+            selIns.innerHTML='<option value="">No hay insumos registrados</option>';
+            selIns.disabled=false;
+        }else{
+            selIns.disabled=false;
+            selIns.innerHTML='<option value="">Seleccione insumo…</option>';
+            insumos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||''))
+                .forEach(i=>{
+                    const op=document.createElement('option');
+                    op.value=String(i.id);
+                    op.textContent=`${i.codigo} – ${i.nombre}`;
+                    selIns.appendChild(op);
+                });
+        }
+    }
+
+    function renderRecetasUI(){
+        const selProd=document.getElementById('rec-prod');
+        const tbody=document.getElementById('tabla-recetas-body');
+        if(!selProd||!tbody) return;
+        const prodId=parseInt(selProd.value||'0',10);
+        tbody.innerHTML='';
+        if(!prodId){
+            const tr=document.createElement('tr'); const td=document.createElement('td');
+            td.colSpan=3; td.className='muted'; td.textContent='Seleccione un producto para ver su receta.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        const list=recetas.filter(r=>r.idProducto===prodId);
+        if(!list.length){
+            const tr=document.createElement('tr'); const td=document.createElement('td');
+            td.colSpan=3; td.className='muted'; td.textContent='Este producto aún no tiene insumos asociados.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        list.forEach(rec=>{
+            const ins=insumos.find(i=>i.id===rec.idInsumo);
+            const tr=document.createElement('tr');
+            let td=document.createElement('td'); td.textContent=ins?`${ins.codigo} – ${ins.nombre}`:'(insumo eliminado)'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=ins?ins.tipo:'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${rec.cantidadPorUnidad} ${ins?ins.unidad:''} / unidad`; tr.appendChild(td);
+            tbody.appendChild(tr);
+        });
+    }
+
+    document.getElementById('rec-prod').addEventListener('change',renderRecetasUI);
+    document.getElementById('btn-rec-limpiar').addEventListener('click',()=>{
+        document.getElementById('rec-insumo').value='';
+        document.getElementById('rec-cantidad').value='';
+    });
+    document.getElementById('btn-rec-agregar').addEventListener('click',()=>{
+        const idProd=parseInt(document.getElementById('rec-prod').value||'0',10);
+        const idIns=parseInt(document.getElementById('rec-insumo').value||'0',10);
+        const cant=parseFloat(document.getElementById('rec-cantidad').value||'0');
+        if(!idProd||!idIns||isNaN(cant)||cant<=0){ alert('Seleccione producto, insumo y cantidad válida.'); return; }
+
+        const now=new Date().toISOString();
+        const existente=recetas.find(r=>r.idProducto===idProd && r.idInsumo===idIns);
+        if(existente){ existente.cantidadPorUnidad=cant; existente.updatedAt=now; }
+        else{
+            recetas.push({id:getNextId(recetas),idProducto:idProd,idInsumo:idIns,cantidadPorUnidad:cant,createdAt:now,updatedAt:now});
+        }
+        saveRecetas();
+        renderRecetasUI();
+        renderProductos();
+        alert('Receta actualizada correctamente.');
+    });
+
+    // PRODUCCIÓN + MOVIMIENTOS
+    const formProd = document.getElementById('form-produccion');
+    formProd.addEventListener('submit',function(e){
+        e.preventDefault();
+        const prodId=parseInt(document.getElementById('prod-prod').value||'0',10);
+        const unid=parseFloat(document.getElementById('prod-unidades').value||'0');
+        const fecha=document.getElementById('prod-fecha').value||hoyISO();
+        const resp=document.getElementById('prod-resp').value.trim();
+        const doc=document.getElementById('prod-doc').value.trim();
+        const nota=document.getElementById('prod-nota').value.trim();
+        if(!prodId||isNaN(unid)||unid<=0||!resp||!nota){ alert('Complete todos los campos obligatorios de producción.'); return; }
+
+        const p=productos.find(x=>x.id===prodId); if(!p){ alert('Producto no encontrado.'); return; }
+        const recetaProd=recetas.filter(r=>r.idProducto===prodId);
+        if(!recetaProd.length){ alert('El producto no tiene receta definida.'); return; }
+
+        const now=new Date().toISOString();
+        const prodReg={id:getNextId(producciones),idProducto:prodId,codigoProducto:p.codigo,nombreProducto:p.nombre,
+            unidadesProducidas:unid,fechaProduccion:fecha,responsable:resp,documento:doc,nota,createdAt:now};
+        producciones.push(prodReg); saveProds();
+
+        recetaProd.forEach(rec=>{
+            const ins=insumos.find(i=>i.id===rec.idInsumo); if(!ins) return;
+            const consumo=unid*rec.cantidadPorUnidad; if(consumo<=0) return;
+            const stockAntes=Number(ins.stockActual||0); const stockDesp=stockAntes-consumo;
+            ins.stockActual=stockDesp; ins.updatedAt=now;
+            const mov={
+                id:getNextId(movimientos),
+                idInsumo:ins.id,
+                codigoInsumo:ins.codigo,
+                nombreInsumo:ins.nombre,
+                tipo:'CONSUMO',
+                cantidad:consumo,
+                unidad:ins.unidad,
+                fechaMovimiento:fecha,
+                createdAt:now,
+                responsable:resp,
+                documento:doc||`Producción ${p.codigo}`,
+                nota:`Consumo automático por producción de ${unid} ${p.unidadProducto||'unidades'} de ${p.codigo}: ${nota}`,
+                stockAntes,
+                stockDespues:stockDesp,
+                origen:'Producción',
+                productoAsociado:`${p.codigo} – ${p.nombre}`
+            };
+            movimientos.push(mov);
+        });
+        saveInsumos(); saveMovs();
+
+        formProd.reset();
+        document.getElementById('prod-fecha').value=hoyISO();
+        renderInsumos(); renderMovimientos(); aplicarFiltrosAuditoria();
+        alert('Producción y consumos registrados correctamente.');
+    });
+
+    const formMovManual=document.getElementById('form-mov-manual');
+    formMovManual.addEventListener('submit',function(e){
+        e.preventDefault();
+        const idIns=parseInt(document.getElementById('mov-insumo').value||'0',10);
+        const tipo=document.getElementById('mov-tipo').value;
+        const cant=parseFloat(document.getElementById('mov-cantidad').value||'0');
+        const fecha=document.getElementById('mov-fecha').value||hoyISO();
+        const resp=document.getElementById('mov-resp').value.trim();
+        const doc=document.getElementById('mov-doc').value.trim();
+        const nota=document.getElementById('mov-nota').value.trim();
+        if(!idIns||!tipo||isNaN(cant)||cant<=0||!resp||!nota){ alert('Complete los campos obligatorios del movimiento.'); return; }
+
+        const ins=insumos.find(i=>i.id===idIns); if(!ins){ alert('Insumo no encontrado.'); return; }
+        const stockAntes=Number(ins.stockActual||0);
+        let delta=0;
+        if(tipo==='INGRESO' || tipo==='AJUSTE_POS') delta=cant;
+        else if(['CONSUMO','AJUSTE_NEG','BAJA'].includes(tipo)) delta=-cant;
+        const stockDesp=stockAntes+delta;
+        if(stockDesp<0){
+            if(!confirm('La operación dejaría el stock en negativo. ¿Desea continuar?')) return;
+        }
+        ins.stockActual=stockDesp; ins.updatedAt=new Date().toISOString(); saveInsumos();
+
+        const mov={
+            id:getNextId(movimientos),
+            idInsumo:ins.id,
+            codigoInsumo:ins.codigo,
+            nombreInsumo:ins.nombre,
+            tipo,cantidad:cant,unidad:ins.unidad,
+            fechaMovimiento:fecha,
+            createdAt:new Date().toISOString(),
+            responsable:resp,documento:doc,nota,
+            stockAntes,stockDespues:stockDesp,
+            origen:'Manual',productoAsociado:''
+        };
+        movimientos.push(mov); saveMovs();
+
+        formMovManual.reset();
+        document.getElementById('mov-fecha').value=hoyISO();
+        renderInsumos(); renderMovimientos(); aplicarFiltrosAuditoria();
+        alert('Movimiento manual registrado correctamente.');
+    });
+
+    function renderMovimientos(){
+        const tbody=document.getElementById('tabla-movs-body');
+        const filtro=(document.getElementById('busqueda-movs').value||'').toLowerCase().trim();
+        tbody.innerHTML='';
+        let list=movimientos.slice().sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+        if(filtro){
+            list=list.filter(m =>
+                (m.codigoInsumo||'').toLowerCase().includes(filtro) ||
+                (m.nombreInsumo||'').toLowerCase().includes(filtro) ||
+                (m.tipo||'').toLowerCase().includes(filtro) ||
+                (m.origen||'').toLowerCase().includes(filtro) ||
+                (m.productoAsociado||'').toLowerCase().includes(filtro) ||
+                (m.responsable||'').toLowerCase().includes(filtro) ||
+                (m.documento||'').toLowerCase().includes(filtro)
+            );
+        }
+        if(!list.length){
+            const tr=document.createElement('tr'); const td=document.createElement('td');
+            td.colSpan=8; td.className='muted'; td.textContent='Sin movimientos registrados.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        list.forEach(m=>{
+            const tr=document.createElement('tr');
+            let td=document.createElement('td'); td.textContent=fechaHoraLegible(m.createdAt||''); tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${m.codigoInsumo||'-'} – ${m.nombreInsumo||'-'}`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.tipo||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${m.cantidad} ${m.unidad||''}`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${m.stockAntes} → ${m.stockDespues}`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.origen||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.productoAsociado||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.responsable||'-'; tr.appendChild(td);
+            tbody.appendChild(tr);
+        });
+    }
+    document.getElementById('btn-clear-search-movs').addEventListener('click',()=>{
+        document.getElementById('busqueda-movs').value=''; renderMovimientos();
+    });
+    document.getElementById('busqueda-movs').addEventListener('input',renderMovimientos);
+
+    function refreshCombosProduccion(){
+        const selProd=document.getElementById('prod-prod');
+        const selIns=document.getElementById('mov-insumo');
+        if(selProd){
+            selProd.innerHTML='';
+            if(!productos.length){
+                selProd.innerHTML='<option value="">No hay productos registrados</option>';
+                selProd.disabled=true;
+            }else{
+                selProd.disabled=false;
+                selProd.innerHTML='<option value="">Seleccione producto…</option>';
+                productos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).forEach(p=>{
+                    const op=document.createElement('option');
+                    op.value=String(p.id);
+                    op.textContent=`${p.codigo} – ${p.nombre}`;
+                    selProd.appendChild(op);
+                });
+            }
+        }
+        if(selIns){
+            selIns.innerHTML='';
+            if(!insumos.length){
+                selIns.innerHTML='<option value="">No hay insumos registrados</option>';
+                selIns.disabled=true;
+            }else{
+                selIns.disabled=false;
+                selIns.innerHTML='<option value="">Seleccione insumo…</option>';
+                insumos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).forEach(i=>{
+                    const op=document.createElement('option');
+                    op.value=String(i.id);
+                    op.textContent=`${i.codigo} – ${i.nombre}`;
+                    selIns.appendChild(op);
+                });
+            }
+        }
+    }
+
+    // Auditoría
+    function refreshCombosAuditoria(){
+        const selIns=document.getElementById('audit-insumo');
+        const selProd=document.getElementById('audit-producto');
+        if(selIns){
+            selIns.innerHTML='';
+            const opAllI=document.createElement('option');
+            opAllI.value=''; opAllI.textContent='Todos'; selIns.appendChild(opAllI);
+            insumos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).forEach(i=>{
+                const op=document.createElement('option');
+                op.value=String(i.id); op.textContent=`${i.codigo} – ${i.nombre}`; selIns.appendChild(op);
+            });
+        }
+        if(selProd){
+            selProd.innerHTML='';
+            const opAllP=document.createElement('option');
+            opAllP.value=''; opAllP.textContent='Todos'; selProd.appendChild(opAllP);
+            productos.slice().sort((a,b)=>(a.codigo||'').localeCompare(b.codigo||'')).forEach(p=>{
+                const op=document.createElement('option');
+                op.value=String(p.id); op.textContent=`${p.codigo} – ${p.nombre}`; selProd.appendChild(op);
+            });
+        }
+    }
+
+    function aplicarFiltrosAuditoria(){
+        const idIns=document.getElementById('audit-insumo').value;
+        const idProd=document.getElementById('audit-producto').value;
+        const tipo=document.getElementById('audit-tipo').value;
+        const desde=document.getElementById('audit-desde').value;
+        const hasta=document.getElementById('audit-hasta').value;
+
+        let list=movimientos.slice().sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+        if(idIns){
+            const idN=parseInt(idIns,10);
+            list=list.filter(m=>m.idInsumo===idN);
+        }
+        if(idProd){
+            const pid=parseInt(idProd,10);
+            const prod=productos.find(p=>p.id===pid);
+            if(prod) list=list.filter(m=>(m.productoAsociado||'').includes(prod.codigo));
+            else list=[];
+        }
+        if(tipo) list=list.filter(m=>m.tipo===tipo);
+        if(desde) list=list.filter(m=>(m.fechaMovimiento||'')>=desde);
+        if(hasta) list=list.filter(m=>(m.fechaMovimiento||'')<=hasta);
+
+        const tbody=document.getElementById('tabla-audit-body');
+        tbody.innerHTML='';
+        if(!list.length){
+            const tr=document.createElement('tr'); const td=document.createElement('td');
+            td.colSpan=7; td.className='muted'; td.textContent='No hay movimientos que coincidan con los filtros.'; tr.appendChild(td); tbody.appendChild(tr); return;
+        }
+        list.forEach(m=>{
+            const tr=document.createElement('tr');
+            let td=document.createElement('td'); td.textContent=fechaLegible(m.fechaMovimiento||''); tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${m.codigoInsumo||'-'} – ${m.nombreInsumo||'-'}`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.productoAsociado||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.tipo||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=`${m.cantidad} ${m.unidad||''}`; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.responsable||'-'; tr.appendChild(td);
+            td=document.createElement('td'); td.textContent=m.nota||'-'; tr.appendChild(td);
+            tbody.appendChild(tr);
+        });
+    }
+    document.getElementById('btn-audit-aplicar').addEventListener('click',aplicarFiltrosAuditoria);
+    document.getElementById('btn-audit-limpiar').addEventListener('click',()=>{
+        document.getElementById('audit-insumo').value='';
+        document.getElementById('audit-producto').value='';
+        document.getElementById('audit-tipo').value='';
+        document.getElementById('audit-desde').value='';
+        document.getElementById('audit-hasta').value='';
+        aplicarFiltrosAuditoria();
+    });
+
+    // Exportación
+    document.getElementById('btn-exportar').addEventListener('click',()=>{
+        const payload={
+            exportadoEn:new Date().toISOString(),
+            insumos,productos,recetas,movimientos,producciones
+        };
+        document.getElementById('export-area').textContent=JSON.stringify(payload,null,2);
+    });
+    document.getElementById('btn-limpiar-export').addEventListener('click',()=>{
+        document.getElementById('export-area').textContent='// Presione “Generar JSON de respaldo” para ver el contenido actual.';
+    });
+
+    // Limpieza maestra
+    document.getElementById('btn-reset-erp').addEventListener('click',()=>{
+        if(!confirm('¿Está seguro de eliminar TODOS los datos del ERP?\nEsto no se puede deshacer.')) return;
+        localStorage.removeItem(LS_INSUMOS_KEY);
+        localStorage.removeItem(LS_PROD_KEY);
+        localStorage.removeItem(LS_RECETAS_KEY);
+        localStorage.removeItem(LS_MOVS_KEY);
+        localStorage.removeItem(LS_PRODREG_KEY);
+        alert('Sistema reiniciado completamente.');
+        location.reload();
+    });
+
+    // INIT
+    function init(){
+        loadData();
+        const ahora=new Date();
+        document.getElementById('header-date').textContent=
+            ahora.toLocaleString('es-CL',{weekday:'long',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+        document.getElementById('prod-fecha').value=hoyISO();
+        document.getElementById('mov-fecha').value=hoyISO();
+
+        renderInsumos();
+        renderProductos();
+        refreshCombosRecetas();
+        renderRecetasUI();
+        refreshCombosProduccion();
+        renderMovimientos();
+        refreshCombosAuditoria();
+        aplicarFiltrosAuditoria();
+    }
+    init();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BCP · Mapa de Arquitectura del Sistema</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0F172A;
+            --bg-card: rgba(15, 23, 42, 0.95);
+            --border-color: rgba(71, 85, 105, 0.3);
+            --text-primary: #E2E8F0;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+            --green: #10B981;
+            --purple: #6366F1;
+            --orange: #F59E0B;
+            --gray: #78716C;
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Grid de fondo */
+        .bg-grid {
+            position: fixed;
+            inset: 0;
+            background-image: 
+                linear-gradient(rgba(71, 85, 105, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(71, 85, 105, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header */
+        header {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.9);
+            backdrop-filter: blur(12px);
+            position: relative;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-title .icon {
+            font-size: 32px;
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #10B981, #6366F1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-title p {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-left: 44px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .header-controls label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .header-controls input[type="checkbox"] {
+            accent-color: var(--purple);
+        }
+
+        .header-controls select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        /* Layout principal */
+        .main-layout {
+            display: flex;
+            height: calc(100vh - 80px);
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Área del mapa */
+        .map-area {
+            flex: 1;
+            position: relative;
+            padding: 20px;
+        }
+
+        .map-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #mapSvg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Nodos del mapa */
+        .node {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .node:hover .node-circle {
+            transform: scale(1.1);
+        }
+
+        .node-circle {
+            transition: all 0.3s ease;
+        }
+
+        .node-label {
+            font-family: 'JetBrains Mono', monospace;
+            pointer-events: none;
+        }
+
+        .node.selected .node-circle {
+            stroke: #fff;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        .node.selected .pulse-ring {
+            display: block;
+        }
+
+        .pulse-ring {
+            display: none;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.15); }
+        }
+
+        /* Conexiones */
+        .connection {
+            fill: none;
+            transition: all 0.3s ease;
+        }
+
+        .connection.highlighted {
+            filter: drop-shadow(0 0 4px currentColor);
+        }
+
+        /* Leyendas */
+        .legend-box {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(8px);
+        }
+
+        .legend-box h4 {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-line {
+            width: 24px;
+            height: 3px;
+            border-radius: 2px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-connections {
+            bottom: 20px;
+            left: 20px;
+        }
+
+        .legend-categories {
+            bottom: 20px;
+            left: 200px;
+        }
+
+        /* Panel lateral */
+        .sidebar {
+            width: 340px;
+            background: var(--bg-card);
+            border-left: 1px solid var(--border-color);
+            padding: 24px;
+            overflow-y: auto;
+            backdrop-filter: blur(12px);
+        }
+
+        .sidebar-empty {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .sidebar-empty .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .sidebar-empty h3 {
+            font-size: 16px;
+            color: #CBD5E1;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-empty p {
+            font-size: 13px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Detalle del módulo */
+        .module-detail {
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .module-icon-box {
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+        }
+
+        .module-header h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .module-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .module-description {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .detail-section {
+            margin-bottom: 20px;
+        }
+
+        .detail-section h3 {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .storage-key {
+            font-size: 11px;
+            background: rgba(30, 41, 59, 0.8);
+            padding: 6px 10px;
+            border-radius: 6px;
+            color: var(--green);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: block;
+            margin-bottom: 4px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .connection-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: 8px;
+            margin-bottom: 6px;
+            border-left: 3px solid;
+        }
+
+        .connection-item .icon {
+            font-size: 18px;
+        }
+
+        .connection-item .name {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .connection-item .label {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        .btn-close {
+            width: 100%;
+            padding: 12px;
+            background: rgba(71, 85, 105, 0.3);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .btn-close:hover {
+            background: rgba(71, 85, 105, 0.5);
+        }
+
+        /* Lista de módulos */
+        .modules-list {
+            margin-top: 32px;
+            text-align: left;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .modules-list h4 {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .module-list-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .module-list-item:hover {
+            background: rgba(71, 85, 105, 0.3);
+        }
+
+        .module-list-item .icon {
+            font-size: 18px;
+        }
+
+        .module-list-item span {
+            font-size: 12px;
+            color: #CBD5E1;
+        }
+
+        .planned-modules {
+            margin-top: 16px;
+            text-align: left;
+            background: rgba(30, 41, 59, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px dashed var(--border-color);
+        }
+
+        .planned-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .planned-tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            background: rgba(71, 85, 105, 0.2);
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 100;
+            backdrop-filter: blur(8px);
+            display: none;
+        }
+
+        .tooltip.visible {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+
+    <header>
+        <div class="header-title">
+            <span class="icon">🔗</span>
+            <div>
+                <h1>BCP · Arquitectura del Sistema</h1>
+                <p>Mapa de conexiones entre módulos · BioCannaPhrama ERP</p>
+            </div>
+        </div>
+        <div class="header-controls">
+            <label>
+                <input type="checkbox" id="showPlanned" checked>
+                <span>Mostrar planificados</span>
+            </label>
+            <select id="filterCategory">
+                <option value="all">Todos los módulos</option>
+                <option value="entrada">🟢 Entrada</option>
+                <option value="proceso">🟣 Procesos</option>
+                <option value="soporte">🟠 Soporte</option>
+                <option value="auditoria">⚪ Auditoría</option>
+            </select>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="map-area">
+            <div class="map-container">
+                <svg id="mapSvg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#64748B" />
+                        </marker>
+                        <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#10B981" />
+                        </marker>
+                        <marker id="arrow-purple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#6366F1" />
+                        </marker>
+                        <marker id="arrow-orange" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#F59E0B" />
+                        </marker>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                    <g id="connections"></g>
+                    <g id="plannedNodes"></g>
+                    <g id="nodes"></g>
+                </svg>
+            </div>
+
+            <!-- Leyenda de conexiones -->
+            <div class="legend-box legend-connections">
+                <h4>Tipo de Conexión</h4>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #10B981;"></div>
+                    <span>Flujo de datos</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: #6366F1;"></div>
+                    <span>Workflow</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: repeating-linear-gradient(90deg, #F59E0B 0, #F59E0B 6px, transparent 6px, transparent 10px);"></div>
+                    <span>Referencia</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-line" style="background: repeating-linear-gradient(90deg, #78716C 0, #78716C 4px, transparent 4px, transparent 8px);"></div>
+                    <span>Auditoría</span>
+                </div>
+            </div>
+
+            <!-- Leyenda de categorías -->
+            <div class="legend-box legend-categories">
+                <h4>Categorías</h4>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #059669;"></div>
+                    <span>Entrada de Datos</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #7C3AED;"></div>
+                    <span>Procesos Productivos</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #EA580C;"></div>
+                    <span>Soporte Operacional</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background: #78716C;"></div>
+                    <span>Auditoría y Trazabilidad</span>
+                </div>
+            </div>
+        </div>
+
+        <aside class="sidebar" id="sidebar">
+            <!-- Contenido dinámico -->
+        </aside>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        // ==================== DATOS ====================
+        const MODULES = [
+            {
+                id: 'recepcion',
+                name: 'Recepción MP',
+                fullName: 'Recepción de Materia Prima',
+                icon: '📦',
+                color: '#2D5F3F',
+                description: 'Ingreso y trazabilidad de cannabis por bolsas individuales. Sistema de control de stock con identificación única por bolsa.',
+                storage: ['bcp_ingresos_v82', 'bcp_salidas_v82'],
+                category: 'entrada',
+                x: 15, y: 30
+            },
+            {
+                id: 'extractos',
+                name: 'Control Extractos',
+                fullName: 'Control de Extractos y Destilados',
+                icon: '⚗️',
+                color: '#7B4BC4',
+                description: 'Gestión de procesos RSO y BHO, fracciones (salsa, cristales, budder) y destilados con trazabilidad completa.',
+                storage: ['bcp_extractos_fichas_v1', 'bcp_extractos_fracciones_v1', 'bcp_extractos_destilados_v1'],
+                category: 'proceso',
+                x: 40, y: 20
+            },
+            {
+                id: 'residuos',
+                name: 'Gestión Residuos',
+                fullName: 'Gestión de Residuos RESPEL',
+                icon: '♻️',
+                color: '#DC2626',
+                description: 'Control de residuos peligrosos y normales según normativa chilena. Seguimiento hasta disposición final.',
+                storage: ['bcp_residuos_v4'],
+                category: 'proceso',
+                x: 65, y: 15
+            },
+            {
+                id: 'equipos',
+                name: 'Equipos',
+                fullName: 'Gestión de Equipos',
+                icon: '🔬',
+                color: '#0891B2',
+                description: 'Maestro de equipos de laboratorio, registro de uso, mantenciones preventivas y correctivas.',
+                storage: ['bcp_equipment_module_v3'],
+                category: 'soporte',
+                x: 85, y: 35
+            },
+            {
+                id: 'reactivos',
+                name: 'Reactivos',
+                fullName: 'Gestión de Reactivos',
+                icon: '🧪',
+                color: '#EA580C',
+                description: 'Control de reactivos químicos con HDS, control de vencimientos y trazabilidad de lotes.',
+                storage: ['bcp_reactivos_v1', 'bcp_movimientos_v1'],
+                category: 'soporte',
+                x: 85, y: 60
+            },
+            {
+                id: 'insumos',
+                name: 'Insumos',
+                fullName: 'Gestión de Insumos y Fungibles',
+                icon: '📋',
+                color: '#059669',
+                description: 'Control de insumos fungibles, productos terminados y recetas de producción.',
+                storage: ['bcp_fungibles_v1', 'bcp_productos_v1', 'bcp_recetas_v1'],
+                category: 'soporte',
+                x: 65, y: 75
+            },
+            {
+                id: 'proveedores',
+                name: 'Proveedores',
+                fullName: 'Gestión de Proveedores',
+                icon: '🏢',
+                color: '#4338CA',
+                description: 'Maestro de proveedores, evaluaciones y documentación asociada.',
+                storage: ['BCP_proveedores_v2', 'BCP_audit_proveedores_v2'],
+                category: 'entrada',
+                x: 15, y: 55
+            },
+            {
+                id: 'compras',
+                name: 'Compras',
+                fullName: 'Sistema de Compras',
+                icon: '🛒',
+                color: '#0D9488',
+                description: 'Solicitudes de compra, seguimiento de órdenes y registro de facturas/boletas.',
+                storage: ['bcp_solicitudes_v1'],
+                category: 'entrada',
+                x: 15, y: 80
+            },
+            {
+                id: 'solicitudes',
+                name: 'Órdenes Producción',
+                fullName: 'Órdenes de Producción',
+                icon: '📝',
+                color: '#B45309',
+                description: 'Solicitudes y órdenes de trabajo para procesos productivos.',
+                storage: ['bcpOrdenesProduccionV3_4'],
+                category: 'proceso',
+                x: 40, y: 50
+            },
+            {
+                id: 'aseo',
+                name: 'Aseo y Sanitización',
+                fullName: 'Control de Aseo y Sanitización',
+                icon: '🧹',
+                color: '#6366F1',
+                description: 'Registros de limpieza por áreas, productos utilizados y verificación.',
+                storage: ['bcp_aseo_areas', 'bcp_aseo_productos', 'bcp_aseo_registros'],
+                category: 'soporte',
+                x: 40, y: 80
+            },
+            {
+                id: 'bitacora',
+                name: 'Bitácora',
+                fullName: 'Bitácora General',
+                icon: '📖',
+                color: '#78716C',
+                description: 'Registros generales del laboratorio y auditoría de operaciones.',
+                storage: ['BCP_BITACORA_V1'],
+                category: 'auditoria',
+                x: 65, y: 50
+            }
+        ];
+
+        const CONNECTIONS = [
+            { from: 'recepcion', to: 'extractos', label: 'Salidas MP', type: 'data', strength: 'strong' },
+            { from: 'extractos', to: 'residuos', label: 'Residuos proceso', type: 'data', strength: 'strong' },
+            { from: 'solicitudes', to: 'extractos', label: 'Órdenes trabajo', type: 'workflow', strength: 'strong' },
+            { from: 'proveedores', to: 'compras', label: 'Datos proveedor', type: 'reference', strength: 'medium' },
+            { from: 'compras', to: 'recepcion', label: 'Compra → Recepción', type: 'workflow', strength: 'medium' },
+            { from: 'compras', to: 'insumos', label: 'Compra insumos', type: 'workflow', strength: 'medium' },
+            { from: 'compras', to: 'reactivos', label: 'Compra reactivos', type: 'workflow', strength: 'medium' },
+            { from: 'reactivos', to: 'equipos', label: 'Consumo en equipos', type: 'reference', strength: 'weak' },
+            { from: 'insumos', to: 'solicitudes', label: 'Materiales producción', type: 'reference', strength: 'medium' },
+            { from: 'equipos', to: 'extractos', label: 'Equipos proceso', type: 'reference', strength: 'medium' },
+            { from: 'aseo', to: 'equipos', label: 'Limpieza equipos', type: 'reference', strength: 'weak' },
+            { from: 'extractos', to: 'bitacora', label: 'Auditoría', type: 'audit', strength: 'weak' },
+            { from: 'recepcion', to: 'bitacora', label: 'Auditoría', type: 'audit', strength: 'weak' },
+            { from: 'residuos', to: 'bitacora', label: 'Auditoría', type: 'audit', strength: 'weak' },
+            { from: 'insumos', to: 'aseo', label: 'Productos limpieza', type: 'reference', strength: 'weak' },
+        ];
+
+        const PLANNED_MODULES = [
+            { id: 'capacitacion', name: 'Capacitación', icon: '🎓', x: 85, y: 85 },
+            { id: 'calibracion', name: 'Calibración', icon: '📐', x: 92, y: 50 },
+            { id: 'noconformidades', name: 'No Conformidades', icon: '⚠️', x: 50, y: 92 },
+            { id: 'auditoria', name: 'Auditoría Interna', icon: '✅', x: 75, y: 88 },
+        ];
+
+        const CATEGORY_COLORS = {
+            entrada: { bg: '#ECFDF5', border: '#059669', label: 'Entrada de Datos' },
+            proceso: { bg: '#F5F3FF', border: '#7C3AED', label: 'Procesos Productivos' },
+            soporte: { bg: '#FFF7ED', border: '#EA580C', label: 'Soporte Operacional' },
+            auditoria: { bg: '#F5F5F4', border: '#78716C', label: 'Auditoría y Trazabilidad' }
+        };
+
+        const CONNECTION_COLORS = {
+            data: '#10B981',
+            workflow: '#6366F1',
+            reference: '#F59E0B',
+            audit: '#78716C'
+        };
+
+        // ==================== ESTADO ====================
+        let selectedModule = null;
+        let hoveredModule = null;
+        let showPlanned = true;
+        let filterCategory = 'all';
+
+        // ==================== FUNCIONES ====================
+        function getConnectionPath(conn) {
+            const fromMod = MODULES.find(m => m.id === conn.from);
+            const toMod = MODULES.find(m => m.id === conn.to);
+            if (!fromMod || !toMod) return '';
+
+            const from = { x: fromMod.x, y: fromMod.y };
+            const to = { x: toMod.x, y: toMod.y };
+
+            const midX = (from.x + to.x) / 2;
+            const midY = (from.y + to.y) / 2;
+            const dx = to.x - from.x;
+            const dy = to.y - from.y;
+
+            const offset = Math.min(Math.abs(dx), Math.abs(dy)) * 0.3;
+            const ctrlX = midX + (dy > 0 ? offset : -offset) * 0.5;
+            const ctrlY = midY + (dx > 0 ? -offset : offset) * 0.5;
+
+            return `M ${from.x} ${from.y} Q ${ctrlX} ${ctrlY} ${to.x} ${to.y}`;
+        }
+
+        function getStrokeWidth(strength) {
+            const widths = { strong: 0.8, medium: 0.5, weak: 0.3 };
+            return widths[strength] || 0.5;
+        }
+
+        function isModuleVisible(mod) {
+            if (filterCategory === 'all') return true;
+            return mod.category === filterCategory;
+        }
+
+        function isConnectionHighlighted(conn) {
+            if (!hoveredModule && !selectedModule) return false;
+            const active = hoveredModule || selectedModule;
+            return conn.from === active || conn.to === active;
+        }
+
+        // ==================== RENDER ====================
+        function renderConnections() {
+            const container = document.getElementById('connections');
+            container.innerHTML = '';
+
+            CONNECTIONS.forEach((conn, idx) => {
+                const fromMod = MODULES.find(m => m.id === conn.from);
+                const toMod = MODULES.find(m => m.id === conn.to);
+                if (!fromMod || !toMod) return;
+                if (!isModuleVisible(fromMod) || !isModuleVisible(toMod)) return;
+
+                const highlighted = isConnectionHighlighted(conn);
+                const path = getConnectionPath(conn);
+                const color = highlighted ? CONNECTION_COLORS[conn.type] : 'rgba(100, 116, 139, 0.25)';
+                const strokeWidth = highlighted ? getStrokeWidth(conn.strength) + 0.3 : getStrokeWidth(conn.strength);
+
+                let dashArray = 'none';
+                if (conn.type === 'audit') dashArray = '2,2';
+                else if (conn.type === 'reference') dashArray = '4,2';
+
+                const markerType = highlighted ? 
+                    (conn.type === 'data' ? 'arrow-green' : conn.type === 'workflow' ? 'arrow-purple' : 'arrow-orange') : 
+                    'arrow';
+
+                const pathEl = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                pathEl.setAttribute('d', path);
+                pathEl.setAttribute('stroke', color);
+                pathEl.setAttribute('stroke-width', strokeWidth);
+                pathEl.setAttribute('fill', 'none');
+                pathEl.setAttribute('stroke-dasharray', dashArray);
+                pathEl.setAttribute('marker-end', `url(#${markerType})`);
+                pathEl.setAttribute('class', `connection ${highlighted ? 'highlighted' : ''}`);
+                if (highlighted) pathEl.setAttribute('filter', 'url(#glow)');
+
+                container.appendChild(pathEl);
+            });
+        }
+
+        function renderPlannedNodes() {
+            const container = document.getElementById('plannedNodes');
+            container.innerHTML = '';
+
+            if (!showPlanned) return;
+
+            PLANNED_MODULES.forEach(mod => {
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${mod.x}, ${mod.y})`);
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('r', '3');
+                circle.setAttribute('fill', 'none');
+                circle.setAttribute('stroke', 'rgba(100, 116, 139, 0.4)');
+                circle.setAttribute('stroke-width', '0.3');
+                circle.setAttribute('stroke-dasharray', '1.5,1.5');
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('y', '5.5');
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('fill', 'rgba(148, 163, 184, 0.5)');
+                text.setAttribute('font-size', '1.8');
+                text.setAttribute('font-family', 'JetBrains Mono, monospace');
+                text.textContent = `${mod.icon} ${mod.name}`;
+
+                g.appendChild(circle);
+                g.appendChild(text);
+                container.appendChild(g);
+            });
+        }
+
+        function renderNodes() {
+            const container = document.getElementById('nodes');
+            container.innerHTML = '';
+
+            MODULES.filter(isModuleVisible).forEach(mod => {
+                const isSelected = selectedModule === mod.id;
+                const isHovered = hoveredModule === mod.id;
+                const isActive = isSelected || isHovered;
+                const catColor = CATEGORY_COLORS[mod.category];
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('transform', `translate(${mod.x}, ${mod.y})`);
+                g.setAttribute('class', `node ${isSelected ? 'selected' : ''}`);
+                g.setAttribute('data-id', mod.id);
+                g.style.cursor = 'pointer';
+
+                // Anillo de pulso
+                if (isActive) {
+                    const pulseRing = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                    pulseRing.setAttribute('r', '6');
+                    pulseRing.setAttribute('fill', 'none');
+                    pulseRing.setAttribute('stroke', mod.color);
+                    pulseRing.setAttribute('stroke-width', '0.3');
+                    pulseRing.setAttribute('opacity', '0.5');
+                    pulseRing.setAttribute('class', 'pulse-ring');
+                    pulseRing.style.display = 'block';
+                    g.appendChild(pulseRing);
+                }
+
+                // Círculo principal
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('r', isActive ? '4.5' : '4');
+                circle.setAttribute('fill', isActive ? mod.color : `${mod.color}CC`);
+                circle.setAttribute('stroke', isActive ? '#fff' : mod.color);
+                circle.setAttribute('stroke-width', isActive ? '0.4' : '0.2');
+                circle.setAttribute('class', 'node-circle');
+                if (isActive) circle.setAttribute('filter', 'url(#glow)');
+
+                // Icono
+                const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                icon.setAttribute('text-anchor', 'middle');
+                icon.setAttribute('dominant-baseline', 'central');
+                icon.setAttribute('font-size', '3');
+                icon.textContent = mod.icon;
+                icon.style.pointerEvents = 'none';
+
+                // Etiqueta
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                label.setAttribute('y', '7');
+                label.setAttribute('text-anchor', 'middle');
+                label.setAttribute('fill', isActive ? '#fff' : '#CBD5E1');
+                label.setAttribute('font-size', '2');
+                label.setAttribute('font-weight', isActive ? '600' : '400');
+                label.setAttribute('font-family', 'JetBrains Mono, monospace');
+                label.setAttribute('class', 'node-label');
+                label.textContent = mod.name;
+
+                // Badge de categoría
+                const badge = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                badge.setAttribute('cx', '3.5');
+                badge.setAttribute('cy', '-3.5');
+                badge.setAttribute('r', '1');
+                badge.setAttribute('fill', catColor.border);
+                badge.setAttribute('opacity', '0.8');
+
+                g.appendChild(circle);
+                g.appendChild(icon);
+                g.appendChild(label);
+                g.appendChild(badge);
+
+                // Eventos
+                g.addEventListener('click', () => {
+                    selectedModule = selectedModule === mod.id ? null : mod.id;
+                    render();
+                    renderSidebar();
+                });
+
+                g.addEventListener('mouseenter', () => {
+                    hoveredModule = mod.id;
+                    render();
+                });
+
+                g.addEventListener('mouseleave', () => {
+                    hoveredModule = null;
+                    render();
+                });
+
+                container.appendChild(g);
+            });
+        }
+
+        function renderSidebar() {
+            const sidebar = document.getElementById('sidebar');
+
+            if (!selectedModule) {
+                sidebar.innerHTML = `
+                    <div class="sidebar-empty">
+                        <div class="icon">🎯</div>
+                        <h3>Selecciona un módulo</h3>
+                        <p>Haz clic en cualquier nodo del mapa para ver sus detalles, conexiones y claves de almacenamiento.</p>
+
+                        <div class="modules-list">
+                            <h4>MÓDULOS ACTIVOS</h4>
+                            ${MODULES.map(mod => `
+                                <div class="module-list-item" data-id="${mod.id}">
+                                    <span class="icon">${mod.icon}</span>
+                                    <span>${mod.name}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        ${showPlanned ? `
+                            <div class="planned-modules">
+                                <h4>📋 PLANIFICADOS</h4>
+                                <div class="planned-tags">
+                                    ${PLANNED_MODULES.map(mod => `
+                                        <span class="planned-tag">${mod.icon} ${mod.name}</span>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+
+                // Añadir eventos a la lista
+                sidebar.querySelectorAll('.module-list-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        selectedModule = item.dataset.id;
+                        render();
+                        renderSidebar();
+                    });
+                    item.addEventListener('mouseenter', () => {
+                        hoveredModule = item.dataset.id;
+                        render();
+                    });
+                    item.addEventListener('mouseleave', () => {
+                        hoveredModule = null;
+                        render();
+                    });
+                });
+
+                return;
+            }
+
+            const mod = MODULES.find(m => m.id === selectedModule);
+            const catColor = CATEGORY_COLORS[mod.category];
+            const incomingConns = CONNECTIONS.filter(c => c.to === selectedModule);
+            const outgoingConns = CONNECTIONS.filter(c => c.from === selectedModule);
+
+            sidebar.innerHTML = `
+                <div class="module-detail">
+                    <div class="module-header">
+                        <div class="module-icon-box" style="background: linear-gradient(135deg, ${mod.color}CC, ${mod.color}); box-shadow: 0 8px 24px ${mod.color}40;">
+                            ${mod.icon}
+                        </div>
+                        <div>
+                            <h2>${mod.name}</h2>
+                            <span class="module-badge" style="background: ${catColor.bg}; color: ${catColor.border};">
+                                ${catColor.label}
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="module-description">${mod.description}</p>
+
+                    <div class="detail-section">
+                        <h3>localStorage Keys</h3>
+                        ${mod.storage.map(key => `<code class="storage-key">${key}</code>`).join('')}
+                    </div>
+
+                    ${incomingConns.length > 0 ? `
+                        <div class="detail-section">
+                            <h3>⬅️ Recibe datos de</h3>
+                            ${incomingConns.map(conn => {
+                                const fromMod = MODULES.find(m => m.id === conn.from);
+                                return `
+                                    <div class="connection-item" style="border-color: ${CONNECTION_COLORS[conn.type]};">
+                                        <span class="icon">${fromMod.icon}</span>
+                                        <div>
+                                            <div class="name">${fromMod.name}</div>
+                                            <div class="label">${conn.label}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+
+                    ${outgoingConns.length > 0 ? `
+                        <div class="detail-section">
+                            <h3>➡️ Envía datos a</h3>
+                            ${outgoingConns.map(conn => {
+                                const toMod = MODULES.find(m => m.id === conn.to);
+                                return `
+                                    <div class="connection-item" style="border-color: ${CONNECTION_COLORS[conn.type]};">
+                                        <span class="icon">${toMod.icon}</span>
+                                        <div>
+                                            <div class="name">${toMod.name}</div>
+                                            <div class="label">${conn.label}</div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+
+                    <button class="btn-close" id="btnClose">Cerrar detalles</button>
+                </div>
+            `;
+
+            document.getElementById('btnClose').addEventListener('click', () => {
+                selectedModule = null;
+                render();
+                renderSidebar();
+            });
+        }
+
+        function render() {
+            renderConnections();
+            renderPlannedNodes();
+            renderNodes();
+        }
+
+        // ==================== EVENTOS ====================
+        document.getElementById('showPlanned').addEventListener('change', (e) => {
+            showPlanned = e.target.checked;
+            render();
+            renderSidebar();
+        });
+
+        document.getElementById('filterCategory').addEventListener('change', (e) => {
+            filterCategory = e.target.value;
+            render();
+        });
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            render();
+            renderSidebar();
+        });
+    </script>
+</body>
+</html>

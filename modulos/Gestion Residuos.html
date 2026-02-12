@@ -1,0 +1,2988 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>BCP - Sistema de Gestión de Residuos v4.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --bcp-primario: #1f6f5f;
+            --bcp-secundario: #38b48b;
+            --bcp-acento: #f4b000;
+            --bcp-fondo: #f5f7fa;
+            --bcp-texto: #24323f;
+            --bcp-peligro: #b91c1c;
+            --bcp-warning: #d97706;
+            --bcp-info: #2563eb;
+            --bcp-success: #059669;
+            --generador-color: #0891b2;
+            --recolector-color: #7c3aed;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+            --radius-sm: 6px;
+            --radius-md: 10px;
+            --radius-lg: 16px;
+            --radius-full: 999px;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bcp-fondo);
+            color: var(--bcp-texto);
+            min-height: 100vh;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(135deg, var(--bcp-primario) 0%, var(--bcp-secundario) 100%);
+            color: #fff;
+            padding: 16px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            box-shadow: var(--shadow-lg);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        header h1::before {
+            content: "♻️";
+            font-size: 1.5rem;
+        }
+
+        header small {
+            display: block;
+            opacity: 0.9;
+            font-size: 0.8rem;
+            margin-top: 2px;
+        }
+
+        .user-panel {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-full);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-panel select,
+        .user-panel input {
+            border-radius: var(--radius-full);
+            border: none;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            min-width: 130px;
+        }
+
+        .user-panel button {
+            border-radius: var(--radius-full);
+            border: none;
+            padding: 8px 16px;
+            background: #fff;
+            color: var(--bcp-primario);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .user-panel button:hover {
+            background: var(--bcp-acento);
+            color: #000;
+            transform: translateY(-1px);
+        }
+
+        .user-info {
+            font-size: 0.85rem;
+            text-align: right;
+        }
+
+        .chip-role {
+            font-size: 0.7rem;
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chip-role.generador {
+            background: var(--generador-color);
+        }
+
+        .chip-role.recolector {
+            background: var(--recolector-color);
+        }
+
+        .chip-role.admin {
+            background: var(--bcp-acento);
+            color: #000;
+        }
+
+        /* ===== MAIN ===== */
+        main {
+            padding: 20px;
+            max-width: 1500px;
+            margin: 0 auto 40px;
+        }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: #fff;
+            padding: 8px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .tab-btn {
+            border-radius: var(--radius-full);
+            border: 2px solid transparent;
+            background: #f3f4f6;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6b7280;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn:hover:not(.disabled) {
+            background: #e5e7eb;
+            color: var(--bcp-texto);
+        }
+
+        .tab-btn.active {
+            background: var(--bcp-primario);
+            color: #fff;
+            border-color: var(--bcp-primario);
+        }
+
+        .tab-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .tab-btn .tab-icon {
+            font-size: 1.1rem;
+        }
+
+        .tab-btn.generador-only {
+            border-left: 3px solid var(--generador-color);
+        }
+
+        .tab-btn.recolector-only {
+            border-left: 3px solid var(--recolector-color);
+        }
+
+        .tab-btn.generador-only.active {
+            background: var(--generador-color);
+        }
+
+        .tab-btn.recolector-only.active {
+            background: var(--recolector-color);
+        }
+
+        section {
+            display: none;
+        }
+
+        section.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 16px;
+        }
+
+        .card h2 {
+            margin: 0 0 4px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h2 .icon {
+            font-size: 1.3rem;
+        }
+
+        .card .subtitle {
+            color: #6b7280;
+            font-size: 0.82rem;
+            margin-bottom: 16px;
+        }
+
+        /* ===== GRID ===== */
+        .grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .grid-2 {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        }
+
+        .grid-3 {
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        }
+
+        /* ===== KPI CARDS ===== */
+        .kpi-card {
+            background: linear-gradient(135deg, #fff 0%, #f8fafc 100%);
+            border-radius: var(--radius-md);
+            padding: 16px 20px;
+            border: 1px solid #e5e7eb;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .kpi-card.primary::before { background: var(--bcp-primario); }
+        .kpi-card.danger::before { background: var(--bcp-peligro); }
+        .kpi-card.warning::before { background: var(--bcp-warning); }
+        .kpi-card.success::before { background: var(--bcp-success); }
+        .kpi-card.info::before { background: var(--bcp-info); }
+
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--bcp-texto);
+            line-height: 1.1;
+        }
+
+        .kpi-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .kpi-detail {
+            font-size: 0.75rem;
+            color: #9ca3af;
+            margin-top: 8px;
+        }
+
+        /* ===== FORMS ===== */
+        .field-group {
+            margin-bottom: 14px;
+        }
+
+        .field-group label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #374151;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .field-group label.required::after {
+            content: " *";
+            color: var(--bcp-peligro);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        input[type="datetime-local"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            border: 1.5px solid #d1d5db;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--bcp-primario);
+            box-shadow: 0 0 0 3px rgba(31, 111, 95, 0.15);
+        }
+
+        input:disabled,
+        select:disabled,
+        textarea:disabled {
+            background: #f3f4f6;
+            color: #6b7280;
+            cursor: not-allowed;
+        }
+
+        textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .field-inline {
+            display: flex;
+            gap: 8px;
+            align-items: stretch;
+        }
+
+        .field-inline input[type="number"] {
+            flex: 1;
+            max-width: 140px;
+        }
+
+        .field-inline select {
+            max-width: 100px;
+        }
+
+        /* ===== FIELDSET ===== */
+        .fieldset {
+            border-radius: var(--radius-md);
+            border: 1.5px solid #e5e7eb;
+            padding: 16px 18px;
+            margin-bottom: 16px;
+            background: #fafbfc;
+        }
+
+        .fieldset legend {
+            font-size: 0.85rem;
+            font-weight: 700;
+            padding: 0 10px;
+            color: var(--bcp-primario);
+        }
+
+        .fieldset.generador {
+            border-color: rgba(8, 145, 178, 0.3);
+            background: rgba(8, 145, 178, 0.03);
+        }
+
+        .fieldset.generador legend {
+            color: var(--generador-color);
+        }
+
+        .fieldset.recolector {
+            border-color: rgba(124, 58, 237, 0.3);
+            background: rgba(124, 58, 237, 0.03);
+        }
+
+        .fieldset.recolector legend {
+            color: var(--recolector-color);
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn {
+            border-radius: var(--radius-full);
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--bcp-primario);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: #185c4f;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        .btn-danger {
+            background: var(--bcp-peligro);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #991b1b;
+        }
+
+        .btn-success {
+            background: var(--bcp-success);
+            color: #fff;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-generador {
+            background: var(--generador-color);
+            color: #fff;
+        }
+
+        .btn-generador:hover {
+            background: #0e7490;
+        }
+
+        .btn-recolector {
+            background: var(--recolector-color);
+            color: #fff;
+        }
+
+        .btn-recolector:hover {
+            background: #6d28d9;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.78rem;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        /* ===== BADGES ===== */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.72rem;
+            font-weight: 600;
+        }
+
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #b91c1c; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .badge-neutral { background: #e5e7eb; color: #374151; }
+        .badge-generador { background: rgba(8, 145, 178, 0.15); color: var(--generador-color); }
+        .badge-recolector { background: rgba(124, 58, 237, 0.15); color: var(--recolector-color); }
+
+        /* ===== TABLE ===== */
+        .table-container {
+            max-height: 480px;
+            overflow: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid #e5e7eb;
+            background: #fff;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+
+        th, td {
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        tbody tr:hover {
+            background: #f1f5f9;
+        }
+
+        .row-warning {
+            background: #fffbeb !important;
+        }
+
+        .row-expired {
+            background: #fef2f2 !important;
+        }
+
+        .row-completed {
+            background: #f0fdf4 !important;
+        }
+
+        /* ===== ESTADO BADGES ===== */
+        .estado-badge {
+            padding: 4px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.72rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .estado-generado { background: #dbeafe; color: #1e40af; }
+        .estado-almacenado { background: #fef3c7; color: #92400e; }
+        .estado-programado { background: #e0e7ff; color: #3730a3; }
+        .estado-transito { background: #fce7f3; color: #9d174d; }
+        .estado-retirado { background: #d1fae5; color: #065f46; }
+        .estado-finalizado { background: #10b981; color: #fff; }
+
+        /* ===== FILTERS ===== */
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: var(--radius-md);
+        }
+
+        .filters select,
+        .filters input {
+            border-radius: var(--radius-full);
+            border: 1px solid #d1d5db;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+            min-width: 150px;
+        }
+
+        /* ===== MODAL ===== */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-backdrop.active {
+            display: flex;
+        }
+
+        .modal {
+            background: #fff;
+            max-width: 700px;
+            width: 100%;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            max-height: 85vh;
+            overflow: auto;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal .modal-subtitle {
+            color: #6b7280;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        /* ===== CHECKBOX GROUP ===== */
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: var(--radius-sm);
+            transition: background 0.2s;
+        }
+
+        .checkbox-group label:hover {
+            background: #f3f4f6;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--bcp-primario);
+        }
+
+        /* ===== LOTE SELECTOR ===== */
+        .lote-selector {
+            border: 2px dashed #d1d5db;
+            border-radius: var(--radius-md);
+            padding: 16px;
+            background: #fafbfc;
+        }
+
+        .lote-selector.linked {
+            border-color: var(--bcp-success);
+            border-style: solid;
+            background: #f0fdf4;
+        }
+
+        .lote-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            background: #fff;
+            border-radius: var(--radius-sm);
+            border: 1px solid #e5e7eb;
+            margin-top: 10px;
+        }
+
+        .lote-info .lote-icon {
+            font-size: 1.5rem;
+        }
+
+        .lote-info .lote-details {
+            flex: 1;
+        }
+
+        .lote-info .lote-code {
+            font-weight: 700;
+            color: var(--bcp-primario);
+        }
+
+        .lote-info .lote-meta {
+            font-size: 0.78rem;
+            color: #6b7280;
+        }
+
+        /* ===== TIMELINE ===== */
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .timeline::before {
+            content: "";
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e5e7eb;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 16px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            left: -24px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #d1d5db;
+            border: 2px solid #fff;
+        }
+
+        .timeline-item.completed::before {
+            background: var(--bcp-success);
+        }
+
+        .timeline-item.current::before {
+            background: var(--bcp-info);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+        }
+
+        .timeline-date {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .timeline-content {
+            font-size: 0.85rem;
+        }
+
+        .timeline-user {
+            font-size: 0.75rem;
+            color: #9ca3af;
+        }
+
+        /* ===== TOAST ===== */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            padding: 14px 20px;
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            animation: toastIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toast.success { background: var(--bcp-success); }
+        .toast.error { background: var(--bcp-peligro); }
+        .toast.warning { background: var(--bcp-warning); }
+        .toast.info { background: var(--bcp-info); }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* ===== ALERT BOX ===== */
+        .alert {
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            margin-bottom: 16px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .alert-info {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
+        }
+
+        .alert-warning {
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            color: #92400e;
+        }
+
+        .alert-danger {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+        }
+
+        .alert-icon {
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            header {
+                padding: 12px 16px;
+            }
+
+            header h1 {
+                font-size: 1.15rem;
+            }
+
+            .user-panel {
+                width: 100%;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .tabs {
+                gap: 4px;
+                padding: 6px;
+            }
+
+            .tab-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+            }
+
+            .tab-btn .tab-text {
+                display: none;
+            }
+
+            .card {
+                padding: 16px;
+            }
+
+            .kpi-value {
+                font-size: 1.6rem;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .filters select,
+            .filters input {
+                width: 100%;
+            }
+        }
+
+        /* ===== PRINT ===== */
+        @media print {
+            header, .tabs, .filters, .actions, .btn {
+                display: none !important;
+            }
+
+            .card {
+                box-shadow: none;
+                border: 1px solid #e5e7eb;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Sistema de Gestión de Residuos</h1>
+        <small>BioCannaPhrama · Versión 4.0 · Módulos Generador/Recolector</small>
+    </div>
+    <div class="user-panel" id="loginPanel">
+        <input type="text" id="usuarioNombre" placeholder="Nombre usuario">
+        <select id="usuarioRol">
+            <option value="Generador">🔵 Generador</option>
+            <option value="Recolector">🟣 Recolector</option>
+            <option value="Administrador">⚙️ Administrador</option>
+        </select>
+        <button type="button" id="btnLogin">Iniciar sesión</button>
+    </div>
+    <div class="user-panel" id="userPanel" style="display:none;">
+        <div class="user-info">
+            <div><strong id="userNameLabel"></strong></div>
+            <div class="chip-role" id="userRoleLabel"></div>
+        </div>
+        <button type="button" id="btnLogout">Cerrar sesión</button>
+    </div>
+</header>
+
+<main>
+    <!-- TABS -->
+    <div class="tabs" id="tabsContainer">
+        <button class="tab-btn active" data-tab="dashboard">
+            <span class="tab-icon">📊</span>
+            <span class="tab-text">Dashboard</span>
+        </button>
+        <button class="tab-btn generador-only" data-tab="generacion" id="tabGeneracion">
+            <span class="tab-icon">🗑️</span>
+            <span class="tab-text">Generar Residuo</span>
+        </button>
+        <button class="tab-btn generador-only" data-tab="almacenamiento" id="tabAlmacenamiento">
+            <span class="tab-icon">📦</span>
+            <span class="tab-text">Almacenamiento</span>
+        </button>
+        <button class="tab-btn recolector-only" data-tab="disposicion" id="tabDisposicion">
+            <span class="tab-icon">🚛</span>
+            <span class="tab-text">Disposición Final</span>
+        </button>
+        <button class="tab-btn" data-tab="listado">
+            <span class="tab-icon">📋</span>
+            <span class="tab-text">Trazabilidad</span>
+        </button>
+        <button class="tab-btn" data-tab="config">
+            <span class="tab-icon">⚙️</span>
+            <span class="tab-text">Configuración</span>
+        </button>
+    </div>
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <section id="dashboard" class="active">
+        <div class="grid grid-4">
+            <div class="kpi-card primary">
+                <div class="kpi-value" id="kpiTotal">0</div>
+                <div class="kpi-label">Total Residuos</div>
+                <div class="kpi-detail" id="kpiTotalDetalle">--</div>
+            </div>
+            <div class="kpi-card danger">
+                <div class="kpi-value" id="kpiPeligrosos">0</div>
+                <div class="kpi-label">Peligrosos</div>
+                <div class="kpi-detail" id="kpiPeligrososDetalle">--</div>
+            </div>
+            <div class="kpi-card warning">
+                <div class="kpi-value" id="kpiPendientes">0</div>
+                <div class="kpi-label">Pendientes Retiro</div>
+                <div class="kpi-detail" id="kpiPendientesDetalle">--</div>
+            </div>
+            <div class="kpi-card success">
+                <div class="kpi-value" id="kpiFinalizados">0</div>
+                <div class="kpi-label">Con Disposición Final</div>
+                <div class="kpi-detail" id="kpiFinalizadosDetalle">--</div>
+            </div>
+        </div>
+
+        <div class="grid grid-2" style="margin-top:16px;">
+            <div class="card">
+                <h2><span class="icon">⚠️</span> Alertas de Almacenamiento</h2>
+                <p class="subtitle">Residuos próximos a vencer o vencidos según fechas máximas</p>
+                <div class="grid grid-2" id="alertasContainer">
+                    <div class="kpi-card warning">
+                        <div class="kpi-value" id="kpiPorVencer">0</div>
+                        <div class="kpi-label">Por vencer (≤7 días)</div>
+                    </div>
+                    <div class="kpi-card danger">
+                        <div class="kpi-value" id="kpiVencidos">0</div>
+                        <div class="kpi-label">Vencidos</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">📈</span> Distribución por Estado</h2>
+                <p class="subtitle">Resumen operativo del flujo de residuos</p>
+                <div id="resumenEstados" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:16px;">
+            <h2><span class="icon">🔗</span> Residuos Vinculados a Producción</h2>
+            <p class="subtitle">Residuos con trazabilidad a lotes de extracción BHO/RSO</p>
+            <div id="vinculacionProduccion" style="margin-top:12px;"></div>
+        </div>
+    </section>
+
+    <!-- ===================== GENERACIÓN DE RESIDUO ===================== -->
+    <section id="generacion">
+        <div class="card">
+            <h2><span class="icon">🗑️</span> Registro de Nuevo Residuo</h2>
+            <p class="subtitle">Módulo Generador · Complete la información del residuo generado</p>
+
+            <div class="alert alert-info">
+                <span class="alert-icon">💡</span>
+                <div>
+                    <strong>Flujo de trabajo:</strong> Complete los datos del residuo, vincúlelo a un lote de producción si aplica, 
+                    y guarde. Luego proceda al módulo de <strong>Almacenamiento</strong> para asignar contenedor y ubicación.
+                </div>
+            </div>
+
+            <form id="formGeneracion">
+                <input type="hidden" id="genIdHidden">
+
+                <fieldset class="fieldset generador">
+                    <legend>📋 Información Básica del Residuo</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">Fecha/hora de generación</label>
+                            <input type="datetime-local" id="genFecha" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Área / Unidad de proceso</label>
+                            <select id="genArea" required>
+                                <option value="">Seleccione área...</option>
+                                <option value="Extracción RSO">Extracción RSO</option>
+                                <option value="Extracción BHO">Extracción BHO</option>
+                                <option value="Laboratorio QC">Laboratorio QC</option>
+                                <option value="Formulación">Formulación</option>
+                                <option value="Envasado">Envasado</option>
+                                <option value="Almacén MP">Almacén MP</option>
+                                <option value="Mantenimiento">Mantenimiento</option>
+                                <option value="Administración">Administración</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Punto de generación</label>
+                            <input type="text" id="genPunto" placeholder="Ej.: Reactor 1, Cabina de flujo" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Etapa del proceso</label>
+                            <input type="text" id="genEtapa" placeholder="Ej.: Lavado, Purga, Winterizado">
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Categoría</label>
+                            <select id="genCategoria" required>
+                                <option value="">Seleccione...</option>
+                                <option value="No peligroso">No peligroso</option>
+                                <option value="Peligroso">Peligroso</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Tipo de residuo</label>
+                            <select id="genTipo" required>
+                                <option value="">Seleccione tipo...</option>
+                                <option value="Solvente usado">Solvente usado</option>
+                                <option value="Biomasa post extracción">Biomasa post extracción</option>
+                                <option value="Sólido contaminado">Sólido contaminado</option>
+                                <option value="Producto fuera de especificación">Producto fuera de especificación</option>
+                                <option value="Material de empaque contaminado">Material de empaque contaminado</option>
+                                <option value="Filtros usados">Filtros usados</option>
+                                <option value="EPP contaminado">EPP contaminado</option>
+                                <option value="Lodo / mezcla">Lodo / mezcla</option>
+                                <option value="Residuo orgánico">Residuo orgánico</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset generador">
+                    <legend>📝 Descripción y Cantidad</legend>
+                    <div class="grid grid-2">
+                        <div class="field-group">
+                            <label class="required">Descripción del residuo</label>
+                            <textarea id="genDescripcion" placeholder="Describa el residuo: composición, origen, características..." required></textarea>
+                        </div>
+                        <div>
+                            <div class="field-group">
+                                <label class="required">Estado físico</label>
+                                <select id="genEstadoFisico" required>
+                                    <option value="">Seleccione...</option>
+                                    <option value="Sólido">Sólido</option>
+                                    <option value="Líquido">Líquido</option>
+                                    <option value="Semisólido / pastoso">Semisólido / pastoso</option>
+                                    <option value="Gas / vapor">Gas / vapor</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label class="required">Cantidad y unidad</label>
+                                <div class="field-inline">
+                                    <input type="number" step="0.001" min="0" id="genCantidad" placeholder="0" required>
+                                    <select id="genUnidad" required>
+                                        <option value="kg">kg</option>
+                                        <option value="L">L</option>
+                                        <option value="g">g</option>
+                                        <option value="mL">mL</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset generador">
+                    <legend>⚠️ Clasificación y Peligrosidad</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label>Código interno BCP</label>
+                            <input type="text" id="genCodigoInterno" placeholder="Ej.: BCP-R-001">
+                        </div>
+                        <div class="field-group">
+                            <label>Código normativo (DS 148)</label>
+                            <input type="text" id="genCodigoNormativo" placeholder="Ej.: Y8, 14-02-03">
+                        </div>
+                        <div class="field-group">
+                            <label>Número ONU</label>
+                            <input type="text" id="genNumeroONU" placeholder="Ej.: UN 1993">
+                        </div>
+                        <div class="field-group">
+                            <label>Clase de riesgo</label>
+                            <input type="text" id="genClaseRiesgo" placeholder="Ej.: 3 (líquido inflamable)">
+                        </div>
+                        <div class="field-group" style="grid-column: span 2;">
+                            <label>Peligrosidad (marque las que aplican)</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" name="genPeligrosidad" value="Inflamable"> 🔥 Inflamable</label>
+                                <label><input type="checkbox" name="genPeligrosidad" value="Corrosivo"> ⚗️ Corrosivo</label>
+                                <label><input type="checkbox" name="genPeligrosidad" value="Tóxico"> ☠️ Tóxico</label>
+                                <label><input type="checkbox" name="genPeligrosidad" value="Reactivo"> ⚡ Reactivo</label>
+                                <label><input type="checkbox" name="genPeligrosidad" value="Biológico"> 🦠 Biológico</label>
+                                <label><input type="checkbox" name="genPeligrosidad" value="Oxidante"> 🧪 Oxidante</label>
+                            </div>
+                        </div>
+                        <div class="field-group" style="grid-column: span 3;">
+                            <label>Incompatibilidades relevantes</label>
+                            <textarea id="genIncompatibilidades" placeholder="Ej.: No mezclar con oxidantes fuertes, ácidos fuertes..."></textarea>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset generador">
+                    <legend>🔗 Vinculación con Lote de Producción</legend>
+                    <div class="lote-selector" id="loteSelector">
+                        <div class="grid grid-2">
+                            <div class="field-group">
+                                <label>Seleccionar lote de extracción</label>
+                                <select id="genLoteSelect">
+                                    <option value="">Sin vincular a lote</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label>O ingresar manualmente</label>
+                                <input type="text" id="genLoteManual" placeholder="Ej.: EXT-20250115-001">
+                            </div>
+                        </div>
+                        <div id="loteInfoContainer" style="display:none;"></div>
+                    </div>
+                    <div class="field-group" style="margin-top:12px;">
+                        <label>Referencia SOP</label>
+                        <input type="text" id="genSopCodigo" placeholder="Ej.: SOP-RES-01">
+                    </div>
+                    <div class="field-group">
+                        <label>Observaciones adicionales</label>
+                        <textarea id="genObservaciones" placeholder="Información adicional relevante..."></textarea>
+                    </div>
+                </fieldset>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-generador">💾 Registrar Residuo</button>
+                    <button type="button" class="btn btn-secondary" id="btnLimpiarGen">🔄 Limpiar Formulario</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===================== ALMACENAMIENTO ===================== -->
+    <section id="almacenamiento">
+        <div class="card">
+            <h2><span class="icon">📦</span> Asignación de Almacenamiento Interno</h2>
+            <p class="subtitle">Módulo Generador · Asigne contenedor y ubicación a residuos generados</p>
+
+            <div class="alert alert-warning">
+                <span class="alert-icon">⏱️</span>
+                <div>
+                    <strong>Importante:</strong> Los residuos peligrosos tienen un límite máximo de almacenamiento de 
+                    <strong>6 meses</strong> según DS 148. El sistema alertará cuando se aproxime la fecha límite.
+                </div>
+            </div>
+
+            <!-- Residuos pendientes de almacenamiento -->
+            <div style="margin-bottom:20px;">
+                <h3 style="font-size:0.95rem; margin-bottom:10px;">📋 Residuos Pendientes de Almacenamiento</h3>
+                <div class="table-container" style="max-height:250px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Categoría</th>
+                                <th>Cantidad</th>
+                                <th>Lote Vinculado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyPendientesAlm"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <form id="formAlmacenamiento" style="display:none;">
+                <input type="hidden" id="almResiduoId">
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">📦</span>
+                    <div>Asignando almacenamiento a: <strong id="almResiduoInfo"></strong></div>
+                </div>
+
+                <fieldset class="fieldset generador">
+                    <legend>🏷️ Contenedor</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">ID Contenedor</label>
+                            <input type="text" id="almContenedorId" placeholder="Ej.: CONT-ETOH-01" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Tipo de contenedor</label>
+                            <select id="almTipoContenedor" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Tambor metálico 200L">Tambor metálico 200L</option>
+                                <option value="Tambor metálico 100L">Tambor metálico 100L</option>
+                                <option value="Bidón HDPE 20L">Bidón HDPE 20L</option>
+                                <option value="Bidón HDPE 10L">Bidón HDPE 10L</option>
+                                <option value="Bidón HDPE 5L">Bidón HDPE 5L</option>
+                                <option value="Contenedor plástico">Contenedor plástico</option>
+                                <option value="Bolsa roja REAS">Bolsa roja REAS</option>
+                                <option value="Caja de cartón">Caja de cartón</option>
+                                <option value="IBC 1000L">IBC 1000L</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Capacidad del contenedor</label>
+                            <div class="field-inline">
+                                <input type="number" step="0.1" min="0" id="almCapacidad" placeholder="0">
+                                <select id="almCapacidadUnidad">
+                                    <option value="L">L</option>
+                                    <option value="kg">kg</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="field-group">
+                            <label>% de llenado estimado</label>
+                            <input type="number" min="0" max="100" id="almPorcentajeLlenado" placeholder="Ej.: 80">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset generador">
+                    <legend>📍 Ubicación Física</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">Edificio / Planta</label>
+                            <select id="almEdificio" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Planta Principal">Planta Principal</option>
+                                <option value="Bodega Residuos Peligrosos">Bodega Residuos Peligrosos</option>
+                                <option value="Patio de Residuos">Patio de Residuos</option>
+                                <option value="Laboratorio">Laboratorio</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Sala / Sector</label>
+                            <input type="text" id="almSala" placeholder="Ej.: Zona A, Sector 2" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Estante / Posición</label>
+                            <input type="text" id="almEstante" placeholder="Ej.: Estante 2, nivel B">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset generador">
+                    <legend>📅 Control de Fechas</legend>
+                    <div class="grid grid-2">
+                        <div class="field-group">
+                            <label class="required">Fecha inicio de almacenamiento</label>
+                            <input type="date" id="almFechaInicio" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Fecha máxima de almacenamiento</label>
+                            <input type="date" id="almFechaMax" required>
+                            <small style="color:#6b7280; font-size:0.75rem;">Peligrosos: máx. 6 meses según DS 148</small>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-generador">📦 Asignar Almacenamiento</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelarAlm">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===================== DISPOSICIÓN FINAL ===================== -->
+    <section id="disposicion">
+        <div class="card">
+            <h2><span class="icon">🚛</span> Gestión de Disposición Final</h2>
+            <p class="subtitle">Módulo Recolector · Gestione el retiro y disposición final de residuos</p>
+
+            <div class="alert alert-info">
+                <span class="alert-icon">📋</span>
+                <div>
+                    <strong>Documentos requeridos:</strong> Manifiesto de transporte, guía de despacho, 
+                    certificado de disposición final. Verifique autorización vigente del gestor.
+                </div>
+            </div>
+
+            <!-- Residuos listos para disposición -->
+            <div style="margin-bottom:20px;">
+                <h3 style="font-size:0.95rem; margin-bottom:10px;">📋 Residuos Disponibles para Retiro</h3>
+                <div class="filters">
+                    <select id="filtroDispCategoria">
+                        <option value="">Categoría: todas</option>
+                        <option value="Peligroso">Peligroso</option>
+                        <option value="No peligroso">No peligroso</option>
+                    </select>
+                    <select id="filtroDispEstado">
+                        <option value="">Estado: todos</option>
+                        <option value="Almacenado">Almacenado</option>
+                        <option value="Programado retiro">Programado retiro</option>
+                        <option value="En tránsito">En tránsito</option>
+                    </select>
+                </div>
+                <div class="table-container" style="max-height:280px;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tipo</th>
+                                <th>Categoría</th>
+                                <th>Cantidad</th>
+                                <th>Contenedor</th>
+                                <th>Ubicación</th>
+                                <th>Almacenado desde</th>
+                                <th>Estado</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyDisposicion"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <form id="formDisposicion" style="display:none;">
+                <input type="hidden" id="dispResiduoId">
+
+                <div class="alert alert-info">
+                    <span class="alert-icon">🚛</span>
+                    <div>Gestionando disposición de: <strong id="dispResiduoInfo"></strong></div>
+                </div>
+
+                <fieldset class="fieldset recolector">
+                    <legend>🏢 Gestor Externo Autorizado</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">Nombre del gestor</label>
+                            <input type="text" id="dispGestorNombre" placeholder="Empresa autorizada" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">RUT gestor</label>
+                            <input type="text" id="dispGestorRut" placeholder="Ej.: 76.123.456-7" required>
+                        </div>
+                        <div class="field-group">
+                            <label class="required">N° resolución / autorización</label>
+                            <input type="text" id="dispGestorResolucion" required>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset recolector">
+                    <legend>🚚 Transporte</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">N° manifiesto / documento</label>
+                            <input type="text" id="dispManifiesto" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Guía de despacho</label>
+                            <input type="text" id="dispGuiaDespacho">
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Patente vehículo</label>
+                            <input type="text" id="dispPatente" placeholder="Ej.: ABCD12" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Nombre transportista</label>
+                            <input type="text" id="dispTransportista">
+                        </div>
+                        <div class="field-group">
+                            <label>Cantidad transportada</label>
+                            <div class="field-inline">
+                                <input type="number" step="0.001" min="0" id="dispCantidadTransporte">
+                                <select id="dispUnidadTransporte">
+                                    <option value="kg">kg</option>
+                                    <option value="L">L</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset recolector">
+                    <legend>🏭 Disposición Final</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">Tipo de disposición</label>
+                            <select id="dispTipoDisposicion" required>
+                                <option value="">Seleccione...</option>
+                                <option value="Incineración">Incineración</option>
+                                <option value="Reciclaje / recuperación">Reciclaje / recuperación</option>
+                                <option value="Tratamiento físico-químico">Tratamiento físico-químico</option>
+                                <option value="Relleno de seguridad">Relleno de seguridad</option>
+                                <option value="Co-procesamiento">Co-procesamiento</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Planta de destino</label>
+                            <input type="text" id="dispPlantaDestino" placeholder="Nombre y ubicación">
+                        </div>
+                        <div class="field-group">
+                            <label>N° certificado disposición</label>
+                            <input type="text" id="dispCertificado">
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset recolector">
+                    <legend>📅 Fechas del Proceso</legend>
+                    <div class="grid grid-3">
+                        <div class="field-group">
+                            <label class="required">Fecha de retiro</label>
+                            <input type="date" id="dispFechaRetiro" required>
+                        </div>
+                        <div class="field-group">
+                            <label>Fecha de disposición final</label>
+                            <input type="date" id="dispFechaDisposicion">
+                        </div>
+                        <div class="field-group">
+                            <label class="required">Nuevo estado</label>
+                            <select id="dispNuevoEstado" required>
+                                <option value="Programado retiro">Programado retiro</option>
+                                <option value="En tránsito">En tránsito</option>
+                                <option value="Retirado por gestor">Retirado por gestor</option>
+                                <option value="Disposición final">Disposición final</option>
+                            </select>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <div class="field-group">
+                    <label>Observaciones del retiro</label>
+                    <textarea id="dispObservaciones" placeholder="Observaciones, incidencias, condiciones especiales..."></textarea>
+                </div>
+
+                <div class="actions">
+                    <button type="submit" class="btn btn-recolector">✅ Registrar Disposición</button>
+                    <button type="button" class="btn btn-secondary" id="btnCancelarDisp">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===================== LISTADO Y TRAZABILIDAD ===================== -->
+    <section id="listado">
+        <div class="card">
+            <h2><span class="icon">📋</span> Listado de Residuos y Trazabilidad</h2>
+            <p class="subtitle">Consulta y seguimiento completo de todos los residuos</p>
+
+            <div class="filters">
+                <select id="filtroEstado">
+                    <option value="">Estado: todos</option>
+                    <option value="Generado">Generado</option>
+                    <option value="Almacenado">Almacenado</option>
+                    <option value="Programado retiro">Programado retiro</option>
+                    <option value="En tránsito">En tránsito</option>
+                    <option value="Retirado por gestor">Retirado por gestor</option>
+                    <option value="Disposición final">Disposición final</option>
+                </select>
+                <select id="filtroCategoria">
+                    <option value="">Categoría: todas</option>
+                    <option value="Peligroso">Peligroso</option>
+                    <option value="No peligroso">No peligroso</option>
+                </select>
+                <select id="filtroArea">
+                    <option value="">Área: todas</option>
+                    <option value="Extracción RSO">Extracción RSO</option>
+                    <option value="Extracción BHO">Extracción BHO</option>
+                    <option value="Laboratorio QC">Laboratorio QC</option>
+                    <option value="Formulación">Formulación</option>
+                    <option value="Envasado">Envasado</option>
+                </select>
+                <input type="text" id="filtroTexto" placeholder="🔍 Buscar por ID, descripción, lote...">
+                <button class="btn btn-small btn-secondary" id="btnLimpiarFiltros">Limpiar filtros</button>
+            </div>
+
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha Gen.</th>
+                            <th>Área / Punto</th>
+                            <th>Tipo</th>
+                            <th>Categoría</th>
+                            <th>Cantidad</th>
+                            <th>Lote Producción</th>
+                            <th>Contenedor</th>
+                            <th>Almacenamiento</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyListado"></tbody>
+                </table>
+            </div>
+
+            <p class="subtitle" style="margin-top:10px;">
+                Leyenda: 
+                <span class="badge badge-warning">Por vencer ≤7 días</span>
+                <span class="badge badge-danger">Vencido</span>
+                <span class="badge badge-success">Finalizado</span>
+            </p>
+        </div>
+    </section>
+
+    <!-- ===================== CONFIGURACIÓN ===================== -->
+    <section id="config">
+        <div class="grid grid-2">
+            <div class="card">
+                <h2><span class="icon">💾</span> Exportar Datos</h2>
+                <p class="subtitle">Descargue todos los registros en formato JSON para respaldo</p>
+                <div class="actions">
+                    <button type="button" class="btn btn-primary" id="btnExportar">📥 Descargar JSON</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">📤</span> Importar Datos</h2>
+                <p class="subtitle">Reemplace los registros actuales con un archivo JSON</p>
+                <input type="file" id="inputImportar" accept="application/json" style="margin-bottom:10px;">
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" id="btnImportar">📤 Importar JSON</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">🔄</span> Sincronizar Lotes</h2>
+                <p class="subtitle">Actualizar lista de lotes desde el módulo de Extracción</p>
+                <div class="actions">
+                    <button type="button" class="btn btn-primary" id="btnSincronizarLotes">🔄 Sincronizar Lotes</button>
+                </div>
+                <p class="subtitle" style="margin-top:10px;" id="infoLotesSincronizados">
+                    Lotes disponibles: --
+                </p>
+            </div>
+
+            <div class="card">
+                <h2><span class="icon">🗑️</span> Gestión Local</h2>
+                <p class="subtitle">Eliminar todos los registros almacenados localmente</p>
+                <div class="actions">
+                    <button type="button" class="btn btn-danger" id="btnEliminarTodo">⚠️ Eliminar TODOS los registros</button>
+                </div>
+            </div>
+
+            <div class="card" style="grid-column: span 2;">
+                <h2><span class="icon">🧪</span> Datos de Demostración</h2>
+                <p class="subtitle">Cargar datos de ejemplo para pruebas del sistema</p>
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" id="btnCargarDemo">🎲 Cargar Datos Demo</button>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- ===================== MODAL HISTORIAL ===================== -->
+<div class="modal-backdrop" id="modalHistorialBackdrop">
+    <div class="modal">
+        <h3>📜 Historial del Residuo</h3>
+        <p class="modal-subtitle" id="modalHistorialInfo"></p>
+        <div id="historialContenido"></div>
+        <div class="actions">
+            <button type="button" class="btn btn-secondary" id="btnCerrarHistorial">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== MODAL DETALLE ===================== -->
+<div class="modal-backdrop" id="modalDetalleBackdrop">
+    <div class="modal" style="max-width:800px;">
+        <h3>🔍 Detalle del Residuo</h3>
+        <p class="modal-subtitle" id="modalDetalleInfo"></p>
+        <div id="detalleContenido"></div>
+        <div class="actions">
+            <button type="button" class="btn btn-secondary" id="btnCerrarDetalle">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== TOAST CONTAINER ===================== -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+(function() {
+    "use strict";
+
+    // ===== CONSTANTES Y CONFIGURACIÓN =====
+    const STORAGE_KEY = "bcp_residuos_v4";
+    const STORAGE_USER_KEY = "bcp_residuos_usuario_v4";
+    const STORAGE_EXTRACCIONES_KEY = "bcp_extracciones";
+
+    const ROLES = {
+        GENERADOR: "Generador",
+        RECOLECTOR: "Recolector",
+        ADMIN: "Administrador"
+    };
+
+    const ESTADOS = {
+        GENERADO: "Generado",
+        ALMACENADO: "Almacenado",
+        PROGRAMADO: "Programado retiro",
+        TRANSITO: "En tránsito",
+        RETIRADO: "Retirado por gestor",
+        FINALIZADO: "Disposición final"
+    };
+
+    // ===== ESTADO DE LA APLICACIÓN =====
+    let residuos = [];
+    let lotesProduccion = [];
+    let usuarioActual = null;
+
+    // ===== UTILIDADES =====
+    function $(id) {
+        return document.getElementById(id);
+    }
+
+    function formatFecha(fecha) {
+        if (!fecha) return "—";
+        const d = new Date(fecha);
+        return d.toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+
+    function formatFechaHora(fecha) {
+        if (!fecha) return "—";
+        const d = new Date(fecha);
+        return d.toLocaleDateString("es-CL", { 
+            day: "2-digit", month: "2-digit", year: "numeric",
+            hour: "2-digit", minute: "2-digit"
+        });
+    }
+
+    function generarId() {
+        const fecha = new Date();
+        const yyyy = fecha.getFullYear();
+        const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+        const dd = String(fecha.getDate()).padStart(2, "0");
+        
+        const prefijo = `RES-${yyyy}${mm}${dd}`;
+        const existentes = residuos.filter(r => r.id.startsWith(prefijo));
+        const siguiente = existentes.length + 1;
+        
+        return `${prefijo}-${String(siguiente).padStart(3, "0")}`;
+    }
+
+    function mostrarToast(mensaje, tipo = "info") {
+        const container = $("toastContainer");
+        const toast = document.createElement("div");
+        toast.className = `toast ${tipo}`;
+        
+        const iconos = {
+            success: "✅",
+            error: "❌",
+            warning: "⚠️",
+            info: "ℹ️"
+        };
+        
+        toast.innerHTML = `<span>${iconos[tipo] || "ℹ️"}</span> ${mensaje}`;
+        container.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = "0";
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
+
+    // ===== PERSISTENCIA =====
+    function guardarEnStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(residuos));
+    }
+
+    function cargarDesdeStorage() {
+        try {
+            const data = localStorage.getItem(STORAGE_KEY);
+            residuos = data ? JSON.parse(data) : [];
+        } catch (e) {
+            console.error("Error cargando residuos:", e);
+            residuos = [];
+        }
+
+        try {
+            const userData = localStorage.getItem(STORAGE_USER_KEY);
+            if (userData) {
+                usuarioActual = JSON.parse(userData);
+                mostrarUsuarioLogueado();
+            }
+        } catch (e) {
+            console.error("Error cargando usuario:", e);
+        }
+
+        sincronizarLotesProduccion();
+    }
+
+    function sincronizarLotesProduccion() {
+        try {
+            const extData = localStorage.getItem(STORAGE_EXTRACCIONES_KEY);
+            if (extData) {
+                const extracciones = JSON.parse(extData);
+                lotesProduccion = extracciones.map(ext => ({
+                    codigo: ext.codigo,
+                    tipo: ext.tipo,
+                    fechaInicio: ext.fechaInicio,
+                    estado: ext.estado,
+                    operador: ext.operador
+                }));
+            } else {
+                lotesProduccion = [];
+            }
+        } catch (e) {
+            console.error("Error sincronizando lotes:", e);
+            lotesProduccion = [];
+        }
+
+        actualizarSelectorLotes();
+        $("infoLotesSincronizados").textContent = `Lotes disponibles: ${lotesProduccion.length}`;
+    }
+
+    function actualizarSelectorLotes() {
+        const select = $("genLoteSelect");
+        select.innerHTML = '<option value="">Sin vincular a lote</option>';
+        
+        lotesProduccion.forEach(lote => {
+            const opt = document.createElement("option");
+            opt.value = lote.codigo;
+            opt.textContent = `${lote.codigo} (${lote.tipo}) - ${lote.estado}`;
+            select.appendChild(opt);
+        });
+    }
+
+    // ===== AUTENTICACIÓN =====
+    function login() {
+        const nombre = $("usuarioNombre").value.trim();
+        const rol = $("usuarioRol").value;
+
+        if (!nombre) {
+            mostrarToast("Ingrese su nombre de usuario", "warning");
+            return;
+        }
+
+        usuarioActual = { nombre, rol };
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(usuarioActual));
+        mostrarUsuarioLogueado();
+        actualizarPermisosTabs();
+        mostrarToast(`Bienvenido/a, ${nombre}`, "success");
+    }
+
+    function logout() {
+        usuarioActual = null;
+        localStorage.removeItem(STORAGE_USER_KEY);
+        
+        $("loginPanel").style.display = "flex";
+        $("userPanel").style.display = "none";
+        $("usuarioNombre").value = "";
+        
+        actualizarPermisosTabs();
+        cambiarTab("dashboard");
+        mostrarToast("Sesión cerrada", "info");
+    }
+
+    function mostrarUsuarioLogueado() {
+        if (!usuarioActual) return;
+        
+        $("loginPanel").style.display = "none";
+        $("userPanel").style.display = "flex";
+        $("userNameLabel").textContent = usuarioActual.nombre;
+        
+        const roleLabel = $("userRoleLabel");
+        roleLabel.textContent = usuarioActual.rol;
+        roleLabel.className = "chip-role";
+        
+        if (usuarioActual.rol === ROLES.GENERADOR) {
+            roleLabel.classList.add("generador");
+        } else if (usuarioActual.rol === ROLES.RECOLECTOR) {
+            roleLabel.classList.add("recolector");
+        } else {
+            roleLabel.classList.add("admin");
+        }
+        
+        actualizarPermisosTabs();
+    }
+
+    function actualizarPermisosTabs() {
+        const esGenerador = usuarioActual?.rol === ROLES.GENERADOR || usuarioActual?.rol === ROLES.ADMIN;
+        const esRecolector = usuarioActual?.rol === ROLES.RECOLECTOR || usuarioActual?.rol === ROLES.ADMIN;
+
+        const tabGeneracion = $("tabGeneracion");
+        const tabAlmacenamiento = $("tabAlmacenamiento");
+        const tabDisposicion = $("tabDisposicion");
+
+        // Tabs de generador
+        if (esGenerador) {
+            tabGeneracion.classList.remove("disabled");
+            tabAlmacenamiento.classList.remove("disabled");
+        } else {
+            tabGeneracion.classList.add("disabled");
+            tabAlmacenamiento.classList.add("disabled");
+        }
+
+        // Tab de recolector
+        if (esRecolector) {
+            tabDisposicion.classList.remove("disabled");
+        } else {
+            tabDisposicion.classList.add("disabled");
+        }
+    }
+
+    function puedeGenerador() {
+        return usuarioActual?.rol === ROLES.GENERADOR || usuarioActual?.rol === ROLES.ADMIN;
+    }
+
+    function puedeRecolector() {
+        return usuarioActual?.rol === ROLES.RECOLECTOR || usuarioActual?.rol === ROLES.ADMIN;
+    }
+
+    // ===== NAVEGACIÓN =====
+    function cambiarTab(tabId) {
+        const tab = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+        if (tab && tab.classList.contains("disabled")) {
+            mostrarToast("No tiene permisos para acceder a este módulo", "warning");
+            return;
+        }
+
+        document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+        document.querySelectorAll("section").forEach(sec => sec.classList.remove("active"));
+
+        const btnActivo = document.querySelector(`.tab-btn[data-tab="${tabId}"]`);
+        if (btnActivo) btnActivo.classList.add("active");
+
+        const seccion = $(tabId);
+        if (seccion) seccion.classList.add("active");
+
+        // Actualizar datos según la pestaña
+        if (tabId === "dashboard") actualizarDashboard();
+        if (tabId === "almacenamiento") renderPendientesAlmacenamiento();
+        if (tabId === "disposicion") renderResiduosDisposicion();
+        if (tabId === "listado") renderTablaListado();
+    }
+
+    // ===== REGISTRO DE HISTORIAL =====
+    function registrarHistorial(residuo, accion, detalle = "") {
+        if (!residuo.historial) residuo.historial = [];
+        
+        residuo.historial.push({
+            fecha: new Date().toISOString(),
+            usuario: usuarioActual?.nombre || "Sistema",
+            rol: usuarioActual?.rol || "Sistema",
+            accion,
+            detalle
+        });
+    }
+
+    // ===== MÓDULO: GENERACIÓN =====
+    function submitGeneracion(e) {
+        e.preventDefault();
+
+        if (!puedeGenerador()) {
+            mostrarToast("No tiene permisos para generar residuos", "error");
+            return;
+        }
+
+        // Recopilar peligrosidades marcadas
+        const peligrosidades = [];
+        document.querySelectorAll('input[name="genPeligrosidad"]:checked').forEach(cb => {
+            peligrosidades.push(cb.value);
+        });
+
+        // Obtener lote vinculado
+        let loteVinculado = $("genLoteSelect").value || $("genLoteManual").value.trim();
+
+        const nuevoResiduo = {
+            id: generarId(),
+            fechaGeneracion: $("genFecha").value,
+            area: $("genArea").value,
+            puntoGeneracion: $("genPunto").value,
+            etapaProceso: $("genEtapa").value,
+            categoria: $("genCategoria").value,
+            tipoResiduo: $("genTipo").value,
+            descripcion: $("genDescripcion").value.trim(),
+            estadoFisico: $("genEstadoFisico").value,
+            cantidad: parseFloat($("genCantidad").value),
+            unidad: $("genUnidad").value,
+            codigoInterno: $("genCodigoInterno").value.trim(),
+            codigoNormativo: $("genCodigoNormativo").value.trim(),
+            numeroONU: $("genNumeroONU").value.trim(),
+            claseRiesgo: $("genClaseRiesgo").value.trim(),
+            peligrosidades,
+            incompatibilidades: $("genIncompatibilidades").value.trim(),
+            loteProduccion: loteVinculado,
+            sopCodigo: $("genSopCodigo").value.trim(),
+            observaciones: $("genObservaciones").value.trim(),
+            estado: ESTADOS.GENERADO,
+            almacenamiento: null,
+            disposicion: null,
+            historial: [],
+            creadoPor: usuarioActual?.nombre || "Sistema",
+            fechaCreacion: new Date().toISOString()
+        };
+
+        registrarHistorial(nuevoResiduo, "Registro inicial", 
+            `Residuo generado en ${nuevoResiduo.area} - ${nuevoResiduo.puntoGeneracion}`);
+
+        residuos.push(nuevoResiduo);
+        guardarEnStorage();
+        limpiarFormularioGeneracion();
+        
+        mostrarToast(`Residuo ${nuevoResiduo.id} registrado correctamente`, "success");
+        actualizarDashboard();
+    }
+
+    function limpiarFormularioGeneracion() {
+        $("formGeneracion").reset();
+        $("genFecha").value = new Date().toISOString().slice(0, 16);
+        document.querySelectorAll('input[name="genPeligrosidad"]').forEach(cb => cb.checked = false);
+    }
+
+    // ===== MÓDULO: ALMACENAMIENTO =====
+    function renderPendientesAlmacenamiento() {
+        const tbody = $("tbodyPendientesAlm");
+        tbody.innerHTML = "";
+
+        const pendientes = residuos.filter(r => r.estado === ESTADOS.GENERADO);
+
+        if (pendientes.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align:center; color:#6b7280; padding:20px;">
+                        No hay residuos pendientes de almacenamiento
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        pendientes.forEach(residuo => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td><strong>${residuo.id}</strong></td>
+                <td>${formatFecha(residuo.fechaGeneracion)}</td>
+                <td>${residuo.tipoResiduo}</td>
+                <td>
+                    <span class="badge ${residuo.categoria === 'Peligroso' ? 'badge-danger' : 'badge-success'}">
+                        ${residuo.categoria}
+                    </span>
+                </td>
+                <td>${residuo.cantidad} ${residuo.unidad}</td>
+                <td>${residuo.loteProduccion || '—'}</td>
+                <td>
+                    <button class="btn btn-small btn-generador" onclick="seleccionarParaAlmacenamiento('${residuo.id}')">
+                        📦 Asignar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.seleccionarParaAlmacenamiento = function(residuoId) {
+        const residuo = residuos.find(r => r.id === residuoId);
+        if (!residuo) return;
+
+        $("almResiduoId").value = residuoId;
+        $("almResiduoInfo").textContent = `${residuo.id} - ${residuo.tipoResiduo} (${residuo.cantidad} ${residuo.unidad})`;
+        
+        // Establecer fecha de hoy como inicio
+        $("almFechaInicio").value = new Date().toISOString().slice(0, 10);
+        
+        // Si es peligroso, calcular máximo 6 meses
+        if (residuo.categoria === "Peligroso") {
+            const fechaMax = new Date();
+            fechaMax.setMonth(fechaMax.getMonth() + 6);
+            $("almFechaMax").value = fechaMax.toISOString().slice(0, 10);
+        }
+
+        $("formAlmacenamiento").style.display = "block";
+        $("formAlmacenamiento").scrollIntoView({ behavior: "smooth" });
+    };
+
+    function submitAlmacenamiento(e) {
+        e.preventDefault();
+
+        if (!puedeGenerador()) {
+            mostrarToast("No tiene permisos para asignar almacenamiento", "error");
+            return;
+        }
+
+        const residuoId = $("almResiduoId").value;
+        const residuo = residuos.find(r => r.id === residuoId);
+        
+        if (!residuo) {
+            mostrarToast("Residuo no encontrado", "error");
+            return;
+        }
+
+        residuo.almacenamiento = {
+            contenedorId: $("almContenedorId").value.trim(),
+            tipoContenedor: $("almTipoContenedor").value,
+            capacidad: parseFloat($("almCapacidad").value) || null,
+            capacidadUnidad: $("almCapacidadUnidad").value,
+            porcentajeLlenado: parseInt($("almPorcentajeLlenado").value) || null,
+            edificio: $("almEdificio").value,
+            sala: $("almSala").value.trim(),
+            estante: $("almEstante").value.trim(),
+            fechaInicio: $("almFechaInicio").value,
+            fechaMax: $("almFechaMax").value,
+            asignadoPor: usuarioActual?.nombre,
+            fechaAsignacion: new Date().toISOString()
+        };
+
+        residuo.estado = ESTADOS.ALMACENADO;
+        registrarHistorial(residuo, "Almacenamiento asignado", 
+            `Contenedor: ${residuo.almacenamiento.contenedorId} | Ubicación: ${residuo.almacenamiento.edificio} - ${residuo.almacenamiento.sala}`);
+
+        guardarEnStorage();
+        $("formAlmacenamiento").reset();
+        $("formAlmacenamiento").style.display = "none";
+        renderPendientesAlmacenamiento();
+        
+        mostrarToast(`Almacenamiento asignado a ${residuoId}`, "success");
+    }
+
+    function cancelarAlmacenamiento() {
+        $("formAlmacenamiento").reset();
+        $("formAlmacenamiento").style.display = "none";
+    }
+
+    // ===== MÓDULO: DISPOSICIÓN FINAL =====
+    function renderResiduosDisposicion() {
+        const tbody = $("tbodyDisposicion");
+        tbody.innerHTML = "";
+
+        const filtroCategoria = $("filtroDispCategoria").value;
+        const filtroEstado = $("filtroDispEstado").value;
+
+        let disponibles = residuos.filter(r => 
+            r.estado === ESTADOS.ALMACENADO || 
+            r.estado === ESTADOS.PROGRAMADO || 
+            r.estado === ESTADOS.TRANSITO
+        );
+
+        if (filtroCategoria) {
+            disponibles = disponibles.filter(r => r.categoria === filtroCategoria);
+        }
+
+        if (filtroEstado) {
+            disponibles = disponibles.filter(r => r.estado === filtroEstado);
+        }
+
+        if (disponibles.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align:center; color:#6b7280; padding:20px;">
+                        No hay residuos disponibles para retiro
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        disponibles.forEach(residuo => {
+            const alm = residuo.almacenamiento || {};
+            const estadoAlm = calcularEstadoAlmacenamiento(residuo);
+            
+            const tr = document.createElement("tr");
+            tr.className = estadoAlm.clase;
+            
+            tr.innerHTML = `
+                <td><strong>${residuo.id}</strong></td>
+                <td>${residuo.tipoResiduo}</td>
+                <td>
+                    <span class="badge ${residuo.categoria === 'Peligroso' ? 'badge-danger' : 'badge-success'}">
+                        ${residuo.categoria}
+                    </span>
+                </td>
+                <td>${residuo.cantidad} ${residuo.unidad}</td>
+                <td>${alm.contenedorId || '—'}</td>
+                <td>${alm.edificio || '—'} - ${alm.sala || '—'}</td>
+                <td>${formatFecha(alm.fechaInicio)}</td>
+                <td><span class="estado-badge estado-${residuo.estado.toLowerCase().replace(/\s/g, '-')}">${residuo.estado}</span></td>
+                <td>
+                    <button class="btn btn-small btn-recolector" onclick="seleccionarParaDisposicion('${residuo.id}')">
+                        🚛 Gestionar
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.seleccionarParaDisposicion = function(residuoId) {
+        const residuo = residuos.find(r => r.id === residuoId);
+        if (!residuo) return;
+
+        $("dispResiduoId").value = residuoId;
+        $("dispResiduoInfo").textContent = `${residuo.id} - ${residuo.tipoResiduo} (${residuo.cantidad} ${residuo.unidad})`;
+        
+        // Si ya tiene datos de disposición, pre-llenar
+        if (residuo.disposicion) {
+            $("dispGestorNombre").value = residuo.disposicion.gestorNombre || "";
+            $("dispGestorRut").value = residuo.disposicion.gestorRut || "";
+            $("dispGestorResolucion").value = residuo.disposicion.gestorResolucion || "";
+            $("dispManifiesto").value = residuo.disposicion.manifiesto || "";
+            $("dispGuiaDespacho").value = residuo.disposicion.guiaDespacho || "";
+            $("dispPatente").value = residuo.disposicion.patente || "";
+            $("dispTransportista").value = residuo.disposicion.transportista || "";
+            $("dispTipoDisposicion").value = residuo.disposicion.tipoDisposicion || "";
+        }
+
+        $("dispFechaRetiro").value = new Date().toISOString().slice(0, 10);
+        $("formDisposicion").style.display = "block";
+        $("formDisposicion").scrollIntoView({ behavior: "smooth" });
+    };
+
+    function submitDisposicion(e) {
+        e.preventDefault();
+
+        if (!puedeRecolector()) {
+            mostrarToast("No tiene permisos para gestionar disposición", "error");
+            return;
+        }
+
+        const residuoId = $("dispResiduoId").value;
+        const residuo = residuos.find(r => r.id === residuoId);
+        
+        if (!residuo) {
+            mostrarToast("Residuo no encontrado", "error");
+            return;
+        }
+
+        const nuevoEstado = $("dispNuevoEstado").value;
+
+        residuo.disposicion = {
+            gestorNombre: $("dispGestorNombre").value.trim(),
+            gestorRut: $("dispGestorRut").value.trim(),
+            gestorResolucion: $("dispGestorResolucion").value.trim(),
+            manifiesto: $("dispManifiesto").value.trim(),
+            guiaDespacho: $("dispGuiaDespacho").value.trim(),
+            patente: $("dispPatente").value.trim(),
+            transportista: $("dispTransportista").value.trim(),
+            cantidadTransporte: parseFloat($("dispCantidadTransporte").value) || residuo.cantidad,
+            unidadTransporte: $("dispUnidadTransporte").value,
+            tipoDisposicion: $("dispTipoDisposicion").value,
+            plantaDestino: $("dispPlantaDestino").value.trim(),
+            certificado: $("dispCertificado").value.trim(),
+            fechaRetiro: $("dispFechaRetiro").value,
+            fechaDisposicion: $("dispFechaDisposicion").value,
+            observaciones: $("dispObservaciones").value.trim(),
+            gestionadoPor: usuarioActual?.nombre,
+            fechaGestion: new Date().toISOString()
+        };
+
+        const estadoAnterior = residuo.estado;
+        residuo.estado = nuevoEstado;
+
+        registrarHistorial(residuo, `Cambio de estado: ${estadoAnterior} → ${nuevoEstado}`, 
+            `Gestor: ${residuo.disposicion.gestorNombre} | Manifiesto: ${residuo.disposicion.manifiesto}`);
+
+        guardarEnStorage();
+        $("formDisposicion").reset();
+        $("formDisposicion").style.display = "none";
+        renderResiduosDisposicion();
+        
+        mostrarToast(`Disposición actualizada para ${residuoId}`, "success");
+    }
+
+    function cancelarDisposicion() {
+        $("formDisposicion").reset();
+        $("formDisposicion").style.display = "none";
+    }
+
+    // ===== CÁLCULOS DE ESTADO =====
+    function calcularEstadoAlmacenamiento(residuo) {
+        if (!residuo.almacenamiento?.fechaMax) {
+            return { texto: "", clase: "" };
+        }
+
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        
+        const fechaMax = new Date(residuo.almacenamiento.fechaMax);
+        fechaMax.setHours(0, 0, 0, 0);
+        
+        const diffDias = Math.ceil((fechaMax - hoy) / (1000 * 60 * 60 * 24));
+
+        if (diffDias < 0) {
+            return { texto: `Vencido hace ${Math.abs(diffDias)} días`, clase: "row-expired" };
+        } else if (diffDias <= 7) {
+            return { texto: `Vence en ${diffDias} días`, clase: "row-warning" };
+        } else {
+            return { texto: `${diffDias} días restantes`, clase: "" };
+        }
+    }
+
+    // ===== LISTADO Y TRAZABILIDAD =====
+    function renderTablaListado() {
+        const tbody = $("tbodyListado");
+        tbody.innerHTML = "";
+
+        let filtrados = [...residuos];
+
+        // Aplicar filtros
+        const filtroEstado = $("filtroEstado").value;
+        const filtroCategoria = $("filtroCategoria").value;
+        const filtroArea = $("filtroArea").value;
+        const filtroTexto = $("filtroTexto").value.toLowerCase();
+
+        if (filtroEstado) {
+            filtrados = filtrados.filter(r => r.estado === filtroEstado);
+        }
+        if (filtroCategoria) {
+            filtrados = filtrados.filter(r => r.categoria === filtroCategoria);
+        }
+        if (filtroArea) {
+            filtrados = filtrados.filter(r => r.area === filtroArea);
+        }
+        if (filtroTexto) {
+            filtrados = filtrados.filter(r => 
+                r.id.toLowerCase().includes(filtroTexto) ||
+                (r.descripcion || "").toLowerCase().includes(filtroTexto) ||
+                (r.tipoResiduo || "").toLowerCase().includes(filtroTexto) ||
+                (r.loteProduccion || "").toLowerCase().includes(filtroTexto) ||
+                (r.almacenamiento?.contenedorId || "").toLowerCase().includes(filtroTexto)
+            );
+        }
+
+        // Ordenar por fecha descendente
+        filtrados.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+
+        if (filtrados.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" style="text-align:center; color:#6b7280; padding:20px;">
+                        No se encontraron residuos con los filtros aplicados
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        filtrados.forEach(residuo => {
+            const alm = residuo.almacenamiento || {};
+            const estadoAlm = calcularEstadoAlmacenamiento(residuo);
+            
+            let claseRow = "";
+            if (residuo.estado === ESTADOS.FINALIZADO) {
+                claseRow = "row-completed";
+            } else {
+                claseRow = estadoAlm.clase;
+            }
+
+            const tr = document.createElement("tr");
+            tr.className = claseRow;
+
+            // Obtener clase del estado
+            const estadoClase = residuo.estado.toLowerCase().replace(/\s+/g, "-").replace("disposición", "finalizado");
+            
+            tr.innerHTML = `
+                <td><strong>${residuo.id}</strong></td>
+                <td>${formatFecha(residuo.fechaGeneracion)}</td>
+                <td>
+                    <div>${residuo.area}</div>
+                    <small style="color:#6b7280;">${residuo.puntoGeneracion}</small>
+                </td>
+                <td>${residuo.tipoResiduo}</td>
+                <td>
+                    <span class="badge ${residuo.categoria === 'Peligroso' ? 'badge-danger' : 'badge-success'}">
+                        ${residuo.categoria}
+                    </span>
+                </td>
+                <td>${residuo.cantidad} ${residuo.unidad}</td>
+                <td>
+                    ${residuo.loteProduccion ? 
+                        `<span class="badge badge-info">🔗 ${residuo.loteProduccion}</span>` : 
+                        '<span style="color:#9ca3af;">—</span>'}
+                </td>
+                <td>
+                    ${alm.contenedorId ? `
+                        <div>${alm.contenedorId}</div>
+                        <small style="color:#6b7280;">${alm.edificio || ''}</small>
+                    ` : '—'}
+                </td>
+                <td>
+                    ${alm.fechaMax ? `
+                        <div>${formatFecha(alm.fechaInicio)}</div>
+                        <small style="color:${estadoAlm.clase === 'row-expired' ? '#b91c1c' : estadoAlm.clase === 'row-warning' ? '#d97706' : '#6b7280'};">
+                            ${estadoAlm.texto}
+                        </small>
+                    ` : '—'}
+                </td>
+                <td>
+                    <span class="estado-badge estado-${estadoClase}">${residuo.estado}</span>
+                </td>
+                <td>
+                    <button class="btn btn-small btn-secondary" onclick="verDetalle('${residuo.id}')" title="Ver detalle">
+                        🔍
+                    </button>
+                    <button class="btn btn-small btn-secondary" onclick="verHistorial('${residuo.id}')" title="Ver historial">
+                        📜
+                    </button>
+                </td>
+            `;
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.verHistorial = function(residuoId) {
+        const residuo = residuos.find(r => r.id === residuoId);
+        if (!residuo) return;
+
+        $("modalHistorialInfo").textContent = `${residuo.id} - ${residuo.tipoResiduo}`;
+        
+        const contenido = $("historialContenido");
+        const historial = residuo.historial || [];
+
+        if (historial.length === 0) {
+            contenido.innerHTML = '<p style="color:#6b7280;">Sin eventos registrados</p>';
+        } else {
+            let html = '<div class="timeline">';
+            
+            historial.slice().reverse().forEach((item, idx) => {
+                const esUltimo = idx === 0;
+                html += `
+                    <div class="timeline-item ${esUltimo ? 'current' : 'completed'}">
+                        <div class="timeline-date">${formatFechaHora(item.fecha)}</div>
+                        <div class="timeline-content"><strong>${item.accion}</strong></div>
+                        ${item.detalle ? `<div class="timeline-content">${item.detalle}</div>` : ''}
+                        <div class="timeline-user">${item.usuario} (${item.rol})</div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            contenido.innerHTML = html;
+        }
+
+        $("modalHistorialBackdrop").classList.add("active");
+    };
+
+    window.verDetalle = function(residuoId) {
+        const residuo = residuos.find(r => r.id === residuoId);
+        if (!residuo) return;
+
+        $("modalDetalleInfo").textContent = `${residuo.id} - ${residuo.tipoResiduo}`;
+        
+        const alm = residuo.almacenamiento || {};
+        const disp = residuo.disposicion || {};
+
+        let html = `
+            <div class="grid grid-2" style="gap:16px;">
+                <div>
+                    <h4 style="margin:0 0 8px; color:var(--generador-color);">📋 Información del Residuo</h4>
+                    <table style="width:100%; font-size:0.85rem;">
+                        <tr><td style="color:#6b7280;">ID:</td><td><strong>${residuo.id}</strong></td></tr>
+                        <tr><td style="color:#6b7280;">Fecha generación:</td><td>${formatFechaHora(residuo.fechaGeneracion)}</td></tr>
+                        <tr><td style="color:#6b7280;">Área:</td><td>${residuo.area}</td></tr>
+                        <tr><td style="color:#6b7280;">Punto:</td><td>${residuo.puntoGeneracion}</td></tr>
+                        <tr><td style="color:#6b7280;">Tipo:</td><td>${residuo.tipoResiduo}</td></tr>
+                        <tr><td style="color:#6b7280;">Categoría:</td><td><span class="badge ${residuo.categoria === 'Peligroso' ? 'badge-danger' : 'badge-success'}">${residuo.categoria}</span></td></tr>
+                        <tr><td style="color:#6b7280;">Cantidad:</td><td>${residuo.cantidad} ${residuo.unidad}</td></tr>
+                        <tr><td style="color:#6b7280;">Estado físico:</td><td>${residuo.estadoFisico}</td></tr>
+                        <tr><td style="color:#6b7280;">Lote producción:</td><td>${residuo.loteProduccion || '—'}</td></tr>
+                        <tr><td style="color:#6b7280;">Código DS 148:</td><td>${residuo.codigoNormativo || '—'}</td></tr>
+                        <tr><td style="color:#6b7280;">N° ONU:</td><td>${residuo.numeroONU || '—'}</td></tr>
+                    </table>
+                    ${residuo.peligrosidades?.length ? `
+                        <div style="margin-top:10px;">
+                            <strong style="font-size:0.8rem;">Peligrosidades:</strong>
+                            <div style="margin-top:4px;">
+                                ${residuo.peligrosidades.map(p => `<span class="badge badge-danger">${p}</span>`).join(' ')}
+                            </div>
+                        </div>
+                    ` : ''}
+                </div>
+                
+                <div>
+                    <h4 style="margin:0 0 8px; color:var(--generador-color);">📦 Almacenamiento</h4>
+                    ${alm.contenedorId ? `
+                        <table style="width:100%; font-size:0.85rem;">
+                            <tr><td style="color:#6b7280;">Contenedor:</td><td><strong>${alm.contenedorId}</strong></td></tr>
+                            <tr><td style="color:#6b7280;">Tipo:</td><td>${alm.tipoContenedor}</td></tr>
+                            <tr><td style="color:#6b7280;">Ubicación:</td><td>${alm.edificio} - ${alm.sala}</td></tr>
+                            <tr><td style="color:#6b7280;">Posición:</td><td>${alm.estante || '—'}</td></tr>
+                            <tr><td style="color:#6b7280;">Fecha inicio:</td><td>${formatFecha(alm.fechaInicio)}</td></tr>
+                            <tr><td style="color:#6b7280;">Fecha máxima:</td><td>${formatFecha(alm.fechaMax)}</td></tr>
+                            <tr><td style="color:#6b7280;">Asignado por:</td><td>${alm.asignadoPor || '—'}</td></tr>
+                        </table>
+                    ` : '<p style="color:#6b7280; font-size:0.85rem;">Sin almacenamiento asignado</p>'}
+                    
+                    <h4 style="margin:16px 0 8px; color:var(--recolector-color);">🚛 Disposición Final</h4>
+                    ${disp.gestorNombre ? `
+                        <table style="width:100%; font-size:0.85rem;">
+                            <tr><td style="color:#6b7280;">Gestor:</td><td><strong>${disp.gestorNombre}</strong></td></tr>
+                            <tr><td style="color:#6b7280;">RUT:</td><td>${disp.gestorRut}</td></tr>
+                            <tr><td style="color:#6b7280;">Resolución:</td><td>${disp.gestorResolucion}</td></tr>
+                            <tr><td style="color:#6b7280;">Manifiesto:</td><td>${disp.manifiesto}</td></tr>
+                            <tr><td style="color:#6b7280;">Tipo disposición:</td><td>${disp.tipoDisposicion}</td></tr>
+                            <tr><td style="color:#6b7280;">Fecha retiro:</td><td>${formatFecha(disp.fechaRetiro)}</td></tr>
+                            <tr><td style="color:#6b7280;">Fecha disposición:</td><td>${formatFecha(disp.fechaDisposicion)}</td></tr>
+                            <tr><td style="color:#6b7280;">Gestionado por:</td><td>${disp.gestionadoPor || '—'}</td></tr>
+                        </table>
+                    ` : '<p style="color:#6b7280; font-size:0.85rem;">Sin datos de disposición</p>'}
+                </div>
+            </div>
+            
+            ${residuo.descripcion ? `
+                <div style="margin-top:16px; padding:12px; background:#f8fafc; border-radius:8px;">
+                    <strong style="font-size:0.85rem;">Descripción:</strong>
+                    <p style="margin:4px 0 0; font-size:0.85rem;">${residuo.descripcion}</p>
+                </div>
+            ` : ''}
+        `;
+
+        $("detalleContenido").innerHTML = html;
+        $("modalDetalleBackdrop").classList.add("active");
+    };
+
+    function cerrarModales() {
+        $("modalHistorialBackdrop").classList.remove("active");
+        $("modalDetalleBackdrop").classList.remove("active");
+    }
+
+    // ===== DASHBOARD =====
+    function actualizarDashboard() {
+        const total = residuos.length;
+        const peligrosos = residuos.filter(r => r.categoria === "Peligroso").length;
+        const pendientes = residuos.filter(r => 
+            r.estado !== ESTADOS.FINALIZADO && 
+            r.estado !== ESTADOS.RETIRADO
+        ).length;
+        const finalizados = residuos.filter(r => r.estado === ESTADOS.FINALIZADO).length;
+
+        $("kpiTotal").textContent = total;
+        $("kpiPeligrosos").textContent = peligrosos;
+        $("kpiPendientes").textContent = pendientes;
+        $("kpiFinalizados").textContent = finalizados;
+
+        // Detalles
+        const generados = residuos.filter(r => r.estado === ESTADOS.GENERADO).length;
+        const almacenados = residuos.filter(r => r.estado === ESTADOS.ALMACENADO).length;
+        
+        $("kpiTotalDetalle").textContent = `${generados} generados, ${almacenados} almacenados`;
+        $("kpiPeligrososDetalle").textContent = `${Math.round(peligrosos/total*100) || 0}% del total`;
+        $("kpiPendientesDetalle").textContent = `Requieren gestión`;
+        $("kpiFinalizadosDetalle").textContent = `${Math.round(finalizados/total*100) || 0}% completados`;
+
+        // Alertas de almacenamiento
+        let porVencer = 0;
+        let vencidos = 0;
+        
+        residuos.forEach(r => {
+            if (r.estado !== ESTADOS.FINALIZADO && r.almacenamiento?.fechaMax) {
+                const estado = calcularEstadoAlmacenamiento(r);
+                if (estado.clase === "row-warning") porVencer++;
+                if (estado.clase === "row-expired") vencidos++;
+            }
+        });
+
+        $("kpiPorVencer").textContent = porVencer;
+        $("kpiVencidos").textContent = vencidos;
+
+        // Resumen por estado
+        const resumenEstados = {};
+        residuos.forEach(r => {
+            resumenEstados[r.estado] = (resumenEstados[r.estado] || 0) + 1;
+        });
+
+        const contEstados = $("resumenEstados");
+        contEstados.innerHTML = "";
+        
+        Object.entries(resumenEstados).sort().forEach(([estado, count]) => {
+            const div = document.createElement("div");
+            div.className = "badge badge-neutral";
+            div.innerHTML = `${estado}: <strong>${count}</strong>`;
+            contEstados.appendChild(div);
+        });
+
+        // Vinculación con producción
+        const vinculados = residuos.filter(r => r.loteProduccion);
+        const contVinculacion = $("vinculacionProduccion");
+        
+        if (vinculados.length === 0) {
+            contVinculacion.innerHTML = '<p style="color:#6b7280; font-size:0.85rem;">No hay residuos vinculados a lotes de producción</p>';
+        } else {
+            // Agrupar por lote
+            const porLote = {};
+            vinculados.forEach(r => {
+                if (!porLote[r.loteProduccion]) {
+                    porLote[r.loteProduccion] = [];
+                }
+                porLote[r.loteProduccion].push(r);
+            });
+
+            let html = '<div class="grid grid-3">';
+            Object.entries(porLote).slice(0, 6).forEach(([lote, residuosLote]) => {
+                const peligrosos = residuosLote.filter(r => r.categoria === "Peligroso").length;
+                html += `
+                    <div class="kpi-card info">
+                        <div style="font-weight:600; color:var(--bcp-info);">🔗 ${lote}</div>
+                        <div style="font-size:0.85rem; margin-top:4px;">
+                            ${residuosLote.length} residuo(s)
+                            ${peligrosos > 0 ? `<span class="badge badge-danger" style="margin-left:4px;">${peligrosos} peligrosos</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            if (Object.keys(porLote).length > 6) {
+                html += `<p style="color:#6b7280; font-size:0.8rem; margin-top:8px;">... y ${Object.keys(porLote).length - 6} lotes más</p>`;
+            }
+            
+            contVinculacion.innerHTML = html;
+        }
+    }
+
+    // ===== EXPORTAR/IMPORTAR =====
+    function exportarJSON() {
+        const exportData = {
+            version: "4.0",
+            exportadoEn: new Date().toISOString(),
+            exportadoPor: usuarioActual?.nombre || "Sistema",
+            totalRegistros: residuos.length,
+            residuos
+        };
+
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `BCP_Residuos_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        mostrarToast("Datos exportados correctamente", "success");
+    }
+
+    function importarJSON() {
+        const input = $("inputImportar");
+        if (!input.files?.length) {
+            mostrarToast("Seleccione un archivo JSON", "warning");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                let importados = [];
+
+                if (Array.isArray(data)) {
+                    importados = data;
+                } else if (data.residuos && Array.isArray(data.residuos)) {
+                    importados = data.residuos;
+                } else {
+                    throw new Error("Formato inválido");
+                }
+
+                if (!confirm(`¿Importar ${importados.length} registros? Esto reemplazará los datos actuales.`)) {
+                    return;
+                }
+
+                residuos = importados;
+                guardarEnStorage();
+                actualizarDashboard();
+                renderTablaListado();
+                
+                mostrarToast(`${importados.length} registros importados`, "success");
+            } catch (err) {
+                console.error(err);
+                mostrarToast("Error al importar: formato inválido", "error");
+            }
+        };
+        reader.readAsText(input.files[0]);
+    }
+
+    function eliminarTodo() {
+        if (!confirm("⚠️ ¿Eliminar TODOS los registros? Esta acción no se puede deshacer.")) return;
+        if (!confirm("Segunda confirmación: ¿Está seguro?")) return;
+
+        residuos = [];
+        guardarEnStorage();
+        actualizarDashboard();
+        renderTablaListado();
+        
+        mostrarToast("Todos los registros eliminados", "warning");
+    }
+
+    // ===== DATOS DEMO =====
+    function cargarDatosDemo() {
+        if (residuos.length > 0) {
+            if (!confirm("Ya existen registros. ¿Desea agregar datos demo?")) return;
+        }
+
+        const fechaBase = new Date();
+        
+        const datosDemo = [
+            {
+                id: "RES-" + fechaBase.toISOString().slice(0,10).replace(/-/g,"") + "-001",
+                fechaGeneracion: new Date(fechaBase - 5*24*60*60*1000).toISOString(),
+                area: "Extracción RSO",
+                puntoGeneracion: "Reactor RSO-01",
+                etapaProceso: "Evaporación",
+                categoria: "Peligroso",
+                tipoResiduo: "Solvente usado",
+                descripcion: "Etanol recuperado con trazas de cannabinoides, post evaporación RSO",
+                estadoFisico: "Líquido",
+                cantidad: 15,
+                unidad: "L",
+                codigoInterno: "BCP-R-001",
+                codigoNormativo: "Y8",
+                numeroONU: "UN 1170",
+                claseRiesgo: "3",
+                peligrosidades: ["Inflamable"],
+                incompatibilidades: "No mezclar con oxidantes fuertes",
+                loteProduccion: "EXT-20250110-001",
+                sopCodigo: "SOP-RES-01",
+                observaciones: "Lote de alta concentración",
+                estado: ESTADOS.ALMACENADO,
+                almacenamiento: {
+                    contenedorId: "CONT-ETOH-01",
+                    tipoContenedor: "Bidón HDPE 20L",
+                    capacidad: 20,
+                    capacidadUnidad: "L",
+                    porcentajeLlenado: 75,
+                    edificio: "Bodega Residuos Peligrosos",
+                    sala: "Zona A",
+                    estante: "Estante 1, nivel A",
+                    fechaInicio: new Date(fechaBase - 4*24*60*60*1000).toISOString().slice(0,10),
+                    fechaMax: new Date(fechaBase.getTime() + 170*24*60*60*1000).toISOString().slice(0,10),
+                    asignadoPor: "Juan Pérez",
+                    fechaAsignacion: new Date(fechaBase - 4*24*60*60*1000).toISOString()
+                },
+                disposicion: null,
+                historial: [
+                    { fecha: new Date(fechaBase - 5*24*60*60*1000).toISOString(), usuario: "Juan Pérez", rol: "Generador", accion: "Registro inicial", detalle: "Residuo generado en Extracción RSO" },
+                    { fecha: new Date(fechaBase - 4*24*60*60*1000).toISOString(), usuario: "Juan Pérez", rol: "Generador", accion: "Almacenamiento asignado", detalle: "Contenedor: CONT-ETOH-01" }
+                ],
+                creadoPor: "Juan Pérez",
+                fechaCreacion: new Date(fechaBase - 5*24*60*60*1000).toISOString()
+            },
+            {
+                id: "RES-" + fechaBase.toISOString().slice(0,10).replace(/-/g,"") + "-002",
+                fechaGeneracion: new Date(fechaBase - 3*24*60*60*1000).toISOString(),
+                area: "Extracción BHO",
+                puntoGeneracion: "Sistema BHO-CLS-01",
+                etapaProceso: "Purga",
+                categoria: "No peligroso",
+                tipoResiduo: "Biomasa post extracción",
+                descripcion: "Biomasa residual post extracción BHO, sin solvente residual",
+                estadoFisico: "Sólido",
+                cantidad: 5.2,
+                unidad: "kg",
+                codigoInterno: "BCP-R-002",
+                codigoNormativo: "",
+                numeroONU: "",
+                claseRiesgo: "",
+                peligrosidades: [],
+                incompatibilidades: "",
+                loteProduccion: "EXT-20250112-001",
+                sopCodigo: "SOP-RES-02",
+                observaciones: "",
+                estado: ESTADOS.GENERADO,
+                almacenamiento: null,
+                disposicion: null,
+                historial: [
+                    { fecha: new Date(fechaBase - 3*24*60*60*1000).toISOString(), usuario: "María González", rol: "Generador", accion: "Registro inicial", detalle: "Biomasa de extracción BHO" }
+                ],
+                creadoPor: "María González",
+                fechaCreacion: new Date(fechaBase - 3*24*60*60*1000).toISOString()
+            },
+            {
+                id: "RES-" + fechaBase.toISOString().slice(0,10).replace(/-/g,"") + "-003",
+                fechaGeneracion: new Date(fechaBase - 10*24*60*60*1000).toISOString(),
+                area: "Laboratorio QC",
+                puntoGeneracion: "HPLC-UV",
+                etapaProceso: "Análisis",
+                categoria: "Peligroso",
+                tipoResiduo: "Solvente usado",
+                descripcion: "Mezcla de metanol y acetonitrilo de análisis HPLC",
+                estadoFisico: "Líquido",
+                cantidad: 2.5,
+                unidad: "L",
+                codigoInterno: "BCP-R-003",
+                codigoNormativo: "Y6",
+                numeroONU: "UN 1993",
+                claseRiesgo: "3",
+                peligrosidades: ["Inflamable", "Tóxico"],
+                incompatibilidades: "No mezclar con oxidantes, ácidos fuertes",
+                loteProduccion: "",
+                sopCodigo: "SOP-QC-01",
+                observaciones: "Residuo de columna HPLC",
+                estado: ESTADOS.FINALIZADO,
+                almacenamiento: {
+                    contenedorId: "CONT-LAB-01",
+                    tipoContenedor: "Bidón HDPE 5L",
+                    capacidad: 5,
+                    capacidadUnidad: "L",
+                    porcentajeLlenado: 50,
+                    edificio: "Laboratorio",
+                    sala: "Área analítica",
+                    estante: "Gabinete residuos",
+                    fechaInicio: new Date(fechaBase - 10*24*60*60*1000).toISOString().slice(0,10),
+                    fechaMax: new Date(fechaBase - 5*24*60*60*1000).toISOString().slice(0,10),
+                    asignadoPor: "Carlos Rojas",
+                    fechaAsignacion: new Date(fechaBase - 10*24*60*60*1000).toISOString()
+                },
+                disposicion: {
+                    gestorNombre: "EcoWaste Chile S.A.",
+                    gestorRut: "76.543.210-5",
+                    gestorResolucion: "RES-2024-1234",
+                    manifiesto: "MAN-2025-0042",
+                    guiaDespacho: "GD-50234",
+                    patente: "ABCD12",
+                    transportista: "Pedro Soto",
+                    cantidadTransporte: 2.5,
+                    unidadTransporte: "L",
+                    tipoDisposicion: "Incineración",
+                    plantaDestino: "Planta EcoWaste, Quilicura",
+                    certificado: "CERT-2025-0015",
+                    fechaRetiro: new Date(fechaBase - 2*24*60*60*1000).toISOString().slice(0,10),
+                    fechaDisposicion: new Date(fechaBase - 1*24*60*60*1000).toISOString().slice(0,10),
+                    observaciones: "Retiro sin incidentes",
+                    gestionadoPor: "Ana Muñoz",
+                    fechaGestion: new Date(fechaBase - 2*24*60*60*1000).toISOString()
+                },
+                historial: [
+                    { fecha: new Date(fechaBase - 10*24*60*60*1000).toISOString(), usuario: "Carlos Rojas", rol: "Generador", accion: "Registro inicial", detalle: "Residuo de HPLC" },
+                    { fecha: new Date(fechaBase - 10*24*60*60*1000).toISOString(), usuario: "Carlos Rojas", rol: "Generador", accion: "Almacenamiento asignado", detalle: "Contenedor: CONT-LAB-01" },
+                    { fecha: new Date(fechaBase - 2*24*60*60*1000).toISOString(), usuario: "Ana Muñoz", rol: "Recolector", accion: "Cambio de estado: Almacenado → Disposición final", detalle: "Gestor: EcoWaste Chile S.A. | Manifiesto: MAN-2025-0042" }
+                ],
+                creadoPor: "Carlos Rojas",
+                fechaCreacion: new Date(fechaBase - 10*24*60*60*1000).toISOString()
+            },
+            {
+                id: "RES-" + fechaBase.toISOString().slice(0,10).replace(/-/g,"") + "-004",
+                fechaGeneracion: new Date(fechaBase - 1*24*60*60*1000).toISOString(),
+                area: "Formulación",
+                puntoGeneracion: "Mezclador F-01",
+                etapaProceso: "Formulación",
+                categoria: "No peligroso",
+                tipoResiduo: "EPP contaminado",
+                descripcion: "Guantes de nitrilo y cofia utilizados en formulación",
+                estadoFisico: "Sólido",
+                cantidad: 0.8,
+                unidad: "kg",
+                codigoInterno: "BCP-R-004",
+                codigoNormativo: "",
+                numeroONU: "",
+                claseRiesgo: "",
+                peligrosidades: [],
+                incompatibilidades: "",
+                loteProduccion: "",
+                sopCodigo: "",
+                observaciones: "",
+                estado: ESTADOS.GENERADO,
+                almacenamiento: null,
+                disposicion: null,
+                historial: [
+                    { fecha: new Date(fechaBase - 1*24*60*60*1000).toISOString(), usuario: "Demo User", rol: "Generador", accion: "Registro inicial", detalle: "EPP de formulación" }
+                ],
+                creadoPor: "Demo User",
+                fechaCreacion: new Date(fechaBase - 1*24*60*60*1000).toISOString()
+            }
+        ];
+
+        residuos = [...residuos, ...datosDemo];
+        guardarEnStorage();
+        actualizarDashboard();
+        renderTablaListado();
+        
+        mostrarToast("Datos demo cargados correctamente", "success");
+    }
+
+    // ===== INICIALIZACIÓN =====
+    function initEventos() {
+        // Tabs
+        document.querySelectorAll(".tab-btn").forEach(btn => {
+            btn.addEventListener("click", function() {
+                if (!this.classList.contains("disabled")) {
+                    cambiarTab(this.dataset.tab);
+                }
+            });
+        });
+
+        // Login/Logout
+        $("btnLogin").addEventListener("click", login);
+        $("btnLogout").addEventListener("click", logout);
+
+        // Formulario Generación
+        $("formGeneracion").addEventListener("submit", submitGeneracion);
+        $("btnLimpiarGen").addEventListener("click", limpiarFormularioGeneracion);
+
+        // Selector de lotes
+        $("genLoteSelect").addEventListener("change", function() {
+            const loteSeleccionado = lotesProduccion.find(l => l.codigo === this.value);
+            const container = $("loteInfoContainer");
+            
+            if (loteSeleccionado) {
+                container.innerHTML = `
+                    <div class="lote-info">
+                        <span class="lote-icon">🧪</span>
+                        <div class="lote-details">
+                            <div class="lote-code">${loteSeleccionado.codigo}</div>
+                            <div class="lote-meta">
+                                ${loteSeleccionado.tipo} | ${loteSeleccionado.estado} | 
+                                ${formatFecha(loteSeleccionado.fechaInicio)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.style.display = "block";
+                $("loteSelector").classList.add("linked");
+                $("genLoteManual").value = "";
+            } else {
+                container.style.display = "none";
+                $("loteSelector").classList.remove("linked");
+            }
+        });
+
+        $("genLoteManual").addEventListener("input", function() {
+            if (this.value.trim()) {
+                $("genLoteSelect").value = "";
+                $("loteInfoContainer").style.display = "none";
+            }
+        });
+
+        // Formulario Almacenamiento
+        $("formAlmacenamiento").addEventListener("submit", submitAlmacenamiento);
+        $("btnCancelarAlm").addEventListener("click", cancelarAlmacenamiento);
+
+        // Auto-calcular fecha máxima para peligrosos
+        $("almFechaInicio").addEventListener("change", function() {
+            // Obtener residuo actual
+            const residuoId = $("almResiduoId").value;
+            const residuo = residuos.find(r => r.id === residuoId);
+            
+            if (residuo?.categoria === "Peligroso" && this.value) {
+                const fechaInicio = new Date(this.value);
+                fechaInicio.setMonth(fechaInicio.getMonth() + 6);
+                $("almFechaMax").value = fechaInicio.toISOString().slice(0, 10);
+            }
+        });
+
+        // Formulario Disposición
+        $("formDisposicion").addEventListener("submit", submitDisposicion);
+        $("btnCancelarDisp").addEventListener("click", cancelarDisposicion);
+
+        // Filtros disposición
+        $("filtroDispCategoria").addEventListener("change", renderResiduosDisposicion);
+        $("filtroDispEstado").addEventListener("change", renderResiduosDisposicion);
+
+        // Filtros listado
+        $("filtroEstado").addEventListener("change", renderTablaListado);
+        $("filtroCategoria").addEventListener("change", renderTablaListado);
+        $("filtroArea").addEventListener("change", renderTablaListado);
+        $("filtroTexto").addEventListener("input", renderTablaListado);
+        $("btnLimpiarFiltros").addEventListener("click", function() {
+            $("filtroEstado").value = "";
+            $("filtroCategoria").value = "";
+            $("filtroArea").value = "";
+            $("filtroTexto").value = "";
+            renderTablaListado();
+        });
+
+        // Configuración
+        $("btnExportar").addEventListener("click", exportarJSON);
+        $("btnImportar").addEventListener("click", importarJSON);
+        $("btnEliminarTodo").addEventListener("click", eliminarTodo);
+        $("btnSincronizarLotes").addEventListener("click", function() {
+            sincronizarLotesProduccion();
+            mostrarToast("Lotes sincronizados", "success");
+        });
+        $("btnCargarDemo").addEventListener("click", cargarDatosDemo);
+
+        // Modales
+        $("btnCerrarHistorial").addEventListener("click", cerrarModales);
+        $("btnCerrarDetalle").addEventListener("click", cerrarModales);
+        
+        $("modalHistorialBackdrop").addEventListener("click", function(e) {
+            if (e.target === this) cerrarModales();
+        });
+        
+        $("modalDetalleBackdrop").addEventListener("click", function(e) {
+            if (e.target === this) cerrarModales();
+        });
+
+        // Cerrar con ESC
+        document.addEventListener("keydown", function(e) {
+            if (e.key === "Escape") cerrarModales();
+        });
+    }
+
+    function init() {
+        cargarDesdeStorage();
+        initEventos();
+        
+        // Establecer fecha/hora actual en formulario de generación
+        $("genFecha").value = new Date().toISOString().slice(0, 16);
+        
+        actualizarDashboard();
+        actualizarPermisosTabs();
+    }
+
+    document.addEventListener("DOMContentLoaded", init);
+})();
+</script>
+</body>
+</html>

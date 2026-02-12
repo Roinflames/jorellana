@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>BCP – Sistema de Gestión de Aseo e Higiene</title>
+  <style>
+    :root {
+      --bcp-green: #2c9c71;
+      --bcp-purple: #6b4ba6;
+      --bcp-light: #f5f7fb;
+      --bcp-accent: #ffb74d;
+      --bcp-text: #1f2933;
+      --bcp-border: #d0d7e2;
+    }
+
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bcp-light);
+      color: var(--bcp-text);
+    }
+
+    header {
+      background: linear-gradient(90deg, var(--bcp-green), var(--bcp-purple));
+      color: white;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    header small {
+      display: block;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .sub-header {
+      padding: 8px 24px 0;
+      font-size: 12px;
+      color: #4b5563;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: white;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 11px;
+      border: 1px solid var(--bcp-border);
+    }
+
+    .tag span.icon {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--bcp-green);
+    }
+
+    .container {
+      margin: 16px auto 24px;
+      max-width: 1200px;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+      overflow: hidden;
+      display: flex;
+      min-height: 520px;
+    }
+
+    nav {
+      width: 260px;
+      background: linear-gradient(180deg, #f5faf8, #f3e9ff);
+      border-right: 1px solid var(--bcp-border);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    nav h2 {
+      font-size: 13px;
+      margin: 0 8px 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #6b7280;
+    }
+
+    .nav-btn {
+      border: none;
+      background: transparent;
+      border-radius: 999px;
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #4b5563;
+      transition: background 0.15s, transform 0.05s;
+    }
+
+    .nav-btn span.icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      background: white;
+      border: 1px solid #e5e7eb;
+    }
+
+    .nav-btn.active {
+      background: rgba(44, 156, 113, 0.12);
+      color: #064e3b;
+      font-weight: 600;
+      transform: translateX(2px);
+      box-shadow: 0 2px 6px rgba(15,23,42,0.08);
+    }
+
+    .nav-footer {
+      margin-top: auto;
+      padding: 10px 8px 0;
+      font-size: 11px;
+      color: #6b7280;
+      border-top: 1px dashed rgba(148,163,184,0.6);
+    }
+
+    main {
+      flex: 1;
+      padding: 16px 18px 18px;
+      background: radial-gradient(circle at top left, #fdfcfb, #f3f4ff);
+    }
+
+    .module {
+      display: none;
+    }
+
+    .module.active {
+      display: block;
+    }
+
+    .card {
+      background: white;
+      border-radius: 14px;
+      border: 1px solid var(--bcp-border);
+      padding: 14px 16px 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 10px rgba(15,23,42,0.05);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .card-header h3 {
+      margin: 0;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-header h3 span.badge {
+      font-size: 10px;
+      background: rgba(107,75,166,0.08);
+      color: var(--bcp-purple);
+      border-radius: 999px;
+      padding: 2px 8px;
+      border: 1px solid rgba(107,75,166,0.35);
+    }
+
+    .card-header small {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 8px 10px;
+      align-items: end;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+    }
+
+    .form-group label {
+      font-weight: 500;
+      color: #374151;
+    }
+
+    .form-group small {
+      font-size: 10px;
+      color: #9ca3af;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"],
+    input[type="time"],
+    select,
+    textarea {
+      border-radius: 999px;
+      border: 1px solid var(--bcp-border);
+      padding: 6px 10px;
+      font-size: 12px;
+      outline: none;
+      background: #f9fafb;
+      transition: border 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+      border-radius: 12px;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--bcp-green);
+      box-shadow: 0 0 0 1px rgba(44,156,113,0.2);
+      background: #ffffff;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.05);
+      margin-right: 4px;
+    }
+
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 14px;
+      font-size: 12px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--bcp-green), #3fb991);
+      color: white;
+      box-shadow: 0 2px 8px rgba(16,185,129,0.35);
+    }
+
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .btn-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px dashed #d1d5db;
+      color: #6b7280;
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.03);
+    }
+
+    .btn-secondary:hover,
+    .btn-danger:hover,
+    .btn-ghost:hover {
+      filter: brightness(0.97);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      margin-top: 8px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--bcp-border);
+    }
+
+    thead {
+      background: linear-gradient(90deg, #f3f4ff, #f0fdfa);
+    }
+
+    th, td {
+      padding: 6px 8px;
+      border-bottom: 1px solid #e5e7eb;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      font-weight: 600;
+      color: #4b5563;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #f9fafb;
+    }
+
+    tbody tr:hover {
+      background: #eef2ff;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      border: 1px solid transparent;
+    }
+
+    .status-ok {
+      background: #ecfdf3;
+      color: #166534;
+      border-color: #bbf7d0;
+    }
+
+    .status-low {
+      background: #fef3c7;
+      color: #92400e;
+      border-color: #fde68a;
+    }
+
+    .status-critical {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    .status-info {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+
+    .row-actions button {
+      padding: 3px 8px;
+      font-size: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 10px;
+      background: #e5e7eb;
+      color: #374151;
+    }
+
+    .pill-green {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .pill-purple {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+
+    .pill-orange {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
+    .flex {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .flex-between {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mt-4 { margin-top: 12px; }
+    .mt-2 { margin-top: 6px; }
+
+    .small-text {
+      font-size: 11px;
+      color: #6b7280;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      font-size: 10px;
+    }
+
+    .chip {
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      color: #4b5563;
+    }
+
+    .divider {
+      border-top: 1px dashed #e5e7eb;
+      margin: 8px 0;
+    }
+
+    @media (max-width: 900px) {
+      .container {
+        flex-direction: column;
+      }
+      nav {
+        width: 100%;
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+      nav h2, .nav-footer {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>BioCannaPharma (BCP) – Sistema de Gestión de Aseo e Higiene</h1>
+      <small>Control de áreas, inventario de productos de aseo y registros trazables de sanitización</small>
+    </div>
+    <div style="text-align:right; font-size:11px;">
+      <div id="currentDate"></div>
+      <div id="currentTime" style="opacity:0.9;"></div>
+      <div class="small-text" style="margin-top:4px;">
+        Modo demo local – datos guardados en este navegador.
+      </div>
+    </div>
+  </header>
+
+  <div class="sub-header">
+    <div class="flex">
+      <div class="tag">
+        <span class="icon"></span> BCP · Aseo y Sanitización
+      </div>
+      <div class="tag">
+        <span class="icon" style="background:var(--bcp-purple);"></span> Trazabilidad básica &amp; auditoría
+      </div>
+    </div>
+    <button class="btn-ghost" id="clearAllBtn" title="Borrar todos los datos de este sistema (solo para pruebas)">
+      🧹 Limpiar datos (TEST)
+    </button>
+  </div>
+
+  <div class="container">
+    <nav>
+      <h2>Módulos</h2>
+      <button class="nav-btn active" data-module="mod-areas">
+        <span class="icon">🏷</span>
+        Áreas de aseo
+      </button>
+      <button class="nav-btn" data-module="mod-inventario">
+        <span class="icon">🧴</span>
+        Inventario de productos
+      </button>
+      <button class="nav-btn" data-module="mod-registro">
+        <span class="icon">📋</span>
+        Registro de aseo
+      </button>
+      <button class="nav-btn" data-module="mod-dashboard">
+        <span class="icon">📊</span>
+        Dashboard fichas de aseo
+      </button>
+      <div class="nav-footer">
+        BCP · Higiene y Sanitización<br />
+        <span style="opacity:0.7;">Pensado para reemplazar etiquetas físicas tipo SPS por un registro digital auditable.</span>
+      </div>
+    </nav>
+
+    <main>
+      <!-- MÓDULO 1: ÁREAS DE ASEO -->
+      <section id="mod-areas" class="module active">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Configuración de áreas de aseo <span class="badge">Maestro</span></h3>
+              <small>Define qué áreas se limpian, cada cuánto y qué tipo de aseo corresponde.</small>
+            </div>
+            <div class="chips">
+              <span class="chip">Ej: Laboratorio de extracción</span>
+              <span class="chip">Bodega de solventes</span>
+              <span class="chip">Baños personal</span>
+            </div>
+          </div>
+          <form id="areaForm">
+            <input type="hidden" id="areaId" />
+            <div class="form-group">
+              <label>Nombre del área *</label>
+              <input type="text" id="areaNombre" placeholder="Ej: Sala de extracción 1" required />
+            </div>
+            <div class="form-group">
+              <label>Tipo de área</label>
+              <select id="areaTipo">
+                <option value="">Seleccionar...</option>
+                <option>Laboratorio / Proceso</option>
+                <option>Bodega</option>
+                <option>Baños</option>
+                <option>Oficinas</option>
+                <option>Pasillos / Zonas comunes</option>
+                <option>Otros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Periodicidad *</label>
+              <select id="areaPeriodicidad" required>
+                <option value="">Seleccionar...</option>
+                <option>Por turno</option>
+                <option>Diario</option>
+                <option>Semanal</option>
+                <option>Mensual</option>
+                <option>Según plan específico</option>
+              </select>
+              <small>Frecuencia mínima definida en el plan de higiene.</small>
+            </div>
+            <div class="form-group">
+              <label>Tipo de aseo principal *</label>
+              <select id="areaTipoAseo" required>
+                <option value="">Seleccionar...</option>
+                <option>Limpieza superficial</option>
+                <option>Limpieza profunda</option>
+                <option>Desinfección / Sanitización</option>
+                <option>Sanitizado</option>
+                <option>Desinsectado</option>
+                <option>Desratizado</option>
+                <option>Manejo de residuos</option>
+                <option>Limpieza + Desinfección</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Responsable / Rol</label>
+              <input type="text" id="areaResponsable" placeholder="Ej: Auxiliar de aseo, turno noche" />
+            </div>
+            <div class="form-group">
+              <label>Activo</label>
+              <div class="flex">
+                <input type="checkbox" id="areaActiva" checked />
+                <span class="small-text">Área habilitada para ser usada en registros de aseo.</span>
+              </div>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Descripción / Observaciones</label>
+              <textarea id="areaDescripcion" placeholder="Detalles específicos: puntos críticos, equipos que se deben mover, precauciones con solventes, etc."></textarea>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1; text-align:right;">
+              <button type="button" class="btn-secondary" id="areaResetBtn">Cancelar / Limpiar</button>
+              <button type="submit" class="btn-primary">💾 Guardar área</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Áreas configuradas</h3>
+              <small>Vista rápida del plan maestro de aseo.</small>
+            </div>
+            <div class="chips">
+              <span class="chip">Click en editar para ajustar un área</span>
+              <span class="chip">No se eliminan áreas críticas sin evaluar impacto</span>
+            </div>
+          </div>
+
+          <table id="areasTable">
+            <thead>
+              <tr>
+                <th>Área</th>
+                <th>Tipo</th>
+                <th>Periodicidad</th>
+                <th>Tipo de aseo</th>
+                <th>Responsable</th>
+                <th>Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+          <div class="small-text mt-2">
+            Sugerencia: revisar este maestro al menos una vez al año o cuando se modifiquen procesos, instalaciones o normativa.
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 2: INVENTARIO DE PRODUCTOS DE ASEO -->
+      <section id="mod-inventario" class="module">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Inventario de productos de aseo</h3>
+              <small>Control de stock de insumos de limpieza, desinfección y papelería sanitaria.</small>
+            </div>
+            <div class="chips">
+              <span class="chip">Ej: Cloro, detergente neutro</span>
+              <span class="chip">Confort, toalla de papel</span>
+              <span class="chip">Desodorante ambiental</span>
+            </div>
+          </div>
+
+          <form id="productoForm">
+            <input type="hidden" id="prodId" />
+            <div class="form-group">
+              <label>Nombre del producto *</label>
+              <input type="text" id="prodNombre" placeholder="Ej: Cloro gel 5%" required />
+            </div>
+            <div class="form-group">
+              <label>Categoría</label>
+              <select id="prodCategoria">
+                <option value="">Seleccionar...</option>
+                <option>Desinfectante / Cloro</option>
+                <option>Detergente / Jabón</option>
+                <option>Papel higiénico / Toallas</option>
+                <option>Ambientador / Glade</option>
+                <option>Guantes / EPP</option>
+                <option>Otros</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Unidad *</label>
+              <select id="prodUnidad" required>
+                <option value="">Seleccionar...</option>
+                <option>un</option>
+                <option>L</option>
+                <option>mL</option>
+                <option>kg</option>
+                <option>g</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Stock actual *</label>
+              <input type="number" min="0" step="0.01" id="prodStock" placeholder="Ej: 12" required />
+            </div>
+            <div class="form-group">
+              <label>Stock mínimo</label>
+              <input type="number" min="0" step="0.01" id="prodMin" placeholder="Ej: 3" />
+              <small>Para alertas de reposición.</small>
+            </div>
+            <div class="form-group">
+              <label>Proveedor</label>
+              <input type="text" id="prodProveedor" placeholder="Ej: Distribuidora de aseo BCP" />
+            </div>
+            <div class="form-group">
+              <label>N° lote / código interno</label>
+              <input type="text" id="prodLote" placeholder="Opcional" />
+            </div>
+            <div class="form-group">
+              <label>Fecha de vencimiento</label>
+              <input type="date" id="prodVence" />
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Observaciones</label>
+              <textarea id="prodObs" placeholder="Ej: Preparar solución de uso diario a partir del concentrado. Respetar fichas técnicas y hojas de seguridad."></textarea>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1; text-align:right;">
+              <button type="button" class="btn-secondary" id="prodResetBtn">Cancelar / Limpiar</button>
+              <button type="submit" class="btn-primary">💾 Guardar producto</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Listado de productos de aseo</h3>
+              <small>Incluye estado según stock actual vs stock mínimo.</small>
+            </div>
+            <div class="chips">
+              <span class="chip">Verde: OK</span>
+              <span class="chip">Ámbar: Bajo stock</span>
+              <span class="chip">Rojo: Crítico / Cero</span>
+            </div>
+          </div>
+
+          <table id="productosTable">
+            <thead>
+              <tr>
+                <th>Producto</th>
+                <th>Categoría</th>
+                <th>Stock</th>
+                <th>Estado</th>
+                <th>Lote / Venc.</th>
+                <th>Proveedor</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+          <div class="small-text mt-2">
+            Cada registro de aseo puede descontar stock automáticamente según los insumos utilizados.
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 3: REGISTRO DE ASEO -->
+      <section id="mod-registro" class="module">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Registro de aseo y sanitización</h3>
+              <small>Bitácora de actividades de limpieza, vinculada a áreas e insumos.</small>
+            </div>
+            <div class="chips">
+              <span class="chip">Trazabilidad básica</span>
+              <span class="chip">Descuento de inventario</span>
+              <span class="chip">Soporte a auditorías</span>
+            </div>
+          </div>
+
+          <form id="registroForm">
+            <input type="hidden" id="regId" />
+            <div class="form-group">
+              <label>Fecha *</label>
+              <input type="date" id="regFecha" required />
+            </div>
+            <div class="form-group">
+              <label>Hora</label>
+              <input type="time" id="regHora" />
+            </div>
+            <div class="form-group">
+              <label>Área intervenida *</label>
+              <select id="regArea" required></select>
+            </div>
+            <div class="form-group">
+              <label>Turno</label>
+              <select id="regTurno">
+                <option value="">Seleccionar...</option>
+                <option>Mañana</option>
+                <option>Tarde</option>
+                <option>Noche</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Responsable *</label>
+              <input type="text" id="regResponsable" placeholder="Nombre / iniciales del ejecutor" required />
+            </div>
+            <div class="form-group">
+              <label>Tipo de aseo realizado</label>
+              <select id="regTipoAseo">
+                <option value="">Dejar según área o especificar...</option>
+                <option>Limpieza superficial</option>
+                <option>Limpieza profunda</option>
+                <option>Desinfección / Sanitización</option>
+                <option>Sanitizado</option>
+                <option>Desinsectado</option>
+                <option>Desratizado</option>
+                <option>Manejo de residuos</option>
+                <option>Limpieza + Desinfección</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Verificado por</label>
+              <input type="text" id="regVerificado" placeholder="Ej: Supervisor de turno (opcional)" />
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Descripción de actividades / observaciones</label>
+              <textarea id="regDescripcion" placeholder="Ej: Se limpian mesones con detergente neutro y se desinfecta con solución clorada al 0,1%. Se retiran residuos en contenedores designados."></textarea>
+            </div>
+
+            <!-- Sub-sección para insumos usados -->
+            <div class="divider"></div>
+            <div class="form-group">
+              <label>Producto de aseo usado</label>
+              <select id="regProdSelect">
+                <option value="">Seleccionar producto...</option>
+              </select>
+              <small>Los productos se cargan desde el módulo de inventario.</small>
+            </div>
+            <div class="form-group">
+              <label>Cantidad utilizada</label>
+              <input type="number" id="regProdCant" min="0" step="0.01" placeholder="Ej: 0.2" />
+            </div>
+            <div class="form-group">
+              <label>&nbsp;</label>
+              <button type="button" class="btn-secondary" id="addInsumoBtn">➕ Agregar insumo</button>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label>Insumos asociados a este aseo</label>
+              <table id="insumosTempTable">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Unidad</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Rellenado dinámicamente -->
+                </tbody>
+              </table>
+              <div class="small-text mt-2">
+                Al guardar el registro se descuenta esta cantidad del inventario de cada producto (si existe).
+              </div>
+            </div>
+
+            <div class="form-group" style="grid-column: 1 / -1; text-align:right;">
+              <button type="button" class="btn-secondary" id="regResetBtn">Cancelar / Limpiar</button>
+              <button type="submit" class="btn-primary">💾 Guardar registro de aseo</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Bitácora de aseo registrada</h3>
+              <small>Filtrado simple por área para revisión rápida.</small>
+            </div>
+            <div class="flex">
+              <select id="filtroArea" style="font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid var(--bcp-border);">
+                <option value="">Todas las áreas</option>
+              </select>
+              <button type="button" class="btn-ghost" id="resetFiltroBtn">Quitar filtro</button>
+            </div>
+          </div>
+
+          <table id="registrosTable">
+            <thead>
+              <tr>
+                <th>Fecha / Hora</th>
+                <th>Área</th>
+                <th>Responsable / Turno</th>
+                <th>Tipo de aseo</th>
+                <th>Insumos utilizados</th>
+                <th>Verificación</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+          <div class="small-text mt-2">
+            Para auditorías formales se recomienda exportar o transcribir estos datos a los formatos oficiales del sistema de calidad.
+          </div>
+        </div>
+      </section>
+
+      <!-- MÓDULO 4: DASHBOARD FICHAS TIPO SPS -->
+      <section id="mod-dashboard" class="module">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <h3>Dashboard de fichas de aseo (Sanitizado / Desinsectado / Desratizado)</h3>
+              <small>Vista consolidada por zona, inspirada en las etiquetas físicas SPS pero en formato digital.</small>
+            </div>
+            <div class="chips">
+              <span class="chip">Usa “Sanitizado”, “Desinsectado” o “Desratizado” en el tipo de aseo</span>
+              <span class="chip">Se alimenta automáticamente desde los registros</span>
+            </div>
+          </div>
+
+          <table id="dashboardTable">
+            <thead>
+              <tr>
+                <th>Área</th>
+                <th>Periodicidad</th>
+                <th>Último sanitizado</th>
+                <th>Último desinsectado</th>
+                <th>Último desratizado</th>
+                <th>Estado general</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Rellenado por JS -->
+            </tbody>
+          </table>
+
+          <div class="small-text mt-2">
+            El estado general considera la periodicidad del área y la fecha del último servicio (sanitizado/desinsectado/desratizado).<br>
+            Ejemplo: para periodicidad semanal, si no hay registro en los últimos 7 días, se marca como “Atrasado”.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Utilidades de fecha/hora en encabezado
+    function updateDateTime() {
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("es-CL", {
+        weekday: "long",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      });
+      const timeStr = now.toLocaleTimeString("es-CL", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
+      });
+      document.getElementById("currentDate").textContent = dateStr;
+      document.getElementById("currentTime").textContent = timeStr + " (hora local)";
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+
+    // LocalStorage helpers
+    const LS_AREAS = "bcp_aseo_areas";
+    const LS_PRODS = "bcp_aseo_productos";
+    const LS_REGS  = "bcp_aseo_registros";
+
+    function loadData(key) {
+      try {
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.error("Error leyendo", key, e);
+        return [];
+      }
+    }
+
+    function saveData(key, data) {
+      localStorage.setItem(key, JSON.stringify(data));
+    }
+
+    // Estado en memoria
+    let areas = loadData(LS_AREAS);
+    let productos = loadData(LS_PRODS);
+    let registros = loadData(LS_REGS);
+    let insumosTemp = []; // insumos para un registro de aseo en edición
+
+    // NAV
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".nav-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const modId = btn.getAttribute("data-module");
+        document.querySelectorAll(".module").forEach(m => m.classList.remove("active"));
+        document.getElementById(modId).classList.add("active");
+      });
+    });
+
+    // Genera IDs simples
+    function generarId(prefix) {
+      return prefix + "_" + Math.random().toString(36).substr(2, 9);
+    }
+
+    // ==================== MÓDULO ÁREAS ====================
+    const areaForm = document.getElementById("areaForm");
+    const areaIdInput = document.getElementById("areaId");
+    const areaNombre = document.getElementById("areaNombre");
+    const areaTipo = document.getElementById("areaTipo");
+    const areaPeriodicidad = document.getElementById("areaPeriodicidad");
+    const areaTipoAseo = document.getElementById("areaTipoAseo");
+    const areaResponsable = document.getElementById("areaResponsable");
+    const areaActiva = document.getElementById("areaActiva");
+    const areaDescripcion = document.getElementById("areaDescripcion");
+    const areasTableBody = document.querySelector("#areasTable tbody");
+    const areaResetBtn = document.getElementById("areaResetBtn");
+
+    function renderAreasTable() {
+      areasTableBody.innerHTML = "";
+      if (!areas.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.className = "small-text";
+        td.textContent = "No hay áreas configuradas todavía.";
+        tr.appendChild(td);
+        areasTableBody.appendChild(tr);
+        actualizarSelectAreas();
+        renderDashboardTable();
+        return;
+      }
+
+      areas.forEach(area => {
+        const tr = document.createElement("tr");
+
+        const tdNombre = document.createElement("td");
+        tdNombre.innerHTML = `<strong>${area.nombre}</strong><br><span class="small-text">${area.descripcion || ""}</span>`;
+        tr.appendChild(tdNombre);
+
+        const tdTipo = document.createElement("td");
+        tdTipo.textContent = area.tipo || "-";
+        tr.appendChild(tdTipo);
+
+        const tdPer = document.createElement("td");
+        tdPer.innerHTML = `<span class="pill pill-purple">${area.periodicidad}</span>`;
+        tr.appendChild(tdPer);
+
+        const tdAseo = document.createElement("td");
+        tdAseo.innerHTML = `<span class="pill pill-green">${area.tipoAseo}</span>`;
+        tr.appendChild(tdAseo);
+
+        const tdResp = document.createElement("td");
+        tdResp.textContent = area.responsable || "-";
+        tr.appendChild(tdResp);
+
+        const tdEstado = document.createElement("td");
+        const estadoSpan = document.createElement("span");
+        estadoSpan.className = "status-pill " + (area.activa ? "status-ok" : "status-low");
+        estadoSpan.textContent = area.activa ? "Activa" : "Inactiva";
+        tdEstado.appendChild(estadoSpan);
+        tr.appendChild(tdEstado);
+
+        const tdAcc = document.createElement("td");
+        tdAcc.className = "row-actions";
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "btn-secondary";
+        btnEdit.textContent = "✏️ Editar";
+        btnEdit.addEventListener("click", () => cargarAreaEnFormulario(area.id));
+
+        const btnDel = document.createElement("button");
+        btnDel.className = "btn-danger";
+        btnDel.textContent = "🗑 Eliminar";
+        btnDel.addEventListener("click", () => eliminarArea(area.id));
+
+        tdAcc.appendChild(btnEdit);
+        tdAcc.appendChild(btnDel);
+        tr.appendChild(tdAcc);
+
+        areasTableBody.appendChild(tr);
+      });
+
+      actualizarSelectAreas();
+      renderDashboardTable();
+    }
+
+    function actualizarSelectAreas() {
+      const regAreaSelect = document.getElementById("regArea");
+      const filtroArea = document.getElementById("filtroArea");
+      regAreaSelect.innerHTML = '<option value="">Seleccionar área...</option>';
+      filtroArea.innerHTML = '<option value="">Todas las áreas</option>';
+
+      areas
+        .filter(a => a.activa)
+        .forEach(a => {
+          const opt = document.createElement("option");
+          opt.value = a.id;
+          opt.textContent = a.nombre;
+          regAreaSelect.appendChild(opt);
+        });
+
+      areas.forEach(a => {
+        const opt = document.createElement("option");
+        opt.value = a.id;
+        opt.textContent = a.nombre;
+        filtroArea.appendChild(opt);
+      });
+    }
+
+    function cargarAreaEnFormulario(id) {
+      const area = areas.find(a => a.id === id);
+      if (!area) return;
+      areaIdInput.value = area.id;
+      areaNombre.value = area.nombre;
+      areaTipo.value = area.tipo || "";
+      areaPeriodicidad.value = area.periodicidad || "";
+      areaTipoAseo.value = area.tipoAseo || "";
+      areaResponsable.value = area.responsable || "";
+      areaActiva.checked = !!area.activa;
+      areaDescripcion.value = area.descripcion || "";
+    }
+
+    function limpiarAreaForm() {
+      areaIdInput.value = "";
+      areaNombre.value = "";
+      areaTipo.value = "";
+      areaPeriodicidad.value = "";
+      areaTipoAseo.value = "";
+      areaResponsable.value = "";
+      areaActiva.checked = true;
+      areaDescripcion.value = "";
+    }
+
+    function eliminarArea(id) {
+      if (!confirm("¿Eliminar esta área de aseo? Considera el impacto en los registros asociados.")) return;
+      areas = areas.filter(a => a.id !== id);
+      saveData(LS_AREAS, areas);
+      renderAreasTable();
+      renderRegistrosTable();
+    }
+
+    areaForm.addEventListener("submit", e => {
+      e.preventDefault();
+      if (!areaNombre.value.trim() || !areaPeriodicidad.value || !areaTipoAseo.value) {
+        alert("Por favor completa al menos nombre, periodicidad y tipo de aseo.");
+        return;
+      }
+
+      const data = {
+        id: areaIdInput.value || generarId("area"),
+        nombre: areaNombre.value.trim(),
+        tipo: areaTipo.value,
+        periodicidad: areaPeriodicidad.value,
+        tipoAseo: areaTipoAseo.value,
+        responsable: areaResponsable.value.trim(),
+        activa: areaActiva.checked,
+        descripcion: areaDescripcion.value.trim()
+      };
+
+      const idx = areas.findIndex(a => a.id === data.id);
+      if (idx >= 0) {
+        areas[idx] = data;
+      } else {
+        areas.push(data);
+      }
+      saveData(LS_AREAS, areas);
+      limpiarAreaForm();
+      renderAreasTable();
+    });
+
+    areaResetBtn.addEventListener("click", limpiarAreaForm);
+
+    // ==================== MÓDULO INVENTARIO ====================
+    const productoForm = document.getElementById("productoForm");
+    const prodId = document.getElementById("prodId");
+    const prodNombre = document.getElementById("prodNombre");
+    const prodCategoria = document.getElementById("prodCategoria");
+    const prodUnidad = document.getElementById("prodUnidad");
+    const prodStock = document.getElementById("prodStock");
+    const prodMin = document.getElementById("prodMin");
+    const prodProveedor = document.getElementById("prodProveedor");
+    const prodLote = document.getElementById("prodLote");
+    const prodVence = document.getElementById("prodVence");
+    const prodObs = document.getElementById("prodObs");
+    const productosTableBody = document.querySelector("#productosTable tbody");
+    const prodResetBtn = document.getElementById("prodResetBtn");
+
+    function renderProductosTable() {
+      productosTableBody.innerHTML = "";
+      if (!productos.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 7;
+        td.className = "small-text";
+        td.textContent = "No hay productos de aseo registrados todavía.";
+        tr.appendChild(td);
+        productosTableBody.appendChild(tr);
+        actualizarSelectProductos();
+        renderDashboardTable();
+        return;
+      }
+
+      productos.forEach(p => {
+        const tr = document.createElement("tr");
+
+        const tdNombre = document.createElement("td");
+        tdNombre.innerHTML = `<strong>${p.nombre}</strong><br><span class="small-text">${p.obs || ""}</span>`;
+        tr.appendChild(tdNombre);
+
+        const tdCat = document.createElement("td");
+        tdCat.textContent = p.categoria || "-";
+        tr.appendChild(tdCat);
+
+        const tdStock = document.createElement("td");
+        tdStock.innerHTML = `${(p.stock || 0).toFixed(2)} ${p.unidad || ""}<br><span class="small-text">Mín: ${(p.min || 0).toFixed(2)}</span>`;
+        tr.appendChild(tdStock);
+
+        const tdEstado = document.createElement("td");
+        const pill = document.createElement("span");
+        pill.className = "status-pill";
+        const stock = p.stock || 0;
+        const min = p.min || 0;
+        if (stock <= 0) {
+          pill.classList.add("status-critical");
+          pill.textContent = "Crítico: sin stock";
+        } else if (stock <= min && min > 0) {
+          pill.classList.add("status-low");
+          pill.textContent = "Bajo stock";
+        } else {
+          pill.classList.add("status-ok");
+          pill.textContent = "OK";
+        }
+        tdEstado.appendChild(pill);
+        tr.appendChild(tdEstado);
+
+        const tdLote = document.createElement("td");
+        let vencStr = "";
+        if (p.vence) {
+          const d = new Date(p.vence);
+          vencStr = d.toLocaleDateString("es-CL");
+        }
+        tdLote.innerHTML = `${p.lote || "-"}<br><span class="small-text">Vence: ${vencStr || "s/i"}</span>`;
+        tr.appendChild(tdLote);
+
+        const tdProv = document.createElement("td");
+        tdProv.textContent = p.proveedor || "-";
+        tr.appendChild(tdProv);
+
+        const tdAcc = document.createElement("td");
+        tdAcc.className = "row-actions";
+        const btnEdit = document.createElement("button");
+        btnEdit.className = "btn-secondary";
+        btnEdit.textContent = "✏️ Editar";
+        btnEdit.addEventListener("click", () => cargarProdEnFormulario(p.id));
+
+        const btnDel = document.createElement("button");
+        btnDel.className = "btn-danger";
+        btnDel.textContent = "🗑 Eliminar";
+        btnDel.addEventListener("click", () => eliminarProducto(p.id));
+
+        tdAcc.appendChild(btnEdit);
+        tdAcc.appendChild(btnDel);
+        tr.appendChild(tdAcc);
+
+        productosTableBody.appendChild(tr);
+      });
+
+      actualizarSelectProductos();
+      renderDashboardTable();
+    }
+
+    function actualizarSelectProductos() {
+      const regProdSelect = document.getElementById("regProdSelect");
+      regProdSelect.innerHTML = '<option value="">Seleccionar producto...</option>';
+      productos.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p.id;
+        opt.textContent = p.nombre + (p.unidad ? ` (${p.unidad})` : "");
+        regProdSelect.appendChild(opt);
+      });
+    }
+
+    function cargarProdEnFormulario(id) {
+      const p = productos.find(x => x.id === id);
+      if (!p) return;
+      prodId.value = p.id;
+      prodNombre.value = p.nombre;
+      prodCategoria.value = p.categoria || "";
+      prodUnidad.value = p.unidad || "";
+      prodStock.value = p.stock ?? "";
+      prodMin.value = p.min ?? "";
+      prodProveedor.value = p.proveedor || "";
+      prodLote.value = p.lote || "";
+      prodVence.value = p.vence || "";
+      prodObs.value = p.obs || "";
+    }
+
+    function limpiarProdForm() {
+      prodId.value = "";
+      prodNombre.value = "";
+      prodCategoria.value = "";
+      prodUnidad.value = "";
+      prodStock.value = "";
+      prodMin.value = "";
+      prodProveedor.value = "";
+      prodLote.value = "";
+      prodVence.value = "";
+      prodObs.value = "";
+    }
+
+    function eliminarProducto(id) {
+      if (!confirm("¿Eliminar este producto de aseo del inventario?")) return;
+      productos = productos.filter(p => p.id !== id);
+      saveData(LS_PRODS, productos);
+      renderProductosTable();
+      renderInsumosTempTable();
+      renderRegistrosTable();
+    }
+
+    productoForm.addEventListener("submit", e => {
+      e.preventDefault();
+      if (!prodNombre.value.trim() || !prodUnidad.value) {
+        alert("Al menos nombre y unidad son obligatorios.");
+        return;
+      }
+      const data = {
+        id: prodId.value || generarId("prod"),
+        nombre: prodNombre.value.trim(),
+        categoria: prodCategoria.value,
+        unidad: prodUnidad.value,
+        stock: parseFloat(prodStock.value || "0"),
+        min: parseFloat(prodMin.value || "0"),
+        proveedor: prodProveedor.value.trim(),
+        lote: prodLote.value.trim(),
+        vence: prodVence.value || "",
+        obs: prodObs.value.trim()
+      };
+
+      const idx = productos.findIndex(p => p.id === data.id);
+      if (idx >= 0) {
+        productos[idx] = data;
+      } else {
+        productos.push(data);
+      }
+
+      saveData(LS_PRODS, productos);
+      limpiarProdForm();
+      renderProductosTable();
+    });
+
+    prodResetBtn.addEventListener("click", limpiarProdForm);
+
+    // ==================== MÓDULO REGISTRO DE ASEO ====================
+    const registroForm = document.getElementById("registroForm");
+    const regId = document.getElementById("regId");
+    const regFecha = document.getElementById("regFecha");
+    const regHora = document.getElementById("regHora");
+    const regArea = document.getElementById("regArea");
+    const regTurno = document.getElementById("regTurno");
+    const regResponsable = document.getElementById("regResponsable");
+    const regTipoAseo = document.getElementById("regTipoAseo");
+    const regVerificado = document.getElementById("regVerificado");
+    const regDescripcion = document.getElementById("regDescripcion");
+    const regProdSelect = document.getElementById("regProdSelect");
+    const regProdCant = document.getElementById("regProdCant");
+    const addInsumoBtn = document.getElementById("addInsumoBtn");
+    const insumosTempTableBody = document.querySelector("#insumosTempTable tbody");
+    const registrosTableBody = document.querySelector("#registrosTable tbody");
+    const regResetBtn = document.getElementById("regResetBtn");
+    const filtroArea = document.getElementById("filtroArea");
+    const resetFiltroBtn = document.getElementById("resetFiltroBtn");
+
+    function setTodayAsDefault() {
+      const today = new Date().toISOString().substring(0, 10);
+      regFecha.value = today;
+    }
+    setTodayAsDefault();
+
+    function renderInsumosTempTable() {
+      insumosTempTableBody.innerHTML = "";
+      if (!insumosTemp.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "small-text";
+        td.textContent = "No hay insumos asociados aún.";
+        tr.appendChild(td);
+        insumosTempTableBody.appendChild(tr);
+        return;
+      }
+
+      insumosTemp.forEach((item, idx) => {
+        const tr = document.createElement("tr");
+
+        const prod = productos.find(p => p.id === item.prodId);
+        const nombre = prod ? prod.nombre : "Producto eliminado";
+        const unidad = prod ? (prod.unidad || "") : "";
+
+        const tdNombre = document.createElement("td");
+        tdNombre.textContent = nombre;
+        tr.appendChild(tdNombre);
+
+        const tdCant = document.createElement("td");
+        tdCant.textContent = item.cantidad.toFixed(2);
+        tr.appendChild(tdCant);
+
+        const tdUnit = document.createElement("td");
+        tdUnit.textContent = unidad;
+        tr.appendChild(tdUnit);
+
+        const tdAcc = document.createElement("td");
+        const btnDel = document.createElement("button");
+        btnDel.className = "btn-danger";
+        btnDel.textContent = "🗑 Quitar";
+        btnDel.addEventListener("click", () => {
+          insumosTemp.splice(idx, 1);
+          renderInsumosTempTable();
+        });
+        tdAcc.appendChild(btnDel);
+        tr.appendChild(tdAcc);
+
+        insumosTempTableBody.appendChild(tr);
+      });
+    }
+
+    addInsumoBtn.addEventListener("click", () => {
+      const pid = regProdSelect.value;
+      const cant = parseFloat(regProdCant.value || "0");
+      if (!pid || isNaN(cant) || cant <= 0) {
+        alert("Selecciona un producto y una cantidad válida.");
+        return;
+      }
+      insumosTemp.push({ prodId: pid, cantidad: cant });
+      regProdSelect.value = "";
+      regProdCant.value = "";
+      renderInsumosTempTable();
+    });
+
+    function limpiarRegistroForm() {
+      regId.value = "";
+      setTodayAsDefault();
+      regHora.value = "";
+      regArea.value = "";
+      regTurno.value = "";
+      regResponsable.value = "";
+      regTipoAseo.value = "";
+      regVerificado.value = "";
+      regDescripcion.value = "";
+      regProdSelect.value = "";
+      regProdCant.value = "";
+      insumosTemp = [];
+      renderInsumosTempTable();
+    }
+
+    regResetBtn.addEventListener("click", limpiarRegistroForm);
+
+    function renderRegistrosTable() {
+      registrosTableBody.innerHTML = "";
+      if (!registros.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.className = "small-text";
+        td.textContent = "No hay registros de aseo todavía.";
+        tr.appendChild(td);
+        registrosTableBody.appendChild(tr);
+        renderDashboardTable();
+        return;
+      }
+
+      const filtroAreaVal = filtroArea.value || "";
+
+      registros
+        .filter(r => !filtroAreaVal || r.areaId === filtroAreaVal)
+        .sort((a, b) => (a.fecha || "").localeCompare(b.fecha || ""))
+        .forEach(r => {
+          const tr = document.createElement("tr");
+
+          const fechaObj = r.fecha ? new Date(r.fecha) : null;
+          const fechaStr = fechaObj ? fechaObj.toLocaleDateString("es-CL") : r.fecha || "-";
+          const horaStr = r.hora || "";
+
+          const areaObj = areas.find(a => a.id === r.areaId);
+          const areaNombre = areaObj ? areaObj.nombre : "Área eliminada";
+
+          const tdFecha = document.createElement("td");
+          tdFecha.innerHTML = `<strong>${fechaStr}</strong><br><span class="small-text">${horaStr || ""}</span>`;
+          tr.appendChild(tdFecha);
+
+          const tdArea = document.createElement("td");
+          tdArea.innerHTML = `<strong>${areaNombre}</strong><br><span class="small-text">${r.descripcion || ""}</span>`;
+          tr.appendChild(tdArea);
+
+          const tdResp = document.createElement("td");
+          tdResp.innerHTML = `<strong>${r.responsable || "-"}</strong><br><span class="small-text">${r.turno || ""}</span>`;
+          tr.appendChild(tdResp);
+
+          const tdTipo = document.createElement("td");
+          const tipo = r.tipoAseo || (areaObj ? areaObj.tipoAseo : "");
+          tdTipo.innerHTML = `<span class="pill pill-orange">${tipo || "-"}</span>`;
+          tr.appendChild(tdTipo);
+
+          const tdInsumos = document.createElement("td");
+          if (!r.insumos || !r.insumos.length) {
+            tdInsumos.innerHTML = `<span class="small-text">Sin insumos asociados</span>`;
+          } else {
+            const ul = document.createElement("ul");
+            ul.style.margin = "0";
+            ul.style.paddingLeft = "16px";
+            ul.style.listStyleType = "disc";
+            r.insumos.forEach(i => {
+              const prod = productos.find(p => p.id === i.prodId);
+              const nombre = prod ? prod.nombre : "Producto eliminado";
+              const unidad = prod ? (prod.unidad || "") : "";
+              const li = document.createElement("li");
+              li.textContent = `${nombre}: ${i.cantidad.toFixed(2)} ${unidad}`;
+              ul.appendChild(li);
+            });
+            tdInsumos.appendChild(ul);
+          }
+          tr.appendChild(tdInsumos);
+
+          const tdVer = document.createElement("td");
+          tdVer.innerHTML = `<span class="small-text">Verificado por:<br><strong>${r.verificado || "s/i"}</strong></span>`;
+          tr.appendChild(tdVer);
+
+          registrosTableBody.appendChild(tr);
+        });
+
+      if (!registrosTableBody.children.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.className = "small-text";
+        td.textContent = "No hay registros que coincidan con el filtro seleccionado.";
+        tr.appendChild(td);
+        registrosTableBody.appendChild(tr);
+      }
+
+      renderDashboardTable();
+    }
+
+    registroForm.addEventListener("submit", e => {
+      e.preventDefault();
+      if (!regFecha.value || !regArea.value || !regResponsable.value.trim()) {
+        alert("Fecha, área y responsable son obligatorios.");
+        return;
+      }
+
+      const data = {
+        id: regId.value || generarId("reg"),
+        fecha: regFecha.value,
+        hora: regHora.value,
+        areaId: regArea.value,
+        turno: regTurno.value,
+        responsable: regResponsable.value.trim(),
+        tipoAseo: regTipoAseo.value,
+        verificado: regVerificado.value.trim(),
+        descripcion: regDescripcion.value.trim(),
+        insumos: insumosTemp.map(i => ({ prodId: i.prodId, cantidad: i.cantidad }))
+      };
+
+      // Descontar del inventario
+      data.insumos.forEach(item => {
+        const prod = productos.find(p => p.id === item.prodId);
+        if (prod) {
+          prod.stock = (prod.stock || 0) - item.cantidad;
+          if (prod.stock < 0) prod.stock = 0;
+        }
+      });
+      saveData(LS_PRODS, productos);
+      renderProductosTable();
+
+      const idx = registros.findIndex(r => r.id === data.id);
+      if (idx >= 0) {
+        registros[idx] = data;
+      } else {
+        registros.push(data);
+      }
+      saveData(LS_REGS, registros);
+
+      limpiarRegistroForm();
+      renderRegistrosTable();
+    });
+
+    filtroArea.addEventListener("change", renderRegistrosTable);
+    resetFiltroBtn.addEventListener("click", () => {
+      filtroArea.value = "";
+      renderRegistrosTable();
+    });
+
+    // ==================== DASHBOARD TIPO SPS ====================
+    const dashboardTableBody = document.querySelector("#dashboardTable tbody");
+
+    function clasificarRegistroTipo(tipoRaw) {
+      const tipo = (tipoRaw || "").toLowerCase();
+      if (tipo.includes("desrat")) return "desratizado";
+      if (tipo.includes("desinsect")) return "desinsectado";
+      if (tipo.includes("sanit")) return "sanitizado";
+      if (tipo.includes("desinfec")) return "sanitizado";
+      return "otro";
+    }
+
+    function getUltimoRegistro(areaId, tipoClasificado) {
+      const regs = registros
+        .filter(r => r.areaId === areaId && clasificarRegistroTipo(r.tipoAseo) === tipoClasificado)
+        .sort((a, b) => (b.fecha + (b.hora || "")).localeCompare(a.fecha + (a.hora || "")));
+      return regs[0] || null;
+    }
+
+    function formatFechaHoraReg(reg) {
+      if (!reg) return '<span class="small-text">s/i</span>';
+      const d = reg.fecha ? new Date(reg.fecha) : null;
+      const f = d && !isNaN(d) ? d.toLocaleDateString("es-CL") : (reg.fecha || "-");
+      const h = reg.hora || "";
+      const resp = reg.responsable || "";
+      return `<strong>${f}</strong><br><span class="small-text">${h ? h + " · " : ""}${resp}</span>`;
+    }
+
+    function getDiasDesde(fechaStr) {
+      if (!fechaStr) return null;
+      const d = new Date(fechaStr);
+      if (isNaN(d)) return null;
+      const today = new Date();
+      const diff = today - d;
+      return Math.floor(diff / (1000 * 60 * 60 * 24));
+    }
+
+    function thresholdFromPeriodicidad(per) {
+      switch (per) {
+        case "Por turno": return 1;
+        case "Diario": return 1;
+        case "Semanal": return 7;
+        case "Mensual": return 31;
+        default: return null; // Según plan específico
+      }
+    }
+
+    function calcularEstadoArea(area, ultSan, ultDesins, ultDesrat) {
+      const thr = thresholdFromPeriodicidad(area.periodicidad);
+      const diasSan = ultSan ? getDiasDesde(ultSan.fecha) : null;
+      const diasDesins = ultDesins ? getDiasDesde(ultDesins.fecha) : null;
+      const diasDesrat = ultDesrat ? getDiasDesde(ultDesrat.fecha) : null;
+
+      const hayAlguno = ultSan || ultDesins || ultDesrat;
+      if (!hayAlguno) {
+        return { label: "Sin registros", cls: "status-critical" };
+      }
+
+      if (!thr) {
+        return { label: "Con registros (plan específico)", cls: "status-info" };
+      }
+
+      const diasList = [diasSan, diasDesins, diasDesrat].filter(d => d !== null);
+      if (!diasList.length) {
+        return { label: "Sin registros recientes", cls: "status-critical" };
+      }
+      const diasMin = Math.min(...diasList);
+
+      if (diasMin <= thr) {
+        return { label: "OK al día", cls: "status-ok" };
+      }
+      return { label: "Atrasado según plan", cls: "status-low" };
+    }
+
+    function renderDashboardTable() {
+      dashboardTableBody.innerHTML = "";
+      if (!areas.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 6;
+        td.className = "small-text";
+        td.textContent = "Configura primero las áreas de aseo para ver el dashboard.";
+        tr.appendChild(td);
+        dashboardTableBody.appendChild(tr);
+        return;
+      }
+
+      areas.forEach(area => {
+        const tr = document.createElement("tr");
+
+        const ultSan = getUltimoRegistro(area.id, "sanitizado");
+        const ultDesins = getUltimoRegistro(area.id, "desinsectado");
+        const ultDesrat = getUltimoRegistro(area.id, "desratizado");
+        const estado = calcularEstadoArea(area, ultSan, ultDesins, ultDesrat);
+
+        const tdArea = document.createElement("td");
+        tdArea.innerHTML = `<strong>${area.nombre}</strong><br><span class="small-text">${area.descripcion || ""}</span>`;
+        tr.appendChild(tdArea);
+
+        const tdPer = document.createElement("td");
+        tdPer.innerHTML = `<span class="pill pill-purple">${area.periodicidad || "-"}</span>`;
+        tr.appendChild(tdPer);
+
+        const tdSan = document.createElement("td");
+        tdSan.innerHTML = formatFechaHoraReg(ultSan);
+        tr.appendChild(tdSan);
+
+        const tdDesins = document.createElement("td");
+        tdDesins.innerHTML = formatFechaHoraReg(ultDesins);
+        tr.appendChild(tdDesins);
+
+        const tdDesrat = document.createElement("td");
+        tdDesrat.innerHTML = formatFechaHoraReg(ultDesrat);
+        tr.appendChild(tdDesrat);
+
+        const tdEstado = document.createElement("td");
+        const pill = document.createElement("span");
+        pill.className = "status-pill " + estado.cls;
+        pill.textContent = estado.label;
+        tdEstado.appendChild(pill);
+        tr.appendChild(tdEstado);
+
+        dashboardTableBody.appendChild(tr);
+      });
+    }
+
+    // BOTÓN LIMPIAR TODO (TEST)
+    document.getElementById("clearAllBtn").addEventListener("click", () => {
+      if (!confirm("Esta acción borrará TODA la configuración de áreas, inventario y registros de aseo en este navegador. ¿Continuar?")) return;
+      localStorage.removeItem(LS_AREAS);
+      localStorage.removeItem(LS_PRODS);
+      localStorage.removeItem(LS_REGS);
+      areas = [];
+      productos = [];
+      registros = [];
+      insumosTemp = [];
+      renderAreasTable();
+      renderProductosTable();
+      renderInsumosTempTable();
+      renderRegistrosTable();
+      renderDashboardTable();
+      alert("Datos borrados. Ideal para reiniciar las pruebas del sistema.");
+    });
+
+    // Inicialización al cargar
+    renderAreasTable();
+    renderProductosTable();
+    renderInsumosTempTable();
+    renderRegistrosTable();
+    renderDashboardTable();
+  </script>
+</body>
+</html>

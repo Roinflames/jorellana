@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>BCP – ERP Gestión de Proveedores</title>
+<style>
+    :root{
+        --bcp-primary:#1B5E20;          /* Verde BCP */
+        --bcp-primary-dark:#104016;
+        --bcp-accent:#8E24AA;          /* Morado BCP */
+        --bcp-bg:#F5FAF7;              /* Fondo muy claro */
+        --bcp-card:#FFFFFF;
+        --bcp-border:#C8E6C9;
+        --bcp-text:#18392B;
+        --bcp-muted:#5F7C65;
+        --bcp-danger:#C62828;
+    }
+    *{box-sizing:border-box;}
+    body{
+        margin:0;
+        font-family:Arial, Helvetica, sans-serif;
+        background:var(--bcp-bg);
+        color:var(--bcp-text);
+    }
+    header{
+        background:linear-gradient(90deg,var(--bcp-primary),var(--bcp-accent));
+        color:#fff;
+        padding:16px 32px;
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        box-shadow:0 2px 6px rgba(0,0,0,0.25);
+    }
+    header .title{
+        font-size:20px;
+        font-weight:bold;
+    }
+    header .subtitle{
+        font-size:12px;
+        opacity:0.9;
+    }
+    header .datetime{
+        font-size:12px;
+        text-align:right;
+    }
+
+    .layout{
+        display:flex;
+        min-height:calc(100vh - 60px);
+    }
+    nav{
+        width:230px;
+        background:#0f2615;
+        color:#e8f5e9;
+        padding:16px 0;
+        box-shadow:2px 0 6px rgba(0,0,0,0.15);
+    }
+    nav h3{
+        margin:0 16px 12px;
+        font-size:13px;
+        text-transform:uppercase;
+        letter-spacing:1px;
+        opacity:0.7;
+    }
+    .nav-btn{
+        display:block;
+        width:100%;
+        text-align:left;
+        padding:10px 18px;
+        border:none;
+        background:transparent;
+        color:#e8f5e9;
+        font-size:14px;
+        cursor:pointer;
+        transition:background 0.2s, padding-left 0.2s, color 0.2s;
+    }
+    .nav-btn.active,
+    .nav-btn:hover{
+        background:rgba(255,255,255,0.08);
+        padding-left:24px;
+        color:#C8E6C9;
+    }
+
+    main{
+        flex:1;
+        padding:20px 30px;
+        overflow-y:auto;
+    }
+    .section{
+        display:none;
+    }
+    .section.active{
+        display:block;
+    }
+
+    .cards-row{
+        display:flex;
+        flex-wrap:wrap;
+        gap:16px;
+        margin-bottom:20px;
+    }
+    .card{
+        background:var(--bcp-card);
+        border-radius:10px;
+        border:1px solid var(--bcp-border);
+        padding:16px 18px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.08);
+    }
+    .card-header{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        margin-bottom:10px;
+    }
+    .card-title{
+        font-size:16px;
+        font-weight:bold;
+        color:var(--bcp-primary-dark);
+    }
+    .card-subtitle{
+        font-size:12px;
+        color:var(--bcp-muted);
+    }
+
+    .card.metric{
+        flex:1;
+        min-width:180px;
+        border-left:4px solid var(--bcp-accent);
+    }
+    .metric-value{
+        font-size:22px;
+        font-weight:bold;
+        margin-top:6px;
+        color:var(--bcp-primary-dark);
+    }
+    .metric-label{
+        font-size:12px;
+        color:var(--bcp-muted);
+    }
+
+    label{
+        font-size:13px;
+        font-weight:bold;
+        display:block;
+        margin-top:10px;
+        color:var(--bcp-primary-dark);
+    }
+    input, select, textarea{
+        width:100%;
+        margin-top:4px;
+        padding:8px 10px;
+        border-radius:6px;
+        border:1px solid var(--bcp-border);
+        font-size:13px;
+        background:#FAFFFA;
+    }
+    textarea{
+        resize:vertical;
+        min-height:60px;
+    }
+    input:focus, select:focus, textarea:focus{
+        outline:none;
+        border-color:var(--bcp-accent);
+        box-shadow:0 0 0 2px rgba(142,36,170,0.12);
+    }
+    .form-row{
+        display:flex;
+        gap:10px;
+    }
+    .form-row > div{
+        flex:1;
+    }
+
+    button{
+        border:none;
+        border-radius:20px;
+        padding:8px 16px;
+        font-size:13px;
+        cursor:pointer;
+        margin-top:12px;
+        margin-right:6px;
+        display:inline-flex;
+        align-items:center;
+        gap:6px;
+    }
+    .btn-primary{
+        background:var(--bcp-primary);
+        color:#fff;
+    }
+    .btn-primary:hover{
+        background:var(--bcp-primary-dark);
+    }
+    .btn-secondary{
+        background:#E8F5E9;
+        color:var(--bcp-primary-dark);
+    }
+    .btn-secondary:hover{
+        background:#C8E6C9;
+    }
+    .btn-danger{
+        background:var(--bcp-danger);
+        color:#fff;
+    }
+    .btn-outline{
+        background:transparent;
+        border:1px solid var(--bcp-border);
+        color:var(--bcp-text);
+    }
+
+    table{
+        width:100%;
+        border-collapse:collapse;
+        font-size:13px;
+        margin-top:10px;
+    }
+    th,td{
+        padding:8px 8px;
+        border-bottom:1px solid #E0F2F1;
+        text-align:left;
+    }
+    th{
+        background:#E8F5E9;
+        font-weight:bold;
+        font-size:12px;
+        text-transform:uppercase;
+        color:var(--bcp-primary-dark);
+    }
+    tr:hover{
+        background:#F1F8E9;
+    }
+    .badge{
+        display:inline-block;
+        padding:3px 8px;
+        border-radius:999px;
+        font-size:11px;
+        font-weight:bold;
+        color:#fff;
+    }
+    .badge-activo{ background:#43A047; }
+    .badge-suspendido{ background:#E53935; }
+
+    .pill{
+        display:inline-block;
+        padding:3px 7px;
+        border-radius:999px;
+        background:#E8F5E9;
+        font-size:11px;
+        margin-right:4px;
+        margin-top:4px;
+        color:var(--bcp-primary-dark);
+    }
+
+    #auditLog{
+        background:#10261A;
+        color:#E8F5E9;
+        font-family:Consolas, monospace;
+        font-size:11px;
+        padding:10px;
+        border-radius:8px;
+        height:180px;
+        overflow-y:auto;
+        white-space:pre-wrap;
+        border:1px solid #1B5E20;
+    }
+
+    .best-offer{
+        background:#E0F7FA !important;
+        border-left:3px solid var(--bcp-accent);
+    }
+
+    .helper-text{
+        font-size:11px;
+        color:var(--bcp-muted);
+        margin-top:2px;
+    }
+
+    .top-right-actions{
+        display:flex;
+        gap:8px;
+    }
+
+    @media(max-width:900px){
+        .layout{
+            flex-direction:column;
+        }
+        nav{
+            width:100%;
+        }
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <div>
+        <div class="title">BioCannaPharma (BCP) – ERP Gestión de Proveedores</div>
+        <div class="subtitle">Módulo integrado para compras, reactivos, equipos, packaging y servicios externos</div>
+    </div>
+    <div class="datetime">
+        <div id="currentDate"></div>
+        <div id="currentTime"></div>
+    </div>
+</header>
+
+<div class="layout">
+    <nav>
+        <h3>Módulos BCP</h3>
+        <button class="nav-btn active" onclick="showSection('proveedores', this)">Gestión de proveedores</button>
+        <button class="nav-btn" onclick="showSection('comparador', this)">Comparador de precios</button>
+        <button class="nav-btn" onclick="showSection('dashboard', this)">Dashboard & Auditoría</button>
+    </nav>
+
+    <main>
+
+        <!-- ================== SECCIÓN PROVEEDORES ================== -->
+        <section id="section-proveedores" class="section active">
+            <div class="cards-row">
+                <div class="card" style="flex:1.2; min-width:260px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Ficha de proveedor</div>
+                            <div class="card-subtitle">Alta y edición de proveedores BCP</div>
+                        </div>
+                        <div class="top-right-actions">
+                            <button class="btn-secondary" onclick="resetProveedorForm()">Nuevo</button>
+                        </div>
+                    </div>
+
+                    <input type="hidden" id="provId">
+
+                    <label>Nombre / Razón social *</label>
+                    <input type="text" id="provNombre" placeholder="Ej: Reactivos Andinos SpA">
+
+                    <div class="form-row">
+                        <div>
+                            <label>RUT / ID fiscal</label>
+                            <input type="text" id="provRut" placeholder="Ej: 76.123.456-7">
+                        </div>
+                        <div>
+                            <label>Rubro principal</label>
+                            <select id="provRubro">
+                                <option value="Reactivos">Reactivos</option>
+                                <option value="Equipos">Equipos</option>
+                                <option value="Packaging">Packaging</option>
+                                <option value="Servicios Técnicos">Servicios Técnicos</option>
+                                <option value="Materias Primas">Materias Primas</option>
+                                <option value="Otros">Otros</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Contacto comercial</label>
+                            <input type="text" id="provContacto" placeholder="Nombre del ejecutivo(a)">
+                        </div>
+                        <div>
+                            <label>Teléfono</label>
+                            <input type="text" id="provFono" placeholder="+56 9 ...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Email</label>
+                            <input type="email" id="provEmail" placeholder="contacto@empresa.cl">
+                        </div>
+                        <div>
+                            <label>Sitio web</label>
+                            <input type="text" id="provWeb" placeholder="https://...">
+                        </div>
+                    </div>
+
+                    <label>Notas internas</label>
+                    <textarea id="provNotas" placeholder="Condiciones de pago, acuerdos, observaciones internas BCP..."></textarea>
+
+                    <div class="helper-text">* Campo obligatorio. El estado por defecto es <b>Activo</b>.</div>
+
+                    <button class="btn-primary" onclick="guardarProveedor()">Guardar proveedor</button>
+                    <button class="btn-outline" onclick="resetProveedorForm()">Limpiar ficha</button>
+                </div>
+
+                <div class="card" style="flex:1.6; min-width:320px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Listado de proveedores</div>
+                            <div class="card-subtitle">Selecciona un proveedor para gestionar sus insumos</div>
+                        </div>
+                        <div class="top-right-actions">
+                            <button class="btn-secondary" onclick="toggleProveedorEstado()">Cambiar estado</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Buscar</label>
+                            <input type="text" id="provSearch" placeholder="Nombre, contacto..." oninput="renderProveedores()">
+                        </div>
+                        <div>
+                            <label>Filtrar rubro</label>
+                            <select id="provFilterRubro" onchange="renderProveedores()">
+                                <option value="">Todos</option>
+                                <option>Reactivos</option>
+                                <option>Equipos</option>
+                                <option>Packaging</option>
+                                <option>Servicios Técnicos</option>
+                                <option>Materias Primas</option>
+                                <option>Otros</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>Estado</label>
+                            <select id="provFilterEstado" onchange="renderProveedores()">
+                                <option value="">Todos</option>
+                                <option value="Activo">Activo</option>
+                                <option value="Suspendido">Suspendido</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Nombre</th>
+                                <th>Rubro</th>
+                                <th>Contacto</th>
+                                <th>Estado</th>
+                                <th>Insumos</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaProveedores"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- FICHA RESUMEN + INSUMOS -->
+            <div class="cards-row">
+                <div class="card" style="flex:1.1; min-width:260px;">
+                    <div class="card-header">
+                        <div class="card-title">Ficha resumida del proveedor seleccionado</div>
+                    </div>
+                    <div id="detalleProveedor">
+                        <div class="helper-text">Selecciona un proveedor en la tabla para ver su ficha y gestionar sus insumos.</div>
+                    </div>
+                </div>
+
+                <div class="card" style="flex:1.9; min-width:320px;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Insumos del proveedor seleccionado</div>
+                            <div class="card-subtitle">Define qué insumos vende cada proveedor y su valor</div>
+                        </div>
+                        <div class="top-right-actions">
+                            <button class="btn-secondary" onclick="resetInsumoForm()">Nuevo insumo</button>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Nombre del insumo *</label>
+                            <input type="text" id="insNombre" placeholder="Ej: Etanol HPLC, Cloro granulado, Frascos 30 mL...">
+                        </div>
+                        <div>
+                            <label>Categoría</label>
+                            <input type="text" id="insCategoria" placeholder="Reactivo, Packaging, Servicio, MP...">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Unidad</label>
+                            <input type="text" id="insUnidad" placeholder="Ej: L, kg, unidad, caja...">
+                        </div>
+                        <div>
+                            <label>Precio unitario *</label>
+                            <input type="number" id="insPrecio" min="0" step="0.0001" placeholder="Ej: 12500">
+                        </div>
+                        <div>
+                            <label>Moneda</label>
+                            <select id="insMoneda">
+                                <option value="CLP">CLP</option>
+                                <option value="USD">USD</option>
+                                <option value="EUR">EUR</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div>
+                            <label>Lead time / Plazo</label>
+                            <input type="text" id="insLeadTime" placeholder="Ej: 5 días hábiles, 2 semanas...">
+                        </div>
+                        <div>
+                            <label>Estado</label>
+                            <select id="insEstado">
+                                <option value="Activo">Activo</option>
+                                <option value="No disponible">No disponible</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <label>Observaciones</label>
+                    <textarea id="insObs" placeholder="Lotes mínimos, condiciones de despacho, restricciones, etc."></textarea>
+                    <div class="helper-text">* Campos obligatorios. Solo se permite gestionar insumos si hay un proveedor seleccionado.</div>
+
+                    <input type="hidden" id="insIndex">
+
+                    <button class="btn-primary" onclick="guardarInsumo()">Guardar insumo</button>
+                    <button class="btn-outline" onclick="resetInsumoForm()">Limpiar insumo</button>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>Categoría</th>
+                                <th>Unidad</th>
+                                <th>Precio</th>
+                                <th>Moneda</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaInsumosProveedor"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================== SECCIÓN COMPARADOR ================== -->
+        <section id="section-comparador" class="section">
+            <div class="cards-row">
+                <div class="card" style="flex:1;">
+                    <div class="card-header">
+                        <div>
+                            <div class="card-title">Comparador de precios entre proveedores</div>
+                            <div class="card-subtitle">Selecciona un insumo y compara quién ofrece la mejor condición</div>
+                        </div>
+                    </div>
+
+                    <label>Insumo a comparar</label>
+                    <select id="cmpInsumoSelect" onchange="renderComparador()">
+                        <option value="">Selecciona un insumo...</option>
+                    </select>
+                    <div class="helper-text">
+                        El listado se genera automáticamente a partir de los insumos declarados por cada proveedor.
+                    </div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th>Rubro</th>
+                                <th>Insumo</th>
+                                <th>Precio</th>
+                                <th>Moneda</th>
+                                <th>Estado prov.</th>
+                                <th>Estado insumo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaComparador"></tbody>
+                    </table>
+                    <div class="helper-text">
+                        La fila resaltada corresponde a la <b>mejor oferta (precio mínimo)</b> considerando solo proveedores activos.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================== SECCIÓN DASHBOARD / AUDITORÍA ================== -->
+        <section id="section-dashboard" class="section">
+            <div class="cards-row">
+                <div class="card metric">
+                    <div class="card-title">Proveedores totales</div>
+                    <div id="metricTotalProv" class="metric-value">0</div>
+                    <div class="metric-label">Registrados en el sistema</div>
+                </div>
+                <div class="card metric">
+                    <div class="card-title">Proveedores activos</div>
+                    <div id="metricActivos" class="metric-value">0</div>
+                    <div class="metric-label">Disponibles para compras</div>
+                </div>
+                <div class="card metric">
+                    <div class="card-title">Insumos distintos</div>
+                    <div id="metricInsumos" class="metric-value">0</div>
+                    <div class="metric-label">Con al menos un proveedor</div>
+                </div>
+                <div class="card metric">
+                    <div class="card-title">Registros auditoría</div>
+                    <div id="metricAudit" class="metric-value">0</div>
+                    <div class="metric-label">Movimientos trazables</div>
+                </div>
+            </div>
+
+            <div class="cards-row">
+                <div class="card" style="flex:1.2;">
+                    <div class="card-header">
+                        <div class="card-title">Top insumos con más proveedores</div>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Insumo</th>
+                                <th>N° proveedores</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaTopInsumos"></tbody>
+                    </table>
+                </div>
+
+                <div class="card" style="flex:1.8;">
+                    <div class="card-header">
+                        <div class="card-title">Audit trail – Proveedores & Insumos</div>
+                        <div class="top-right-actions">
+                            <button class="btn-outline" onclick="exportarJSON()">Exportar datos JSON</button>
+                            <button class="btn-danger" onclick="limpiarTodo()">Limpiar todo (modo test)</button>
+                        </div>
+                    </div>
+                    <div id="auditLog"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>
+
+<script>
+    // ========================= UTILIDAD BÁSICA =========================
+    function updateDateTime(){
+        const now = new Date();
+        const optionsDate = {year:'numeric', month:'2-digit', day:'2-digit'};
+        document.getElementById('currentDate').textContent =
+            now.toLocaleDateString('es-CL', optionsDate);
+        document.getElementById('currentTime').textContent =
+            now.toLocaleTimeString('es-CL');
+    }
+    setInterval(updateDateTime,1000);
+    updateDateTime();
+
+    function showSection(section, btn){
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.getElementById('section-' + section).classList.add('active');
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if(section === 'dashboard'){ actualizarDashboard(); }
+        if(section === 'comparador'){ buildInsumoSelector(); renderComparador(); }
+    }
+
+    // ========================= ALMACENAMIENTO =========================
+    const KEY_PROVEEDORES = 'BCP_proveedores_v2';
+    const KEY_AUDIT = 'BCP_audit_proveedores_v2';
+    const KEY_SEQ = 'BCP_prov_sequence_v2';
+
+    function loadProveedores(){
+        return JSON.parse(localStorage.getItem(KEY_PROVEEDORES) || '[]');
+    }
+    function saveProveedores(list){
+        localStorage.setItem(KEY_PROVEEDORES, JSON.stringify(list));
+    }
+
+    function registrarAudit(mensaje){
+        const now = new Date().toLocaleString('es-CL');
+        const log = JSON.parse(localStorage.getItem(KEY_AUDIT) || '[]');
+        log.push(`[${now}] ${mensaje}`);
+        localStorage.setItem(KEY_AUDIT, JSON.stringify(log));
+        renderAuditLog();
+    }
+    function renderAuditLog(){
+        const log = JSON.parse(localStorage.getItem(KEY_AUDIT) || '[]');
+        const cont = document.getElementById('auditLog');
+        cont.textContent = log.slice().reverse().join('\n');
+        document.getElementById('metricAudit').textContent = log.length;
+    }
+
+    function generarProveedorId(){
+        let seq = parseInt(localStorage.getItem(KEY_SEQ) || '1',10);
+        const id = 'BCP-PV-' + String(seq).padStart(4,'0');
+        localStorage.setItem(KEY_SEQ, String(seq+1));
+        return id;
+    }
+
+    // ========================= PROVEEDORES =========================
+    let selectedProveedorId = null;
+
+    function guardarProveedor(){
+        const nombre = document.getElementById('provNombre').value.trim();
+        if(!nombre){
+            alert('El nombre / razón social es obligatorio.');
+            return;
+        }
+
+        let proveedores = loadProveedores();
+        const idHidden = document.getElementById('provId').value;
+        let prov;
+
+        if(idHidden){ // edición
+            prov = proveedores.find(p => p.id === idHidden);
+            if(!prov) return;
+        }else{
+            prov = {
+                id: generarProveedorId(),
+                estado: 'Activo',
+                insumos: [],
+                fechaRegistro: new Date().toISOString()
+            };
+            proveedores.push(prov);
+        }
+
+        prov.nombre   = nombre;
+        prov.rut      = document.getElementById('provRut').value.trim();
+        prov.rubro    = document.getElementById('provRubro').value;
+        prov.contacto = document.getElementById('provContacto').value.trim();
+        prov.telefono = document.getElementById('provFono').value.trim();
+        prov.email    = document.getElementById('provEmail').value.trim();
+        prov.web      = document.getElementById('provWeb').value.trim();
+        prov.notas    = document.getElementById('provNotas').value.trim();
+        prov.fechaActualizacion = new Date().toISOString();
+
+        saveProveedores(proveedores);
+        registrarAudit(`${idHidden ? 'Actualización' : 'Alta'} proveedor ${prov.id} (${prov.nombre})`);
+
+        selectedProveedorId = prov.id;
+        renderProveedores();
+        fillProveedorDetalle();
+        resetInsumoForm();
+        alert('Proveedor guardado correctamente.');
+    }
+
+    function renderProveedores(){
+        const proveedores = loadProveedores();
+        const tbody = document.getElementById('tablaProveedores');
+        tbody.innerHTML = '';
+
+        const search = document.getElementById('provSearch').value.toLowerCase();
+        const rubro = document.getElementById('provFilterRubro').value;
+        const estado = document.getElementById('provFilterEstado').value;
+
+        proveedores.forEach(p => {
+            if(search && !(
+                (p.nombre || '').toLowerCase().includes(search) ||
+                (p.contacto || '').toLowerCase().includes(search)
+            )) return;
+            if(rubro && p.rubro !== rubro) return;
+            if(estado && p.estado !== estado) return;
+
+            const tr = document.createElement('tr');
+            tr.onclick = () => { seleccionarProveedor(p.id); };
+
+            const tdId = document.createElement('td');
+            tdId.textContent = p.id;
+            const tdNombre = document.createElement('td');
+            tdNombre.textContent = p.nombre || '';
+            const tdRubro = document.createElement('td');
+            tdRubro.textContent = p.rubro || '';
+            const tdContacto = document.createElement('td');
+            tdContacto.textContent = p.contacto || '';
+
+            const tdEstado = document.createElement('td');
+            const span = document.createElement('span');
+            span.className = 'badge ' + (p.estado === 'Activo' ? 'badge-activo' : 'badge-suspendido');
+            span.textContent = p.estado || 'N/A';
+            tdEstado.appendChild(span);
+
+            const tdInsumos = document.createElement('td');
+            tdInsumos.textContent = (p.insumos || []).length;
+
+            const tdAcciones = document.createElement('td');
+            tdAcciones.innerHTML =
+                `<button class="btn-secondary" onclick="event.stopPropagation(); editarProveedor('${p.id}')">Editar</button>`;
+
+            tr.appendChild(tdId);
+            tr.appendChild(tdNombre);
+            tr.appendChild(tdRubro);
+            tr.appendChild(tdContacto);
+            tr.appendChild(tdEstado);
+            tr.appendChild(tdInsumos);
+            tr.appendChild(tdAcciones);
+
+            tbody.appendChild(tr);
+        });
+
+        actualizarDashboard();
+    }
+
+    function editarProveedor(id){
+        const proveedores = loadProveedores();
+        const p = proveedores.find(pr => pr.id === id);
+        if(!p) return;
+
+        document.getElementById('provId').value = p.id;
+        document.getElementById('provNombre').value = p.nombre || '';
+        document.getElementById('provRut').value = p.rut || '';
+        document.getElementById('provRubro').value = p.rubro || 'Reactivos';
+        document.getElementById('provContacto').value = p.contacto || '';
+        document.getElementById('provFono').value = p.telefono || '';
+        document.getElementById('provEmail').value = p.email || '';
+        document.getElementById('provWeb').value = p.web || '';
+        document.getElementById('provNotas').value = p.notas || '';
+
+        selectedProveedorId = p.id;
+        fillProveedorDetalle();
+        renderInsumosProveedor();
+    }
+
+    function resetProveedorForm(){
+        document.getElementById('provId').value = '';
+        document.getElementById('provNombre').value = '';
+        document.getElementById('provRut').value = '';
+        document.getElementById('provRubro').value = 'Reactivos';
+        document.getElementById('provContacto').value = '';
+        document.getElementById('provFono').value = '';
+        document.getElementById('provEmail').value = '';
+        document.getElementById('provWeb').value = '';
+        document.getElementById('provNotas').value = '';
+    }
+
+    function seleccionarProveedor(id){
+        selectedProveedorId = id;
+        fillProveedorDetalle();
+        renderInsumosProveedor();
+    }
+
+    function fillProveedorDetalle(){
+        const cont = document.getElementById('detalleProveedor');
+        if(!selectedProveedorId){
+            cont.innerHTML = '<div class="helper-text">Selecciona un proveedor en la tabla.</div>';
+            return;
+        }
+        const proveedores = loadProveedores();
+        const p = proveedores.find(pr => pr.id === selectedProveedorId);
+        if(!p){
+            cont.innerHTML = '<div class="helper-text">Proveedor no encontrado.</div>';
+            return;
+        }
+        const estadoBadge = `<span class="badge ${p.estado === 'Activo' ? 'badge-activo' : 'badge-suspendido'}">${p.estado}</span>`;
+        cont.innerHTML = `
+            <div style="margin-bottom:8px;"><strong>${p.id}</strong> – ${p.nombre || ''} ${estadoBadge}</div>
+            <div class="pill">${p.rubro || 'Sin rubro'}</div>
+            <div style="margin-top:8px; font-size:13px;">
+                <div><strong>RUT/ID:</strong> ${p.rut || '-'}</div>
+                <div><strong>Contacto:</strong> ${p.contacto || '-'} | <strong>Tel:</strong> ${p.telefono || '-'}</div>
+                <div><strong>Email:</strong> ${p.email || '-'} | <strong>Web:</strong> ${p.web || '-'}</div>
+            </div>
+            <div style="margin-top:8px; font-size:12px; color:var(--bcp-muted);">
+                <strong>Notas internas:</strong> ${p.notas || 'Sin notas registradas.'}
+            </div>
+        `;
+    }
+
+    function toggleProveedorEstado(){
+        if(!selectedProveedorId){
+            alert('Debe seleccionar un proveedor en la tabla.');
+            return;
+        }
+        const proveedores = loadProveedores();
+        const p = proveedores.find(pr => pr.id === selectedProveedorId);
+        if(!p) return;
+        p.estado = (p.estado === 'Activo' ? 'Suspendido' : 'Activo');
+        p.fechaActualizacion = new Date().toISOString();
+        saveProveedores(proveedores);
+        registrarAudit(`Cambio de estado proveedor ${p.id} (${p.nombre}) a ${p.estado}`);
+        renderProveedores();
+        fillProveedorDetalle();
+    }
+
+    // ========================= INSUMOS POR PROVEEDOR =========================
+    function resetInsumoForm(){
+        document.getElementById('insNombre').value = '';
+        document.getElementById('insCategoria').value = '';
+        document.getElementById('insUnidad').value = '';
+        document.getElementById('insPrecio').value = '';
+        document.getElementById('insMoneda').value = 'CLP';
+        document.getElementById('insLeadTime').value = '';
+        document.getElementById('insEstado').value = 'Activo';
+        document.getElementById('insObs').value = '';
+        document.getElementById('insIndex').value = '';
+    }
+
+    function guardarInsumo(){
+        if(!selectedProveedorId){
+            alert('Debe seleccionar primero un proveedor.');
+            return;
+        }
+        const nombre = document.getElementById('insNombre').value.trim();
+        const precio = parseFloat(document.getElementById('insPrecio').value);
+        if(!nombre || isNaN(precio)){
+            alert('El nombre del insumo y el precio unitario son obligatorios.');
+            return;
+        }
+
+        const proveedores = loadProveedores();
+        const p = proveedores.find(pr => pr.id === selectedProveedorId);
+        if(!p) return;
+        if(!Array.isArray(p.insumos)) p.insumos = [];
+
+        const idxHidden = document.getElementById('insIndex').value;
+        let insumo;
+
+        if(idxHidden !== ''){
+            const idx = parseInt(idxHidden,10);
+            insumo = p.insumos[idx];
+            if(!insumo) return;
+        }else{
+            insumo = {};
+            p.insumos.push(insumo);
+        }
+
+        insumo.nombre = nombre;
+        insumo.categoria = document.getElementById('insCategoria').value.trim();
+        insumo.unidad = document.getElementById('insUnidad').value.trim();
+        insumo.precio = precio;
+        insumo.moneda = document.getElementById('insMoneda').value;
+        insumo.leadTime = document.getElementById('insLeadTime').value.trim();
+        insumo.estado = document.getElementById('insEstado').value;
+        insumo.obs = document.getElementById('insObs').value.trim();
+
+        saveProveedores(proveedores);
+        registrarAudit(`${idxHidden !== '' ? 'Actualización' : 'Alta'} insumo "${insumo.nombre}" en proveedor ${p.id} (${p.nombre})`);
+        renderInsumosProveedor();
+        buildInsumoSelector();
+        resetInsumoForm();
+    }
+
+    function renderInsumosProveedor(){
+        const tbody = document.getElementById('tablaInsumosProveedor');
+        tbody.innerHTML = '';
+        if(!selectedProveedorId) return;
+        const proveedores = loadProveedores();
+        const p = proveedores.find(pr => pr.id === selectedProveedorId);
+        if(!p || !Array.isArray(p.insumos)) return;
+
+        p.insumos.forEach((ins, idx) => {
+            const tr = document.createElement('tr');
+            const tdNombre = document.createElement('td');
+            tdNombre.textContent = ins.nombre || '';
+            const tdCat = document.createElement('td');
+            tdCat.textContent = ins.categoria || '';
+            const tdUnidad = document.createElement('td');
+            tdUnidad.textContent = ins.unidad || '';
+            const tdPrecio = document.createElement('td');
+            tdPrecio.textContent = (ins.precio != null ? ins.precio.toLocaleString('es-CL') : '-') ;
+            const tdMoneda = document.createElement('td');
+            tdMoneda.textContent = ins.moneda || 'CLP';
+
+            const tdEstado = document.createElement('td');
+            const span = document.createElement('span');
+            span.className = 'badge ' + (ins.estado === 'Activo' ? 'badge-activo' : 'badge-suspendido');
+            span.textContent = ins.estado || 'N/A';
+            tdEstado.appendChild(span);
+
+            const tdAcciones = document.createElement('td');
+            tdAcciones.innerHTML =
+                `<button class="btn-secondary" onclick="event.stopPropagation(); editarInsumo(${idx})">Editar</button>`;
+
+            tr.appendChild(tdNombre);
+            tr.appendChild(tdCat);
+            tr.appendChild(tdUnidad);
+            tr.appendChild(tdPrecio);
+            tr.appendChild(tdMoneda);
+            tr.appendChild(tdEstado);
+            tr.appendChild(tdAcciones);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function editarInsumo(idx){
+        if(!selectedProveedorId) return;
+        const proveedores = loadProveedores();
+        const p = proveedores.find(pr => pr.id === selectedProveedorId);
+        if(!p || !p.insumos || !p.insumos[idx]) return;
+        const ins = p.insumos[idx];
+
+        document.getElementById('insNombre').value = ins.nombre || '';
+        document.getElementById('insCategoria').value = ins.categoria || '';
+        document.getElementById('insUnidad').value = ins.unidad || '';
+        document.getElementById('insPrecio').value = ins.precio != null ? ins.precio : '';
+        document.getElementById('insMoneda').value = ins.moneda || 'CLP';
+        document.getElementById('insLeadTime').value = ins.leadTime || '';
+        document.getElementById('insEstado').value = ins.estado || 'Activo';
+        document.getElementById('insObs').value = ins.obs || '';
+        document.getElementById('insIndex').value = idx;
+    }
+
+    // ========================= COMPARADOR =========================
+    function buildInsumoSelector(){
+        const sel = document.getElementById('cmpInsumoSelect');
+        const proveedores = loadProveedores();
+        const setNames = new Set();
+
+        proveedores.forEach(p => {
+            (p.insumos || []).forEach(ins => {
+                if(ins.nombre){
+                    setNames.add(ins.nombre.trim());
+                }
+            });
+        });
+
+        const current = sel.value;
+        sel.innerHTML = '<option value="">Selecciona un insumo...</option>';
+        Array.from(setNames).sort().forEach(name => {
+            const opt = document.createElement('option');
+            opt.value = name;
+            opt.textContent = name;
+            sel.appendChild(opt);
+        });
+        if(current && setNames.has(current)) sel.value = current;
+
+        document.getElementById('metricInsumos').textContent = setNames.size;
+        renderTopInsumos();
+    }
+
+    function renderComparador(){
+        const insumoSel = document.getElementById('cmpInsumoSelect').value;
+        const tbody = document.getElementById('tablaComparador');
+        tbody.innerHTML = '';
+        if(!insumoSel) return;
+
+        const proveedores = loadProveedores();
+        const filas = [];
+
+        proveedores.forEach(p => {
+            (p.insumos || []).forEach(ins => {
+                if((ins.nombre || '').trim() === insumoSel.trim()){
+                    filas.push({
+                        proveedor: p,
+                        insumo: ins
+                    });
+                }
+            });
+        });
+
+        filas.sort((a,b) => {
+            const pa = a.insumo.precio || Number.MAX_VALUE;
+            const pb = b.insumo.precio || Number.MAX_VALUE;
+            return pa - pb;
+        });
+
+        let bestIndex = -1;
+        filas.forEach((row, idx) => {
+            if(bestIndex === -1 && row.proveedor.estado === 'Activo' && row.insumo.estado === 'Activo'){
+                bestIndex = idx;
+            }
+        });
+
+        filas.forEach((row, idx) => {
+            const tr = document.createElement('tr');
+            if(idx === bestIndex) tr.classList.add('best-offer');
+
+            const tdProv = document.createElement('td');
+            tdProv.textContent = `${row.proveedor.id} – ${row.proveedor.nombre}`;
+            const tdRubro = document.createElement('td');
+            tdRubro.textContent = row.proveedor.rubro || '';
+            const tdIns = document.createElement('td');
+            tdIns.textContent = row.insumo.nombre || '';
+            const tdPrecio = document.createElement('td');
+            tdPrecio.textContent = (row.insumo.precio != null ? row.insumo.precio.toLocaleString('es-CL') : '-');
+            const tdMon = document.createElement('td');
+            tdMon.textContent = row.insumo.moneda || 'CLP';
+
+            const tdEstProv = document.createElement('td');
+            tdEstProv.innerHTML = `<span class="badge ${row.proveedor.estado === 'Activo' ? 'badge-activo' : 'badge-suspendido'}">${row.proveedor.estado}</span>`;
+
+            const tdEstIns = document.createElement('td');
+            tdEstIns.innerHTML = `<span class="badge ${row.insumo.estado === 'Activo' ? 'badge-activo' : 'badge-suspendido'}">${row.insumo.estado}</span>`;
+
+            tr.appendChild(tdProv);
+            tr.appendChild(tdRubro);
+            tr.appendChild(tdIns);
+            tr.appendChild(tdPrecio);
+            tr.appendChild(tdMon);
+            tr.appendChild(tdEstProv);
+            tr.appendChild(tdEstIns);
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ========================= DASHBOARD =========================
+    function actualizarDashboard(){
+        const proveedores = loadProveedores();
+        document.getElementById('metricTotalProv').textContent = proveedores.length;
+        document.getElementById('metricActivos').textContent =
+            proveedores.filter(p => p.estado === 'Activo').length;
+        renderAuditLog();
+        buildInsumoSelector();
+    }
+
+    function renderTopInsumos(){
+        const proveedores = loadProveedores();
+        const mapCount = {};
+        proveedores.forEach(p => {
+            (p.insumos || []).forEach(ins => {
+                if(!ins.nombre) return;
+                const key = ins.nombre.trim();
+                mapCount[key] = (mapCount[key] || 0) + 1;
+            });
+        });
+        const arr = Object.entries(mapCount)
+            .sort((a,b) => b[1] - a[1])
+            .slice(0,5);
+
+        const tbody = document.getElementById('tablaTopInsumos');
+        tbody.innerHTML = '';
+        arr.forEach(([name,count]) => {
+            const tr = document.createElement('tr');
+            const tdName = document.createElement('td');
+            tdName.textContent = name;
+            const tdCount = document.createElement('td');
+            tdCount.textContent = count;
+            tr.appendChild(tdName);
+            tr.appendChild(tdCount);
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ========================= EXPORT / LIMPIEZA =========================
+    function exportarJSON(){
+        const data = {
+            proveedores: loadProveedores(),
+            audit: JSON.parse(localStorage.getItem(KEY_AUDIT) || '[]')
+        };
+        const text = JSON.stringify(data,null,2);
+        navigator.clipboard.writeText(text)
+            .then(()=> alert('Datos copiados al portapapeles en formato JSON.'))
+            .catch(()=> alert('No se pudo copiar al portapapeles, pero los datos siguen en el navegador.'));
+    }
+
+    function limpiarTodo(){
+        if(!confirm('¿Seguro que deseas borrar todos los datos de proveedores e insumos? SOLO PARA ETAPA DE TEST.')) return;
+        localStorage.removeItem(KEY_PROVEEDORES);
+        localStorage.removeItem(KEY_AUDIT);
+        localStorage.removeItem(KEY_SEQ);
+        selectedProveedorId = null;
+        renderProveedores();
+        fillProveedorDetalle();
+        renderInsumosProveedor();
+        renderComparador();
+        buildInsumoSelector();
+        renderAuditLog();
+        actualizarDashboard();
+    }
+
+    // ========================= INIT =========================
+    renderProveedores();
+    renderAuditLog();
+    buildInsumoSelector();
+    actualizarDashboard();
+</script>
+
+</body>
+</html>

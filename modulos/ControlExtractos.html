@@ -1,0 +1,2551 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioCannaPhrama - Sistema de Control de Extractos v1.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        :root {
+            --bcp-purple-dark: #5A2CA0;
+            --bcp-purple-medium: #7B4BC4;
+            --bcp-green-dark: #2D5F3F;
+            --bcp-green-medium: #3DB54A;
+            --bcp-green-light: #E8F5E9;
+            --bcp-gold: #D4AF37;
+            --bcp-amber: #F59E0B;
+        }
+        
+        * { font-family: 'Inter', sans-serif; }
+        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(10px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        @keyframes slideInRight { 
+            from { transform: translateX(100%); opacity: 0; } 
+            to { transform: translateX(0); opacity: 1; } 
+        }
+        @keyframes pulse { 
+            0%, 100% { transform: scale(1); } 
+            50% { transform: scale(1.05); } 
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .slide-in-right { animation: slideInRight 0.3s ease-out; }
+        .pulse-hover:hover { animation: pulse 0.3s ease-in-out; }
+        
+        .bg-bcp-gradient { 
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-green-medium) 100%); 
+        }
+        .bg-bcp-purple { 
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-purple-medium) 100%); 
+        }
+        .bg-bcp-green { 
+            background: linear-gradient(135deg, var(--bcp-green-dark) 0%, var(--bcp-green-medium) 100%); 
+        }
+        
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+        }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { 
+            background-color: #fefefe; 
+            margin: auto; 
+            padding: 0; 
+            border-radius: 20px; 
+            max-width: 900px; 
+            width: 95%; 
+            max-height: 90vh; 
+            overflow-y: auto; 
+            animation: fadeIn 0.3s; 
+            box-shadow: 0 25px 80px rgba(0,0,0,0.4); 
+        }
+        
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--bcp-purple-medium); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--bcp-purple-dark); }
+        
+        .card-hover { 
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .card-hover:hover { 
+            transform: translateY(-4px); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15); 
+        }
+        
+        .tab-btn { position: relative; overflow: hidden; }
+        .tab-btn::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: var(--bcp-purple-dark);
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        .tab-btn.active::after { width: 80%; }
+        .tab-btn.active { 
+            background: white; 
+            color: var(--bcp-purple-dark); 
+            font-weight: 700;
+        }
+        
+        .fraccion-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .fraccion-card:hover {
+            border-color: var(--bcp-purple-medium);
+            box-shadow: 0 8px 25px rgba(90, 44, 160, 0.15);
+        }
+        
+        .stock-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .input-focus:focus {
+            outline: none;
+            border-color: var(--bcp-purple-medium);
+            box-shadow: 0 0 0 3px rgba(90, 44, 160, 0.1);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--bcp-purple-dark) 0%, var(--bcp-green-medium) 100%);
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(90, 44, 160, 0.3);
+        }
+        
+        .shimmer-bg {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        .status-disponible { background: #DEF7EC; color: #03543F; }
+        .status-parcial { background: #FEF3C7; color: #92400E; }
+        .status-agotado { background: #FDE8E8; color: #9B1C1C; }
+        .status-proceso { background: #E1EFFE; color: #1E40AF; }
+        
+        .tipo-extracto { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .tipo-salsa { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .tipo-cristales { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .tipo-budder { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .tipo-destilado { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .tipo-otros { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 via-white to-green-50 min-h-screen">
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- MODAL: Nueva Ficha de Extracto -->
+    <div id="modalNuevaFicha" class="modal">
+        <div class="modal-content">
+            <div class="bg-bcp-gradient p-6 text-white rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold">🧪 Crear Lote de Extracto (Nueva Ficha)</h2>
+                        <p class="text-purple-100 text-sm mt-1">Registrar extracto y sus fracciones</p>
+                    </div>
+                    <button onclick="cerrarModal('modalNuevaFicha')" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
+                </div>
+            </div>
+            <div class="p-6">
+                <form id="formNuevaFicha" onsubmit="guardarFichaExtracto(event)">
+                    <!-- Origen del Lote -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">1</span>
+                            Origen del Lote
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Origen *</label>
+                                <select id="tipoOrigen" onchange="cambiarTipoOrigen()" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                                    <option value="interno">📦 Lote Interno (desde Recepción MP)</option>
+                                    <option value="externo">🌐 Lote Externo (ingreso manual)</option>
+                                </select>
+                            </div>
+                            <div id="selectorLoteInterno">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Seleccionar Lote de Extracción *</label>
+                                <select id="loteExtraccionSelect" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                                    <option value="">-- Seleccione un lote --</option>
+                                </select>
+                            </div>
+                            <div id="camposLoteExterno" class="hidden col-span-2">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Código Externo *</label>
+                                        <input type="text" id="codigoExterno" placeholder="Ej: EXT-PROV-001" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Proveedor *</label>
+                                        <input type="text" id="proveedorExterno" placeholder="Nombre del proveedor" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Extracción *</label>
+                                        <select id="tipoExtraccionExterno" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                                            <option value="BHO">BHO - Butane Hash Oil</option>
+                                            <option value="RSO">RSO - Rick Simpson Oil</option>
+                                            <option value="CO2">CO2 - Supercrítico</option>
+                                            <option value="ETANOL">Etanol</option>
+                                            <option value="OTRO">Otro</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Información del Extracto -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">2</span>
+                            Información del Extracto
+                        </h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Procesamiento *</label>
+                                <input type="date" id="fechaProcesamiento" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Operador Responsable *</label>
+                                <input type="text" id="operadorResponsable" required placeholder="Nombre completo" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad Total MP (g)</label>
+                                <input type="number" id="cantidadTotalMP" step="0.01" min="0" readonly class="w-full px-4 py-3 border-2 border-gray-200 rounded-lg bg-gray-100">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Fracciones / Subproductos -->
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center text-purple-600">3</span>
+                            Fracciones / Subproductos Obtenidos
+                        </h3>
+                        <p class="text-sm text-gray-600 mb-4">Registre cada fracción obtenida del proceso de extracción. Puede agregar múltiples fracciones.</p>
+                        
+                        <div id="fraccionesContainer" class="space-y-4 mb-4"></div>
+                        
+                        <button type="button" onclick="agregarFraccion()" class="w-full py-3 border-2 border-dashed border-purple-300 rounded-lg text-purple-600 font-semibold hover:bg-purple-50 transition-all">
+                            ➕ Agregar Fracción
+                        </button>
+                    </div>
+                    
+                    <!-- Resumen y Rendimiento -->
+                    <div class="mb-6 p-4 bg-gradient-to-r from-purple-50 to-green-50 rounded-xl border-2 border-purple-200">
+                        <h3 class="text-lg font-bold text-gray-800 mb-3">📊 Resumen de Rendimiento</h3>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <div class="text-2xl font-bold text-purple-600" id="resumenTotalFracciones">0</div>
+                                <div class="text-xs text-gray-600">Fracciones</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <div class="text-2xl font-bold text-green-600" id="resumenPesoTotal">0.00g</div>
+                                <div class="text-xs text-gray-600">Peso Total</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <div class="text-2xl font-bold text-amber-600" id="resumenRendimiento">0.00%</div>
+                                <div class="text-xs text-gray-600">Rendimiento</div>
+                            </div>
+                            <div class="text-center p-3 bg-white rounded-lg shadow-sm">
+                                <div class="text-2xl font-bold text-blue-600" id="resumenMerma">0.00g</div>
+                                <div class="text-xs text-gray-600">Merma Estimada</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Observaciones -->
+                    <div class="mb-6">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
+                        <textarea id="observacionesFicha" rows="3" placeholder="Notas adicionales del proceso..." class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus"></textarea>
+                    </div>
+                    
+                    <!-- Botones -->
+                    <div class="flex gap-4">
+                        <button type="button" onclick="cerrarModal('modalNuevaFicha')" class="flex-1 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition-all">
+                            Cancelar
+                        </button>
+                        <button type="submit" class="flex-1 py-3 btn-primary rounded-lg font-semibold">
+                            ✅ Guardar Ficha de Extracto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- MODAL: Detalle de Extracto -->
+    <div id="modalDetalleExtracto" class="modal">
+        <div class="modal-content">
+            <div class="bg-bcp-purple p-6 text-white rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold" id="modalDetalleTitulo">Detalle de Extracto</h2>
+                        <p class="text-purple-100 text-sm mt-1" id="modalDetalleSubtitulo"></p>
+                    </div>
+                    <button onclick="cerrarModal('modalDetalleExtracto')" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
+                </div>
+            </div>
+            <div class="p-6" id="modalDetalleContenido"></div>
+        </div>
+    </div>
+    
+    <!-- MODAL: Nuevo Destilado -->
+    <div id="modalNuevoDestilado" class="modal">
+        <div class="modal-content">
+            <div class="bg-bcp-green p-6 text-white rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold">⚗️ Crear Lote de Destilado</h2>
+                        <p class="text-green-100 text-sm mt-1">Mezclar extractos para proceso de destilación</p>
+                    </div>
+                    <button onclick="cerrarModal('modalNuevoDestilado')" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
+                </div>
+            </div>
+            <div class="p-6" id="modalDestiladoContenido"></div>
+        </div>
+    </div>
+    
+    <!-- MODAL: Asignar a Solicitud -->
+    <div id="modalAsignarSolicitud" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="bg-bcp-gradient p-6 text-white rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold">📤 Asignar/Egresar Stock</h2>
+                        <p class="text-purple-100 text-sm mt-1">Registrar uso o asignación de fracción</p>
+                    </div>
+                    <button onclick="cerrarModal('modalAsignarSolicitud')" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
+                </div>
+            </div>
+            <div class="p-6" id="modalAsignarContenido"></div>
+        </div>
+    </div>
+
+    <!-- CONTENIDO PRINCIPAL -->
+    <div class="max-w-7xl mx-auto p-4">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="bg-bcp-gradient p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-96 h-96 bg-white opacity-5 rounded-full -mr-48 -mt-48"></div>
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full -ml-32 -mb-32"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                                <span class="text-4xl">🧪</span>
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-bold">BioCannaPhrama</h1>
+                                <p class="text-purple-100 mt-1 text-sm">Sistema de Control de Extractos v1.0 - Trazabilidad Completa</p>
+                            </div>
+                        </div>
+                        <div class="text-right text-sm">
+                            <div class="text-purple-100">✅ Fracciones | ✅ Destilados | ✅ Stock Integrado</div>
+                            <div class="text-purple-200 mt-1" id="fechaHora"></div>
+                            <div class="mt-3 bg-white/10 rounded-lg p-3 text-left max-w-md ml-auto">
+                                <form id="authLoginForm" onsubmit="loginExtractos(event)" class="flex flex-wrap gap-2" autocomplete="on">
+                                    <input id="authUsername" type="text" placeholder="usuario API" class="px-3 py-2 rounded text-gray-800 text-xs w-32">
+                                    <input id="authPassword" type="password" placeholder="clave API" class="px-3 py-2 rounded text-gray-800 text-xs w-32">
+                                    <button type="submit" class="px-3 py-2 bg-white text-purple-700 rounded text-xs font-semibold hover:bg-purple-50">
+                                        Iniciar sesion
+                                    </button>
+                                </form>
+                                <div id="authSessionBox" class="hidden items-center justify-between gap-2">
+                                    <div class="text-xs">
+                                        <div class="font-semibold text-white" id="authUserLabel"></div>
+                                        <div class="text-purple-100" id="authRoleLabel"></div>
+                                    </div>
+                                    <button onclick="logoutExtractos()" class="px-3 py-2 bg-white/20 text-white rounded text-xs font-semibold hover:bg-white/30">
+                                        Cerrar sesion
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navegación -->
+            <div class="flex flex-wrap border-b bg-gray-50">
+                <button onclick="showTab('dashboard')" class="tab-btn flex-1 min-w-[120px] px-4 py-4 font-semibold transition-all hover:bg-purple-50 text-gray-600" data-tab="dashboard">
+                    📊 Dashboard
+                </button>
+                <button onclick="showTab('fichas')" class="tab-btn flex-1 min-w-[120px] px-4 py-4 font-semibold transition-all hover:bg-purple-50 text-gray-600" data-tab="fichas">
+                    📋 Fichas Extracto
+                </button>
+                <button onclick="showTab('stock')" class="tab-btn flex-1 min-w-[120px] px-4 py-4 font-semibold transition-all hover:bg-purple-50 text-gray-600" data-tab="stock">
+                    📦 Stock Fracciones
+                </button>
+                <button onclick="showTab('destilados')" class="tab-btn flex-1 min-w-[120px] px-4 py-4 font-semibold transition-all hover:bg-purple-50 text-gray-600" data-tab="destilados">
+                    ⚗️ Destilados
+                </button>
+                <button onclick="showTab('movimientos')" class="tab-btn flex-1 min-w-[120px] px-4 py-4 font-semibold transition-all hover:bg-purple-50 text-gray-600" data-tab="movimientos">
+                    📜 Movimientos
+                </button>
+                <button onclick="showTab('config')" class="tab-btn flex-1 min-w-[120px] px-4 py-4 font-semibold transition-all hover:bg-purple-50 text-gray-600" data-tab="config">
+                    ⚙️ Config
+                </button>
+            </div>
+            
+            <!-- Contenido -->
+            <div class="p-6">
+                <!-- TAB: Dashboard -->
+                <div id="tab-dashboard" class="tab-content">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">📊 Dashboard de Extractos</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="abrirModalNuevaFicha()" class="px-6 py-2 btn-primary rounded-lg font-semibold shadow-lg">
+                                ➕ Crear Lote
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- KPIs -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl p-5 text-white shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold" id="kpiTotalFichas">0</div>
+                                    <div class="text-purple-200 text-sm">Fichas Totales</div>
+                                </div>
+                                <div class="text-4xl opacity-50">📋</div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-5 text-white shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold" id="kpiTotalStock">0g</div>
+                                    <div class="text-green-200 text-sm">Stock Disponible</div>
+                                </div>
+                                <div class="text-4xl opacity-50">📦</div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-5 text-white shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold" id="kpiTotalFracciones">0</div>
+                                    <div class="text-amber-100 text-sm">Fracciones Activas</div>
+                                </div>
+                                <div class="text-4xl opacity-50">🧫</div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-5 text-white shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold" id="kpiDestilados">0</div>
+                                    <div class="text-blue-200 text-sm">Lotes Destilado</div>
+                                </div>
+                                <div class="text-4xl opacity-50">⚗️</div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl p-5 text-white shadow-lg card-hover">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="text-3xl font-bold" id="kpiRendimiento">0%</div>
+                                    <div class="text-pink-200 text-sm">Rendimiento Prom.</div>
+                                </div>
+                                <div class="text-4xl opacity-50">📈</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráficos -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Distribución por Tipo de Fracción</h3>
+                            <canvas id="chartFracciones" height="200"></canvas>
+                        </div>
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">Producción Mensual (g)</h3>
+                            <canvas id="chartProduccion" height="200"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Últimas Fichas -->
+                    <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">📋 Últimas Fichas Registradas</h3>
+                        <div id="ultimasFichas" class="space-y-3"></div>
+                    </div>
+                </div>
+                
+                <!-- TAB: Fichas de Extracto -->
+                <div id="tab-fichas" class="tab-content hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">📋 Fichas de Extracto</h2>
+                        <div class="flex gap-3 flex-wrap">
+                            <input type="text" id="searchFichas" placeholder="🔍 Buscar fichas..." onkeyup="renderFichas()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                            <select id="filterTipoExtraccion" onchange="renderFichas()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                                <option value="">Todos los tipos</option>
+                                <option value="BHO">BHO</option>
+                                <option value="RSO">RSO</option>
+                                <option value="CO2">CO2</option>
+                                <option value="ETANOL">Etanol</option>
+                            </select>
+                            <button onclick="abrirModalNuevaFicha()" class="px-6 py-2 btn-primary rounded-lg font-semibold shadow-lg">
+                                ➕ Crear Lote
+                            </button>
+                        </div>
+                    </div>
+                    <div id="fichasList" class="space-y-4"></div>
+                </div>
+                
+                <!-- TAB: Stock de Fracciones -->
+                <div id="tab-stock" class="tab-content hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">📦 Stock de Fracciones</h2>
+                        <div class="flex gap-3 flex-wrap">
+                            <input type="text" id="searchStock" placeholder="🔍 Buscar..." onkeyup="renderStock()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                            <select id="filterTipoFraccion" onchange="renderStock()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                                <option value="">Todos los tipos</option>
+                                <option value="extracto">Extracto Puro</option>
+                                <option value="salsa">Fracción Salsa</option>
+                                <option value="cristales">Fracción Cristales</option>
+                                <option value="budder">Fracción Budder</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                            <select id="filterEstado" onchange="renderStock()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                                <option value="">Todos los estados</option>
+                                <option value="disponible">Disponible</option>
+                                <option value="parcial">Parcialmente usado</option>
+                                <option value="agotado">Agotado</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Resumen de Stock -->
+                    <div class="grid grid-cols-2 md:grid-cols-6 gap-3 mb-6">
+                        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-purple-600" id="stockExtracto">0g</div>
+                            <div class="text-xs text-gray-600">Extracto</div>
+                        </div>
+                        <div class="bg-pink-50 border-2 border-pink-200 rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-pink-600" id="stockSalsa">0g</div>
+                            <div class="text-xs text-gray-600">Salsa</div>
+                        </div>
+                        <div class="bg-blue-50 border-2 border-blue-200 rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-blue-600" id="stockCristales">0g</div>
+                            <div class="text-xs text-gray-600">Cristales</div>
+                        </div>
+                        <div class="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-amber-600" id="stockBudder">0g</div>
+                            <div class="text-xs text-gray-600">Budder</div>
+                        </div>
+                        <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-green-600" id="stockDestilado">0g</div>
+                            <div class="text-xs text-gray-600">Destilado</div>
+                        </div>
+                        <div class="bg-gray-50 border-2 border-gray-200 rounded-xl p-4 text-center">
+                            <div class="text-2xl font-bold text-gray-600" id="stockOtros">0g</div>
+                            <div class="text-xs text-gray-600">Otros</div>
+                        </div>
+                    </div>
+                    
+                    <div id="stockList" class="grid gap-4"></div>
+                </div>
+                
+                <!-- TAB: Destilados -->
+                <div id="tab-destilados" class="tab-content hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">⚗️ Lotes de Destilado</h2>
+                        <button onclick="abrirModalNuevoDestilado()" class="px-6 py-2 btn-primary rounded-lg font-semibold shadow-lg">
+                            ➕ Nuevo Destilado
+                        </button>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 mb-6">
+                        <div class="flex items-start gap-3">
+                            <div class="text-green-600 text-2xl">💡</div>
+                            <div class="text-sm text-gray-700">
+                                <div class="font-bold mb-1">Proceso de Destilación</div>
+                                <p>Seleccione múltiples fracciones de extracto para combinarlas en un lote de destilado. El sistema registrará la trazabilidad completa de los lotes de origen.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="destiladosList" class="space-y-4"></div>
+                </div>
+                
+                <!-- TAB: Movimientos -->
+                <div id="tab-movimientos" class="tab-content hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">📜 Historial de Movimientos</h2>
+                        <div class="flex gap-3 flex-wrap">
+                            <input type="text" id="searchMovimientos" placeholder="🔍 Buscar..." onkeyup="renderMovimientos()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                            <select id="filterTipoMov" onchange="renderMovimientos()" class="px-4 py-2 border-2 border-gray-300 rounded-lg input-focus">
+                                <option value="">Todos los tipos</option>
+                                <option value="ingreso">Ingresos</option>
+                                <option value="egreso">Egresos</option>
+                                <option value="asignacion">Asignaciones</option>
+                                <option value="destilado">Destilados</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="movimientosList" class="space-y-3"></div>
+                </div>
+                
+                <!-- TAB: Configuración -->
+                <div id="tab-config" class="tab-content hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">⚙️ Configuración del Sistema</h2>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Exportar/Importar -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">💾 Gestión de Datos</h3>
+                            <div class="space-y-3">
+                                <button onclick="exportarDatos()" class="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-all">
+                                    📥 Exportar Todos los Datos
+                                </button>
+                                <label class="block">
+                                    <div class="w-full py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-all text-center cursor-pointer">
+                                        📤 Importar Datos
+                                    </div>
+                                    <input type="file" accept=".json" onchange="importarDatos(event)" class="hidden">
+                                </label>
+                                <button onclick="confirmarLimpiarDatos()" class="w-full py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-all">
+                                    🗑️ Limpiar Todos los Datos
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Info del Sistema -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">ℹ️ Información del Sistema</h3>
+                            <div class="space-y-3 text-sm">
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Versión:</span>
+                                    <span class="font-semibold">1.0.0</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Fichas registradas:</span>
+                                    <span class="font-semibold" id="infoFichas">0</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Fracciones activas:</span>
+                                    <span class="font-semibold" id="infoFracciones">0</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Lotes destilado:</span>
+                                    <span class="font-semibold" id="infoDestilados">0</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b">
+                                    <span class="text-gray-600">Movimientos:</span>
+                                    <span class="font-semibold" id="infoMovimientos">0</span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-gray-600">Última actualización:</span>
+                                    <span class="font-semibold" id="infoUltimaActualizacion">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Integración -->
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-sm col-span-1 md:col-span-2">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">🔗 Estado de Integración</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="w-3 h-3 rounded-full" id="statusRecepcion"></div>
+                                        <span class="font-semibold">Recepción MP</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600" id="statusRecepcionMsg"></p>
+                                </div>
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="w-3 h-3 rounded-full" id="statusSolicitudes"></div>
+                                        <span class="font-semibold">Solicitudes</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600" id="statusSolicitudesMsg"></p>
+                                </div>
+                                <div class="p-4 bg-gray-50 rounded-lg">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                                        <span class="font-semibold">LocalStorage</span>
+                                    </div>
+                                    <p class="text-sm text-gray-600">Conectado y funcionando</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Cargar Demo -->
+                        <div class="bg-gradient-to-r from-purple-50 to-pink-50 border-2 border-purple-200 rounded-xl p-6 shadow-sm col-span-1 md:col-span-2">
+                            <h3 class="text-lg font-bold text-gray-800 mb-4">🎮 Datos de Demostración</h3>
+                            <p class="text-sm text-gray-600 mb-4">Cargar datos de ejemplo para probar el sistema.</p>
+                            <button onclick="cargarDatosDemo()" class="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+                                🚀 Cargar Datos Demo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="mt-6 text-center text-sm text-gray-600">
+            <p>BioCannaPhrama © 2025 - Sistema de Control de Extractos v1.0</p>
+            <p class="mt-1 text-xs">🧪 Fracciones | ⚗️ Destilados | 📦 Stock Integrado | 📊 Trazabilidad Completa | Cumplimiento BPM</p>
+        </div>
+    </div>
+
+    <script>
+// ========== CONSTANTES Y CONFIGURACIÓN ==========
+const STORAGE_KEYS = {
+    FICHAS: 'bcp_extractos_fichas_v1',
+    FRACCIONES: 'bcp_extractos_fracciones_v1',
+    DESTILADOS: 'bcp_extractos_destilados_v1',
+    MOVIMIENTOS: 'bcp_extractos_movimientos_v1',
+    VERSION: 'bcp_extractos_version_v1',
+    API_TOKEN: 'bcp_api_token',
+    // Claves del módulo de recepción (para integración)
+    RECEPCION_SALIDAS: 'bcp_salidas_v82'
+};
+
+const TIPOS_FRACCION = {
+    extracto: { nombre: 'Extracto Puro', emoji: '🧪', clase: 'tipo-extracto' },
+    salsa: { nombre: 'Fracción Salsa', emoji: '🍯', clase: 'tipo-salsa' },
+    cristales: { nombre: 'Fracción Cristales', emoji: '💎', clase: 'tipo-cristales' },
+    budder: { nombre: 'Fracción Budder', emoji: '🧈', clase: 'tipo-budder' },
+    destilado: { nombre: 'Destilado', emoji: '⚗️', clase: 'tipo-destilado' },
+    otros: { nombre: 'Otros', emoji: '📦', clase: 'tipo-otros' }
+};
+
+// ========== VARIABLES GLOBALES ==========
+let fichasExtracto = [];
+let fracciones = [];
+let destilados = [];
+let movimientos = [];
+let fraccionCounter = 0;
+let chartFracciones = null;
+let chartProduccion = null;
+let currentUser = null;
+
+// ========== INICIALIZACIÓN ==========
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
+    inicializarAuth();
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+    document.getElementById('fechaProcesamiento').valueAsDate = new Date();
+    showTab('dashboard');
+    verificarIntegraciones();
+});
+
+function actualizarFechaHora() {
+    const now = new Date();
+    const elem = document.getElementById('fechaHora');
+    if (elem) {
+        elem.textContent = now.toLocaleString('es-CL', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
+// ========== PERSISTENCIA ==========
+function cargarDatos() {
+    try {
+        const fichasStr = localStorage.getItem(STORAGE_KEYS.FICHAS);
+        const fraccionesStr = localStorage.getItem(STORAGE_KEYS.FRACCIONES);
+        const destiladosStr = localStorage.getItem(STORAGE_KEYS.DESTILADOS);
+        const movimientosStr = localStorage.getItem(STORAGE_KEYS.MOVIMIENTOS);
+        
+        fichasExtracto = fichasStr ? JSON.parse(fichasStr) : [];
+        fracciones = fraccionesStr ? JSON.parse(fraccionesStr) : [];
+        destilados = destiladosStr ? JSON.parse(destiladosStr) : [];
+        movimientos = movimientosStr ? JSON.parse(movimientosStr) : [];
+        
+        console.log(`✅ Datos cargados: ${fichasExtracto.length} fichas, ${fracciones.length} fracciones`);
+        mostrarNotificacion(`Sistema iniciado - ${fichasExtracto.length} fichas`, 'success');
+    } catch (error) {
+        console.error('❌ Error:', error);
+        mostrarNotificacion('Error al cargar datos', 'error');
+    }
+}
+
+function guardarDatos() {
+    try {
+        localStorage.setItem(STORAGE_KEYS.FICHAS, JSON.stringify(fichasExtracto));
+        localStorage.setItem(STORAGE_KEYS.FRACCIONES, JSON.stringify(fracciones));
+        localStorage.setItem(STORAGE_KEYS.DESTILADOS, JSON.stringify(destilados));
+        localStorage.setItem(STORAGE_KEYS.MOVIMIENTOS, JSON.stringify(movimientos));
+        localStorage.setItem(STORAGE_KEYS.VERSION, new Date().toISOString());
+        return true;
+    } catch (error) {
+        console.error('❌ Error:', error);
+        mostrarNotificacion('Error al guardar', 'error');
+        return false;
+    }
+}
+
+// ========== GENERACIÓN DE IDs Y CÓDIGOS ==========
+function generarIdFicha() {
+    const now = new Date();
+    const fecha = now.toISOString().split('T')[0].replace(/-/g, '');
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `FIC-${fecha}-${random}`;
+}
+
+function generarCodigoExtracto() {
+    const now = new Date();
+    const aa = now.getFullYear().toString().slice(-2);
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const fecha = `${aa}${mm}${dd}`;
+    
+    const fichasMismoDia = fichasExtracto.filter(f => {
+        const fFecha = new Date(f.fechaCreacion);
+        return fFecha.getFullYear().toString().slice(-2) === aa &&
+               (fFecha.getMonth() + 1).toString().padStart(2, '0') === mm &&
+               fFecha.getDate().toString().padStart(2, '0') === dd;
+    });
+    
+    const numero = (fichasMismoDia.length + 1).toString().padStart(3, '0');
+    return `BCP-EXT-${fecha}-${numero}`;
+}
+
+function generarCodigoFraccion(tipo) {
+    const now = new Date();
+    const aa = now.getFullYear().toString().slice(-2);
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const fecha = `${aa}${mm}${dd}`;
+    
+    const tipoAbrev = {
+        extracto: 'EXT',
+        salsa: 'SAL',
+        cristales: 'CRS',
+        budder: 'BUD',
+        destilado: 'DST',
+        otros: 'OTR'
+    }[tipo] || 'OTR';
+    
+    const fraccionesMismoDiaTipo = fracciones.filter(f => {
+        const fFecha = new Date(f.fechaCreacion);
+        return fFecha.getFullYear().toString().slice(-2) === aa &&
+               (fFecha.getMonth() + 1).toString().padStart(2, '0') === mm &&
+               fFecha.getDate().toString().padStart(2, '0') === dd &&
+               f.tipo === tipo;
+    });
+    
+    const numero = (fraccionesMismoDiaTipo.length + 1).toString().padStart(3, '0');
+    return `BCP-FRC-${tipoAbrev}-${fecha}-${numero}`;
+}
+
+function generarCodigoDestilado() {
+    const now = new Date();
+    const aa = now.getFullYear().toString().slice(-2);
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const fecha = `${aa}${mm}${dd}`;
+    
+    const destiladosMismoDia = destilados.filter(d => {
+        const dFecha = new Date(d.fechaCreacion);
+        return dFecha.getFullYear().toString().slice(-2) === aa &&
+               (dFecha.getMonth() + 1).toString().padStart(2, '0') === mm &&
+               dFecha.getDate().toString().padStart(2, '0') === dd;
+    });
+    
+    const numero = (destiladosMismoDia.length + 1).toString().padStart(3, '0');
+    return `BCP-DST-${fecha}-${numero}`;
+}
+
+function crearMetadataAuditoria(usuario = 'Sistema') {
+    return {
+        creadoPor: usuario,
+        fechaCreacion: new Date().toISOString(),
+        modificadoPor: usuario,
+        fechaModificacion: new Date().toISOString(),
+        version: 1,
+        activo: true
+    };
+}
+
+// ========== NOTIFICACIONES ==========
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    const colores = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-amber-500',
+        info: 'bg-blue-600'
+    };
+    const iconos = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    const toast = document.createElement('div');
+    toast.className = `${colores[tipo]} text-white px-6 py-4 rounded-lg shadow-2xl mb-3 slide-in-right`;
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">${iconos[tipo]}</span>
+            <span class="font-semibold">${mensaje}</span>
+        </div>
+    `;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => {
+        toast.style.transform = 'translateX(400px)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ========== AUTH API (MÍNIMO) ==========
+function obtenerTokenApi() {
+    return localStorage.getItem(STORAGE_KEYS.API_TOKEN) || '';
+}
+
+function guardarTokenApi(token) {
+    localStorage.setItem(STORAGE_KEYS.API_TOKEN, token);
+}
+
+function limpiarTokenApi() {
+    localStorage.removeItem(STORAGE_KEYS.API_TOKEN);
+}
+
+function actualizarAuthUI() {
+    const form = document.getElementById('authLoginForm');
+    const sessionBox = document.getElementById('authSessionBox');
+    const userLabel = document.getElementById('authUserLabel');
+    const roleLabel = document.getElementById('authRoleLabel');
+
+    if (!form || !sessionBox) return;
+
+    if (currentUser) {
+        form.classList.add('hidden');
+        sessionBox.classList.remove('hidden');
+        sessionBox.classList.add('flex');
+        userLabel.textContent = currentUser.full_name || currentUser.username || 'Usuario';
+        roleLabel.textContent = `Rol: ${currentUser.role || 'sin-rol'}`;
+    } else {
+        form.classList.remove('hidden');
+        sessionBox.classList.add('hidden');
+        sessionBox.classList.remove('flex');
+        userLabel.textContent = '';
+        roleLabel.textContent = '';
+    }
+}
+
+async function inicializarAuth() {
+    const token = obtenerTokenApi();
+    if (!token) {
+        currentUser = null;
+        actualizarAuthUI();
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/me', {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('token inválido');
+        const data = await response.json();
+        currentUser = data.user || null;
+    } catch (error) {
+        limpiarTokenApi();
+        currentUser = null;
+        mostrarNotificacion('Sesion API expirada. Inicie sesion nuevamente.', 'warning');
+    }
+    actualizarAuthUI();
+}
+
+async function loginExtractos(event) {
+    event.preventDefault();
+    const username = (document.getElementById('authUsername')?.value || '').trim();
+    const password = (document.getElementById('authPassword')?.value || '').trim();
+
+    if (!username || !password) {
+        mostrarNotificacion('Ingrese usuario y clave API', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.access_token) {
+            mostrarNotificacion(data.detail || 'Credenciales API invalidas', 'error');
+            return;
+        }
+
+        guardarTokenApi(data.access_token);
+        currentUser = data.user || null;
+        document.getElementById('authUsername').value = '';
+        document.getElementById('authPassword').value = '';
+        actualizarAuthUI();
+        mostrarNotificacion('Sesion iniciada en API', 'success');
+    } catch (error) {
+        mostrarNotificacion('No se pudo conectar con API', 'error');
+    }
+}
+
+function logoutExtractos() {
+    limpiarTokenApi();
+    currentUser = null;
+    actualizarAuthUI();
+    mostrarNotificacion('Sesion cerrada', 'info');
+}
+
+function requireAuthForAction(actionLabel) {
+    if (!currentUser) {
+        mostrarNotificacion(`Debe iniciar sesion para ${actionLabel}`, 'warning');
+        return false;
+    }
+    return true;
+}
+
+// ========== INTEGRACIÓN CON RECEPCIÓN MP ==========
+function obtenerLotesExtraccionDisponibles() {
+    try {
+        const salidasStr = localStorage.getItem(STORAGE_KEYS.RECEPCION_SALIDAS);
+        if (!salidasStr) return [];
+        
+        const salidas = JSON.parse(salidasStr);
+        // Filtrar solo lotes de extracción que no tengan ficha creada
+        const lotesUsados = fichasExtracto.map(f => f.loteOrigenId);
+        
+        return salidas.filter(s => 
+            s.tipo_salida === 'extraccion' && 
+            !lotesUsados.includes(s.id)
+        );
+    } catch (error) {
+        console.error('Error al obtener lotes:', error);
+        return [];
+    }
+}
+
+function obtenerInfoLoteExtraccion(loteId) {
+    try {
+        const salidasStr = localStorage.getItem(STORAGE_KEYS.RECEPCION_SALIDAS);
+        if (!salidasStr) return null;
+        
+        const salidas = JSON.parse(salidasStr);
+        return salidas.find(s => s.id === loteId);
+    } catch (error) {
+        console.error('Error:', error);
+        return null;
+    }
+}
+
+function verificarIntegraciones() {
+    // Verificar Recepción MP
+    const salidasStr = localStorage.getItem(STORAGE_KEYS.RECEPCION_SALIDAS);
+    const statusRecepcion = document.getElementById('statusRecepcion');
+    const statusRecepcionMsg = document.getElementById('statusRecepcionMsg');
+    
+    if (salidasStr) {
+        const salidas = JSON.parse(salidasStr);
+        const lotesExtraccion = salidas.filter(s => s.tipo_salida === 'extraccion');
+        statusRecepcion.className = 'w-3 h-3 rounded-full bg-green-500';
+        statusRecepcionMsg.textContent = `Conectado - ${lotesExtraccion.length} lotes disponibles`;
+    } else {
+        statusRecepcion.className = 'w-3 h-3 rounded-full bg-amber-500';
+        statusRecepcionMsg.textContent = 'Sin datos - Use ingreso manual';
+    }
+    
+    // Verificar Solicitudes
+    const solicitudesStr = localStorage.getItem('bcpOrdenesProduccionV3_4');
+    const statusSolicitudes = document.getElementById('statusSolicitudes');
+    const statusSolicitudesMsg = document.getElementById('statusSolicitudesMsg');
+    
+    if (solicitudesStr) {
+        let totalSolicitudes = 0;
+        try {
+            const data = JSON.parse(solicitudesStr);
+            if (Array.isArray(data?.ordenes)) totalSolicitudes = data.ordenes.length;
+        } catch (_) {}
+        statusSolicitudes.className = 'w-3 h-3 rounded-full bg-green-500';
+        statusSolicitudesMsg.textContent = `Conectado - ${totalSolicitudes} solicitudes detectadas`;
+    } else {
+        statusSolicitudes.className = 'w-3 h-3 rounded-full bg-gray-400';
+        statusSolicitudesMsg.textContent = 'No detectado';
+    }
+}
+
+// ========== MODAL: NUEVA FICHA ==========
+function abrirModalNuevaFicha() {
+    if (!requireAuthForAction('crear lotes')) return;
+    // Limpiar formulario
+    document.getElementById('formNuevaFicha').reset();
+    document.getElementById('fechaProcesamiento').valueAsDate = new Date();
+    document.getElementById('fraccionesContainer').innerHTML = '';
+    fraccionCounter = 0;
+    
+    // Cargar lotes disponibles
+    cargarLotesExtraccionSelect();
+    
+    // Mostrar modal
+    document.getElementById('modalNuevaFicha').classList.add('active');
+
+    const operadorInput = document.getElementById('operadorResponsable');
+    if (operadorInput && currentUser) {
+        operadorInput.value = currentUser.full_name || currentUser.username || '';
+    }
+    
+    // Agregar una fracción por defecto
+    agregarFraccion();
+    actualizarResumenFracciones();
+}
+
+function cargarLotesExtraccionSelect() {
+    const select = document.getElementById('loteExtraccionSelect');
+    const lotes = obtenerLotesExtraccionDisponibles();
+    
+    select.innerHTML = '<option value="">-- Seleccione un lote --</option>';
+    
+    if (lotes.length === 0) {
+        select.innerHTML += '<option value="" disabled>No hay lotes disponibles</option>';
+        return;
+    }
+    
+    lotes.forEach(lote => {
+        const totalMP = lote.bolsas ? lote.bolsas.reduce((sum, b) => sum + (b.cantidadUsada || 0), 0) : 0;
+        const fecha = new Date(lote.fecha).toLocaleDateString('es-CL');
+        select.innerHTML += `
+            <option value="${lote.id}" data-total="${totalMP}" data-tipo="${lote.tipoExtraccion}">
+                ${lote.nombreLote} | ${lote.tipoExtraccion} | ${totalMP.toFixed(2)}g | ${fecha}
+            </option>
+        `;
+    });
+}
+
+function cambiarTipoOrigen() {
+    const tipo = document.getElementById('tipoOrigen').value;
+    const selectorInterno = document.getElementById('selectorLoteInterno');
+    const camposExterno = document.getElementById('camposLoteExterno');
+    const selectLote = document.getElementById('loteExtraccionSelect');
+    
+    if (tipo === 'interno') {
+        selectorInterno.classList.remove('hidden');
+        camposExterno.classList.add('hidden');
+        selectLote.required = true;
+    } else {
+        selectorInterno.classList.add('hidden');
+        camposExterno.classList.remove('hidden');
+        selectLote.required = false;
+    }
+    
+    actualizarCantidadMP();
+}
+
+document.getElementById('loteExtraccionSelect')?.addEventListener('change', function() {
+    actualizarCantidadMP();
+});
+
+function actualizarCantidadMP() {
+    const tipoOrigen = document.getElementById('tipoOrigen').value;
+    const cantidadInput = document.getElementById('cantidadTotalMP');
+    
+    if (tipoOrigen === 'interno') {
+        const select = document.getElementById('loteExtraccionSelect');
+        const option = select.options[select.selectedIndex];
+        if (option && option.dataset.total) {
+            cantidadInput.value = parseFloat(option.dataset.total).toFixed(2);
+        } else {
+            cantidadInput.value = '';
+        }
+    }
+    
+    actualizarResumenFracciones();
+}
+
+// ========== FRACCIONES ==========
+function agregarFraccion() {
+    fraccionCounter++;
+    const container = document.getElementById('fraccionesContainer');
+    
+    const div = document.createElement('div');
+    div.className = 'fraccion-card rounded-xl p-4 fade-in';
+    div.id = `fraccion-${fraccionCounter}`;
+    div.innerHTML = `
+        <div class="flex justify-between items-start mb-3">
+            <h4 class="font-bold text-gray-800">Fracción #${fraccionCounter}</h4>
+            <button type="button" onclick="eliminarFraccion(${fraccionCounter})" class="text-red-500 hover:text-red-700 font-bold">✕</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Tipo de Fracción *</label>
+                <select name="tipoFraccion_${fraccionCounter}" required onchange="actualizarResumenFracciones()" class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg input-focus text-sm">
+                    <option value="extracto">🧪 Extracto Puro</option>
+                    <option value="salsa">🍯 Fracción Salsa</option>
+                    <option value="cristales">💎 Fracción Cristales</option>
+                    <option value="budder">🧈 Fracción Budder</option>
+                    <option value="otros">📦 Otros</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Cantidad (g) *</label>
+                <input type="number" name="cantidadFraccion_${fraccionCounter}" step="0.01" min="0" required 
+                       onchange="actualizarResumenFracciones()" oninput="actualizarResumenFracciones()"
+                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg input-focus text-sm" placeholder="0.00">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Pureza (%)</label>
+                <input type="number" name="purezaFraccion_${fraccionCounter}" step="0.1" min="0" max="100" 
+                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg input-focus text-sm" placeholder="0.0">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Ubicación</label>
+                <input type="text" name="ubicacionFraccion_${fraccionCounter}" 
+                       class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg input-focus text-sm" placeholder="Ej: Cámara 1">
+            </div>
+        </div>
+        <div class="mt-3">
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Observaciones de la fracción</label>
+            <input type="text" name="obsFraccion_${fraccionCounter}" 
+                   class="w-full px-3 py-2 border-2 border-gray-300 rounded-lg input-focus text-sm" placeholder="Notas específicas...">
+        </div>
+    `;
+    
+    container.appendChild(div);
+    actualizarResumenFracciones();
+}
+
+function eliminarFraccion(id) {
+    const fraccion = document.getElementById(`fraccion-${id}`);
+    if (fraccion) {
+        fraccion.remove();
+        actualizarResumenFracciones();
+    }
+}
+
+function actualizarResumenFracciones() {
+    const container = document.getElementById('fraccionesContainer');
+    const fraccionesEl = container.querySelectorAll('[id^="fraccion-"]');
+    
+    let totalPeso = 0;
+    let totalFracciones = fraccionesEl.length;
+    
+    fraccionesEl.forEach(fraccion => {
+        const id = fraccion.id.split('-')[1];
+        const cantidad = parseFloat(document.querySelector(`[name="cantidadFraccion_${id}"]`)?.value) || 0;
+        totalPeso += cantidad;
+    });
+    
+    const cantidadMP = parseFloat(document.getElementById('cantidadTotalMP').value) || 0;
+    const rendimiento = cantidadMP > 0 ? (totalPeso / cantidadMP * 100) : 0;
+    const merma = cantidadMP - totalPeso;
+    
+    document.getElementById('resumenTotalFracciones').textContent = totalFracciones;
+    document.getElementById('resumenPesoTotal').textContent = totalPeso.toFixed(2) + 'g';
+    document.getElementById('resumenRendimiento').textContent = rendimiento.toFixed(2) + '%';
+    document.getElementById('resumenMerma').textContent = (merma > 0 ? merma.toFixed(2) : '0.00') + 'g';
+}
+
+// ========== GUARDAR FICHA ==========
+function guardarFichaExtracto(event) {
+    event.preventDefault();
+    if (!requireAuthForAction('guardar lotes')) return;
+    
+    const tipoOrigen = document.getElementById('tipoOrigen').value;
+    let datosOrigen = {};
+    
+    if (tipoOrigen === 'interno') {
+        const selectLote = document.getElementById('loteExtraccionSelect');
+        if (!selectLote.value) {
+            mostrarNotificacion('Seleccione un lote de extracción', 'error');
+            return;
+        }
+        const loteInfo = obtenerInfoLoteExtraccion(selectLote.value);
+        if (!loteInfo) {
+            mostrarNotificacion('Lote no encontrado', 'error');
+            return;
+        }
+        datosOrigen = {
+            tipoOrigen: 'interno',
+            loteOrigenId: loteInfo.id,
+            loteOrigenCodigo: loteInfo.nombreLote,
+            tipoExtraccion: loteInfo.tipoExtraccion,
+            bolsasOrigen: loteInfo.bolsas || [],
+            cantidadMP: loteInfo.bolsas ? loteInfo.bolsas.reduce((s, b) => s + (b.cantidadUsada || 0), 0) : 0
+        };
+    } else {
+        const codigoExterno = document.getElementById('codigoExterno').value.trim();
+        const proveedorExterno = document.getElementById('proveedorExterno').value.trim();
+        const tipoExtraccionExterno = document.getElementById('tipoExtraccionExterno').value;
+        
+        if (!codigoExterno || !proveedorExterno) {
+            mostrarNotificacion('Complete los datos del lote externo', 'error');
+            return;
+        }
+        
+        datosOrigen = {
+            tipoOrigen: 'externo',
+            loteOrigenId: null,
+            loteOrigenCodigo: codigoExterno,
+            tipoExtraccion: tipoExtraccionExterno,
+            proveedorExterno: proveedorExterno,
+            cantidadMP: parseFloat(document.getElementById('cantidadTotalMP').value) || 0
+        };
+    }
+    
+    // Recopilar fracciones
+    const container = document.getElementById('fraccionesContainer');
+    const fraccionesEl = container.querySelectorAll('[id^="fraccion-"]');
+    
+    if (fraccionesEl.length === 0) {
+        mostrarNotificacion('Agregue al menos una fracción', 'error');
+        return;
+    }
+    
+    const fraccionesData = [];
+    let totalPeso = 0;
+    
+    fraccionesEl.forEach(fraccion => {
+        const id = fraccion.id.split('-')[1];
+        const tipo = document.querySelector(`[name="tipoFraccion_${id}"]`).value;
+        const cantidad = parseFloat(document.querySelector(`[name="cantidadFraccion_${id}"]`).value) || 0;
+        const pureza = parseFloat(document.querySelector(`[name="purezaFraccion_${id}"]`)?.value) || null;
+        const ubicacion = document.querySelector(`[name="ubicacionFraccion_${id}"]`)?.value || '';
+        const obs = document.querySelector(`[name="obsFraccion_${id}"]`)?.value || '';
+        
+        if (cantidad <= 0) {
+            mostrarNotificacion('Todas las fracciones deben tener cantidad mayor a 0', 'error');
+            return;
+        }
+        
+        totalPeso += cantidad;
+        
+        fraccionesData.push({
+            tipo,
+            cantidad,
+            pureza,
+            ubicacion,
+            observaciones: obs
+        });
+    });
+    
+    if (fraccionesData.length === 0) return;
+    
+    const operador = document.getElementById('operadorResponsable').value.trim();
+    const fechaProcesamiento = document.getElementById('fechaProcesamiento').value;
+    const observaciones = document.getElementById('observacionesFicha').value.trim();
+    
+    if (!operador) {
+        mostrarNotificacion('Ingrese el operador responsable', 'error');
+        return;
+    }
+    
+    // Crear ficha
+    const codigoExtracto = generarCodigoExtracto();
+    const idFicha = generarIdFicha();
+    
+    const nuevaFicha = {
+        id: idFicha,
+        codigo: codigoExtracto,
+        ...datosOrigen,
+        fechaProcesamiento,
+        operador,
+        totalFracciones: fraccionesData.length,
+        pesoTotal: totalPeso,
+        rendimiento: datosOrigen.cantidadMP > 0 ? (totalPeso / datosOrigen.cantidadMP * 100) : 0,
+        observaciones,
+        estado: 'completado',
+        ...crearMetadataAuditoria(operador)
+    };
+    
+    fichasExtracto.push(nuevaFicha);
+    
+    // Crear fracciones individuales
+    fraccionesData.forEach(f => {
+        const codigoFraccion = generarCodigoFraccion(f.tipo);
+        const nuevaFraccion = {
+            id: `FRC-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            codigo: codigoFraccion,
+            fichaId: idFicha,
+            fichacodigo: codigoExtracto,
+            tipo: f.tipo,
+            cantidadOriginal: f.cantidad,
+            cantidadDisponible: f.cantidad,
+            pureza: f.pureza,
+            ubicacion: f.ubicacion,
+            observaciones: f.observaciones,
+            estado: 'disponible',
+            usosRegistrados: [],
+            ...crearMetadataAuditoria(operador)
+        };
+        
+        fracciones.push(nuevaFraccion);
+        
+        // Registrar movimiento de ingreso
+        registrarMovimiento({
+            tipo: 'ingreso',
+            fraccionId: nuevaFraccion.id,
+            fraccionCodigo: codigoFraccion,
+            cantidad: f.cantidad,
+            descripcion: `Ingreso desde ficha ${codigoExtracto}`,
+            referencia: codigoExtracto,
+            usuario: operador
+        });
+    });
+    
+    if (!guardarDatos()) {
+        fichasExtracto.pop();
+        return;
+    }
+    
+    mostrarNotificacion(`Ficha ${codigoExtracto} creada con ${fraccionesData.length} fracciones`, 'success');
+    cerrarModal('modalNuevaFicha');
+    renderDashboard();
+}
+
+// ========== MOVIMIENTOS ==========
+function registrarMovimiento(data) {
+    const movimiento = {
+        id: `MOV-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        fecha: new Date().toISOString(),
+        ...data,
+        ...crearMetadataAuditoria(data.usuario || 'Sistema')
+    };
+    movimientos.push(movimiento);
+}
+
+// ========== DESTILADOS ==========
+function abrirModalNuevoDestilado() {
+    if (!requireAuthForAction('crear lotes de destilado')) return;
+    const fraccionesDisponibles = fracciones.filter(f => 
+        f.estado !== 'agotado' && f.cantidadDisponible > 0
+    );
+    
+    if (fraccionesDisponibles.length === 0) {
+        mostrarNotificacion('No hay fracciones disponibles para destilación', 'warning');
+        return;
+    }
+    
+    let html = `
+        <form id="formNuevoDestilado" onsubmit="guardarDestilado(event)">
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-3">Seleccionar Fracciones</h3>
+                <p class="text-sm text-gray-600 mb-4">Marque las fracciones a incluir y especifique la cantidad a usar de cada una.</p>
+                <div class="space-y-3 max-h-64 overflow-y-auto" id="fraccionesParaDestilado">
+    `;
+    
+    fraccionesDisponibles.forEach(f => {
+        const tipoInfo = TIPOS_FRACCION[f.tipo] || TIPOS_FRACCION.otros;
+        html += `
+            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border-2 border-gray-200">
+                <input type="checkbox" id="dest_${f.id}" name="fraccionDestilado" value="${f.id}" 
+                       onchange="toggleCantidadDestilado('${f.id}')" class="w-5 h-5 rounded">
+                <div class="flex-1">
+                    <div class="font-semibold text-gray-800">${tipoInfo.emoji} ${f.codigo}</div>
+                    <div class="text-xs text-gray-600">Disponible: ${f.cantidadDisponible.toFixed(2)}g | ${tipoInfo.nombre}</div>
+                </div>
+                <input type="number" id="cant_${f.id}" name="cantidadDest_${f.id}" step="0.01" min="0" 
+                       max="${f.cantidadDisponible}" disabled
+                       class="w-24 px-2 py-1 border rounded text-sm" placeholder="0.00">
+                <span class="text-xs text-gray-500">g</span>
+            </div>
+        `;
+    });
+    
+    html += `
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-3">Datos del Destilado</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Operador *</label>
+                        <input type="text" id="operadorDestilado" required value="${currentUser ? (currentUser.full_name || currentUser.username || '') : ''}" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad Obtenida (g) *</label>
+                        <input type="number" id="cantidadDestilado" step="0.01" min="0" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pureza (%)</label>
+                        <input type="number" id="purezaDestilado" step="0.1" min="0" max="100" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación</label>
+                        <input type="text" id="ubicacionDestilado" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
+                <textarea id="obsDestilado" rows="2" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus"></textarea>
+            </div>
+            
+            <div class="flex gap-4">
+                <button type="button" onclick="cerrarModal('modalNuevoDestilado')" class="flex-1 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 py-3 btn-primary rounded-lg font-semibold">
+                    ✅ Crear Lote de Destilado
+                </button>
+            </div>
+        </form>
+    `;
+    
+    document.getElementById('modalDestiladoContenido').innerHTML = html;
+    document.getElementById('modalNuevoDestilado').classList.add('active');
+}
+
+function toggleCantidadDestilado(fraccionId) {
+    const checkbox = document.getElementById(`dest_${fraccionId}`);
+    const input = document.getElementById(`cant_${fraccionId}`);
+    const fraccion = fracciones.find(f => f.id === fraccionId);
+    
+    if (checkbox.checked) {
+        input.disabled = false;
+        input.value = fraccion.cantidadDisponible.toFixed(2);
+        input.focus();
+    } else {
+        input.disabled = true;
+        input.value = '';
+    }
+}
+
+function guardarDestilado(event) {
+    event.preventDefault();
+    if (!requireAuthForAction('guardar destilados')) return;
+    
+    const checkboxes = document.querySelectorAll('input[name="fraccionDestilado"]:checked');
+    if (checkboxes.length === 0) {
+        mostrarNotificacion('Seleccione al menos una fracción', 'error');
+        return;
+    }
+    
+    const operador = document.getElementById('operadorDestilado').value.trim();
+    const cantidadObtenida = parseFloat(document.getElementById('cantidadDestilado').value);
+    const pureza = parseFloat(document.getElementById('purezaDestilado').value) || null;
+    const ubicacion = document.getElementById('ubicacionDestilado').value.trim();
+    const observaciones = document.getElementById('obsDestilado').value.trim();
+    
+    if (!operador || !cantidadObtenida || cantidadObtenida <= 0) {
+        mostrarNotificacion('Complete los campos requeridos', 'error');
+        return;
+    }
+    
+    // Procesar fracciones seleccionadas
+    const fraccionesUsadas = [];
+    let totalUsado = 0;
+    
+    checkboxes.forEach(cb => {
+        const fraccionId = cb.value;
+        const cantidad = parseFloat(document.getElementById(`cant_${fraccionId}`).value);
+        const fraccion = fracciones.find(f => f.id === fraccionId);
+        
+        if (!fraccion || cantidad <= 0 || cantidad > fraccion.cantidadDisponible) {
+            mostrarNotificacion(`Cantidad inválida para ${fraccion?.codigo}`, 'error');
+            return;
+        }
+        
+        fraccionesUsadas.push({
+            fraccionId,
+            fraccionCodigo: fraccion.codigo,
+            cantidadUsada: cantidad,
+            tipo: fraccion.tipo
+        });
+        
+        totalUsado += cantidad;
+    });
+    
+    if (fraccionesUsadas.length === 0) return;
+    
+    // Crear código de destilado
+    const codigoDestilado = generarCodigoDestilado();
+    
+    // Crear registro de destilado
+    const nuevoDestilado = {
+        id: `DST-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        codigo: codigoDestilado,
+        fraccionesOrigen: fraccionesUsadas,
+        cantidadEntrada: totalUsado,
+        cantidadObtenida,
+        pureza,
+        rendimiento: (cantidadObtenida / totalUsado * 100),
+        ubicacion,
+        observaciones,
+        operador,
+        estado: 'completado',
+        ...crearMetadataAuditoria(operador)
+    };
+    
+    destilados.push(nuevoDestilado);
+    
+    // Descontar de fracciones
+    fraccionesUsadas.forEach(fu => {
+        const fraccion = fracciones.find(f => f.id === fu.fraccionId);
+        if (fraccion) {
+            fraccion.cantidadDisponible -= fu.cantidadUsada;
+            if (fraccion.cantidadDisponible <= 0) {
+                fraccion.estado = 'agotado';
+                fraccion.cantidadDisponible = 0;
+            } else {
+                fraccion.estado = 'parcial';
+            }
+            
+            fraccion.usosRegistrados.push({
+                tipo: 'destilado',
+                referencia: codigoDestilado,
+                cantidad: fu.cantidadUsada,
+                fecha: new Date().toISOString(),
+                usuario: operador
+            });
+            
+            fraccion.modificadoPor = operador;
+            fraccion.fechaModificacion = new Date().toISOString();
+            
+            // Registrar movimiento
+            registrarMovimiento({
+                tipo: 'destilado',
+                fraccionId: fraccion.id,
+                fraccionCodigo: fraccion.codigo,
+                cantidad: -fu.cantidadUsada,
+                descripcion: `Usado en destilado ${codigoDestilado}`,
+                referencia: codigoDestilado,
+                usuario: operador
+            });
+        }
+    });
+    
+    // Crear fracción de destilado en el stock
+    const fraccionDestilado = {
+        id: `FRC-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+        codigo: codigoDestilado,
+        fichaId: nuevoDestilado.id,
+        fichacodigo: codigoDestilado,
+        tipo: 'destilado',
+        cantidadOriginal: cantidadObtenida,
+        cantidadDisponible: cantidadObtenida,
+        pureza,
+        ubicacion,
+        observaciones,
+        estado: 'disponible',
+        usosRegistrados: [],
+        esDestilado: true,
+        ...crearMetadataAuditoria(operador)
+    };
+    
+    fracciones.push(fraccionDestilado);
+    
+    // Movimiento de ingreso del destilado
+    registrarMovimiento({
+        tipo: 'ingreso',
+        fraccionId: fraccionDestilado.id,
+        fraccionCodigo: codigoDestilado,
+        cantidad: cantidadObtenida,
+        descripcion: `Destilado creado desde ${fraccionesUsadas.length} fracciones`,
+        referencia: codigoDestilado,
+        usuario: operador
+    });
+    
+    if (!guardarDatos()) {
+        destilados.pop();
+        fracciones.pop();
+        return;
+    }
+    
+    mostrarNotificacion(`Destilado ${codigoDestilado} creado: ${cantidadObtenida}g`, 'success');
+    cerrarModal('modalNuevoDestilado');
+    renderDashboard();
+}
+
+// ========== ASIGNAR/EGRESAR STOCK ==========
+function abrirModalAsignar(fraccionId) {
+    if (!requireAuthForAction('registrar egresos')) return;
+    const fraccion = fracciones.find(f => f.id === fraccionId);
+    if (!fraccion) return;
+    
+    const tipoInfo = TIPOS_FRACCION[fraccion.tipo] || TIPOS_FRACCION.otros;
+    
+    let html = `
+        <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+            <div class="font-bold text-gray-800">${tipoInfo.emoji} ${fraccion.codigo}</div>
+            <div class="text-sm text-gray-600">${tipoInfo.nombre}</div>
+            <div class="mt-2 text-2xl font-bold text-green-600">${fraccion.cantidadDisponible.toFixed(2)}g disponibles</div>
+        </div>
+        
+        <form onsubmit="procesarEgreso(event, '${fraccionId}')">
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Movimiento *</label>
+                <select id="tipoEgreso" required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+                    <option value="asignacion">📋 Asignación a Solicitud/Orden</option>
+                    <option value="egreso">📤 Egreso General</option>
+                    <option value="ajuste">⚖️ Ajuste de Inventario</option>
+                    <option value="merma">🗑️ Merma/Pérdida</option>
+                </select>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad (g) *</label>
+                <input type="number" id="cantidadEgreso" step="0.01" min="0.01" max="${fraccion.cantidadDisponible}" 
+                       required class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Referencia (Orden/Solicitud)</label>
+                <input type="text" id="referenciaEgreso" placeholder="Ej: BCP-OP-20251210-001" 
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Responsable *</label>
+                <input type="text" id="responsableEgreso" required value="${currentUser ? (currentUser.full_name || currentUser.username || '') : ''}" 
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones</label>
+                <textarea id="obsEgreso" rows="2" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg input-focus"></textarea>
+            </div>
+            
+            <div class="flex gap-4">
+                <button type="button" onclick="cerrarModal('modalAsignarSolicitud')" class="flex-1 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 py-3 btn-primary rounded-lg font-semibold">
+                    ✅ Confirmar Egreso
+                </button>
+            </div>
+        </form>
+    `;
+    
+    document.getElementById('modalAsignarContenido').innerHTML = html;
+    document.getElementById('modalAsignarSolicitud').classList.add('active');
+}
+
+function procesarEgreso(event, fraccionId) {
+    event.preventDefault();
+    if (!requireAuthForAction('registrar egresos')) return;
+    
+    const fraccion = fracciones.find(f => f.id === fraccionId);
+    if (!fraccion) return;
+    
+    const tipoEgreso = document.getElementById('tipoEgreso').value;
+    const cantidad = parseFloat(document.getElementById('cantidadEgreso').value);
+    const referencia = document.getElementById('referenciaEgreso').value.trim();
+    const responsable = document.getElementById('responsableEgreso').value.trim();
+    const observaciones = document.getElementById('obsEgreso').value.trim();
+    
+    if (cantidad > fraccion.cantidadDisponible) {
+        mostrarNotificacion('Cantidad excede el stock disponible', 'error');
+        return;
+    }
+    
+    // Descontar
+    fraccion.cantidadDisponible -= cantidad;
+    if (fraccion.cantidadDisponible <= 0) {
+        fraccion.estado = 'agotado';
+        fraccion.cantidadDisponible = 0;
+    } else {
+        fraccion.estado = 'parcial';
+    }
+    
+    // Registrar uso
+    fraccion.usosRegistrados.push({
+        tipo: tipoEgreso,
+        referencia,
+        cantidad,
+        fecha: new Date().toISOString(),
+        usuario: responsable,
+        observaciones
+    });
+    
+    fraccion.modificadoPor = responsable;
+    fraccion.fechaModificacion = new Date().toISOString();
+    
+    // Movimiento
+    registrarMovimiento({
+        tipo: tipoEgreso,
+        fraccionId: fraccion.id,
+        fraccionCodigo: fraccion.codigo,
+        cantidad: -cantidad,
+        descripcion: observaciones || `${tipoEgreso} - ${referencia || 'Sin referencia'}`,
+        referencia,
+        usuario: responsable
+    });
+    
+    if (!guardarDatos()) return;
+    
+    mostrarNotificacion(`Egreso de ${cantidad}g registrado`, 'success');
+    cerrarModal('modalAsignarSolicitud');
+    renderStock();
+}
+
+// ========== TABS Y RENDERS ==========
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    document.getElementById('tab-' + tabName).classList.remove('hidden');
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
+    
+    if (tabName === 'dashboard') renderDashboard();
+    if (tabName === 'fichas') renderFichas();
+    if (tabName === 'stock') renderStock();
+    if (tabName === 'destilados') renderDestilados();
+    if (tabName === 'movimientos') renderMovimientos();
+    if (tabName === 'config') renderConfig();
+}
+
+function renderDashboard() {
+    // KPIs
+    document.getElementById('kpiTotalFichas').textContent = fichasExtracto.length;
+    
+    const stockDisponible = fracciones.reduce((sum, f) => sum + f.cantidadDisponible, 0);
+    document.getElementById('kpiTotalStock').textContent = stockDisponible.toFixed(2) + 'g';
+    
+    const fraccionesActivas = fracciones.filter(f => f.cantidadDisponible > 0).length;
+    document.getElementById('kpiTotalFracciones').textContent = fraccionesActivas;
+    
+    document.getElementById('kpiDestilados').textContent = destilados.length;
+    
+    const rendimientoPromedio = fichasExtracto.length > 0 
+        ? fichasExtracto.reduce((sum, f) => sum + (f.rendimiento || 0), 0) / fichasExtracto.length 
+        : 0;
+    document.getElementById('kpiRendimiento').textContent = rendimientoPromedio.toFixed(1) + '%';
+    
+    // Gráfico de fracciones
+    renderChartFracciones();
+    renderChartProduccion();
+    
+    // Últimas fichas
+    const ultimasFichas = [...fichasExtracto].sort((a, b) => 
+        new Date(b.fechaCreacion) - new Date(a.fechaCreacion)
+    ).slice(0, 5);
+    
+    const container = document.getElementById('ultimasFichas');
+    if (ultimasFichas.length === 0) {
+        container.innerHTML = '<p class="text-gray-500 text-center py-4">No hay fichas registradas</p>';
+        return;
+    }
+    
+    container.innerHTML = ultimasFichas.map(f => `
+        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-all cursor-pointer" 
+             onclick="verDetalleFicha('${f.id}')">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-xl">
+                    ${f.tipoExtraccion === 'BHO' ? '💨' : f.tipoExtraccion === 'RSO' ? '🌿' : '🧪'}
+                </div>
+                <div>
+                    <div class="font-bold text-gray-800">${f.codigo}</div>
+                    <div class="text-sm text-gray-600">${f.tipoExtraccion} | ${f.totalFracciones} fracciones</div>
+                </div>
+            </div>
+            <div class="text-right">
+                <div class="text-lg font-bold text-green-600">${f.pesoTotal.toFixed(2)}g</div>
+                <div class="text-xs text-gray-500">${new Date(f.fechaCreacion).toLocaleDateString('es-CL')}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderChartFracciones() {
+    const ctx = document.getElementById('chartFracciones');
+    if (!ctx) return;
+    
+    const stockPorTipo = {};
+    Object.keys(TIPOS_FRACCION).forEach(tipo => {
+        stockPorTipo[tipo] = fracciones
+            .filter(f => f.tipo === tipo)
+            .reduce((sum, f) => sum + f.cantidadDisponible, 0);
+    });
+    
+    if (chartFracciones) chartFracciones.destroy();
+    
+    chartFracciones = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(TIPOS_FRACCION).map(k => TIPOS_FRACCION[k].nombre),
+            datasets: [{
+                data: Object.values(stockPorTipo),
+                backgroundColor: [
+                    '#7c3aed', '#f472b6', '#60a5fa', '#fbbf24', '#34d399', '#94a3b8'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                    labels: { font: { size: 11 } }
+                }
+            }
+        }
+    });
+}
+
+function renderChartProduccion() {
+    const ctx = document.getElementById('chartProduccion');
+    if (!ctx) return;
+    
+    // Agrupar por mes
+    const produccionMensual = {};
+    fichasExtracto.forEach(f => {
+        const fecha = new Date(f.fechaCreacion);
+        const mes = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+        produccionMensual[mes] = (produccionMensual[mes] || 0) + f.pesoTotal;
+    });
+    
+    const meses = Object.keys(produccionMensual).sort();
+    const valores = meses.map(m => produccionMensual[m]);
+    
+    if (chartProduccion) chartProduccion.destroy();
+    
+    chartProduccion = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: meses.map(m => {
+                const [year, month] = m.split('-');
+                return new Date(year, month - 1).toLocaleDateString('es-CL', { month: 'short', year: '2-digit' });
+            }),
+            datasets: [{
+                label: 'Producción (g)',
+                data: valores,
+                backgroundColor: 'rgba(90, 44, 160, 0.7)',
+                borderColor: 'rgba(90, 44, 160, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+}
+
+function renderFichas() {
+    const search = document.getElementById('searchFichas').value.toLowerCase();
+    const filterTipo = document.getElementById('filterTipoExtraccion').value;
+    
+    let fichasFiltradas = fichasExtracto.filter(f => {
+        const matchSearch = f.codigo.toLowerCase().includes(search) || 
+                           (f.loteOrigenCodigo || '').toLowerCase().includes(search);
+        const matchTipo = !filterTipo || f.tipoExtraccion === filterTipo;
+        return matchSearch && matchTipo;
+    });
+    
+    fichasFiltradas.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+    
+    const container = document.getElementById('fichasList');
+    
+    if (fichasFiltradas.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">No hay fichas que mostrar</p></div>';
+        return;
+    }
+    
+    container.innerHTML = fichasFiltradas.map(f => {
+        const tipoEmoji = f.tipoExtraccion === 'BHO' ? '💨' : f.tipoExtraccion === 'RSO' ? '🌿' : '🧪';
+        const origenBadge = f.tipoOrigen === 'interno' 
+            ? '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Interno</span>'
+            : '<span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">Externo</span>';
+        
+        return `
+            <div class="bg-white border-2 border-gray-200 rounded-xl p-5 card-hover fade-in">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center text-2xl">
+                            ${tipoEmoji}
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="font-bold text-lg text-gray-800">${f.codigo}</span>
+                                ${origenBadge}
+                            </div>
+                            <div class="text-sm text-gray-600 space-y-1">
+                                <div>📦 Origen: ${f.loteOrigenCodigo || 'N/A'}</div>
+                                <div>🔬 Tipo: ${f.tipoExtraccion} | 📅 ${new Date(f.fechaProcesamiento).toLocaleDateString('es-CL')}</div>
+                                <div>👤 Operador: ${f.operador}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-green-600">${f.pesoTotal.toFixed(2)}g</div>
+                        <div class="text-sm text-gray-500">${f.totalFracciones} fracciones</div>
+                        <div class="text-xs text-amber-600 font-semibold mt-1">Rend: ${f.rendimiento.toFixed(1)}%</div>
+                        <button onclick="verDetalleFicha('${f.id}')" class="mt-2 px-4 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-semibold hover:bg-purple-200 transition-all">
+                            Ver detalle →
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function verDetalleFicha(fichaId) {
+    const ficha = fichasExtracto.find(f => f.id === fichaId);
+    if (!ficha) return;
+    
+    const fraccionesFicha = fracciones.filter(f => f.fichaId === fichaId);
+    
+    document.getElementById('modalDetalleTitulo').textContent = ficha.codigo;
+    document.getElementById('modalDetalleSubtitulo').textContent = `${ficha.tipoExtraccion} | ${new Date(ficha.fechaProcesamiento).toLocaleDateString('es-CL')}`;
+    
+    let html = `
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div class="p-4 bg-purple-50 rounded-lg text-center">
+                <div class="text-2xl font-bold text-purple-600">${ficha.pesoTotal.toFixed(2)}g</div>
+                <div class="text-xs text-gray-600">Peso Total</div>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg text-center">
+                <div class="text-2xl font-bold text-green-600">${ficha.rendimiento.toFixed(1)}%</div>
+                <div class="text-xs text-gray-600">Rendimiento</div>
+            </div>
+            <div class="p-4 bg-amber-50 rounded-lg text-center">
+                <div class="text-2xl font-bold text-amber-600">${ficha.cantidadMP.toFixed(2)}g</div>
+                <div class="text-xs text-gray-600">MP Entrada</div>
+            </div>
+            <div class="p-4 bg-blue-50 rounded-lg text-center">
+                <div class="text-2xl font-bold text-blue-600">${ficha.totalFracciones}</div>
+                <div class="text-xs text-gray-600">Fracciones</div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h4 class="font-bold text-gray-800 mb-3">📋 Información General</h4>
+            <div class="bg-gray-50 rounded-lg p-4 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-gray-600">Lote Origen:</span><span class="font-semibold">${ficha.loteOrigenCodigo || 'N/A'}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Tipo Origen:</span><span class="font-semibold capitalize">${ficha.tipoOrigen}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Operador:</span><span class="font-semibold">${ficha.operador}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Fecha Proceso:</span><span class="font-semibold">${new Date(ficha.fechaProcesamiento).toLocaleDateString('es-CL')}</span></div>
+                <div class="flex justify-between"><span class="text-gray-600">Registrado:</span><span class="font-semibold">${new Date(ficha.fechaCreacion).toLocaleString('es-CL')}</span></div>
+            </div>
+        </div>
+        
+        <div class="mb-6">
+            <h4 class="font-bold text-gray-800 mb-3">🧫 Fracciones</h4>
+            <div class="space-y-3">
+    `;
+    
+    fraccionesFicha.forEach(f => {
+        const tipoInfo = TIPOS_FRACCION[f.tipo] || TIPOS_FRACCION.otros;
+        const estadoClass = f.estado === 'disponible' ? 'status-disponible' : 
+                           f.estado === 'parcial' ? 'status-parcial' : 'status-agotado';
+        
+        html += `
+            <div class="p-4 border-2 border-gray-200 rounded-lg">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="font-bold text-gray-800">${tipoInfo.emoji} ${f.codigo}</div>
+                        <div class="text-sm text-gray-600">${tipoInfo.nombre}</div>
+                        ${f.pureza ? `<div class="text-xs text-gray-500">Pureza: ${f.pureza}%</div>` : ''}
+                    </div>
+                    <div class="text-right">
+                        <div class="text-lg font-bold text-green-600">${f.cantidadDisponible.toFixed(2)}g</div>
+                        <div class="text-xs text-gray-500">de ${f.cantidadOriginal.toFixed(2)}g</div>
+                        <span class="stock-badge ${estadoClass} mt-1">${f.estado}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += `
+            </div>
+        </div>
+    `;
+    
+    if (ficha.observaciones) {
+        html += `
+            <div class="mb-6">
+                <h4 class="font-bold text-gray-800 mb-3">📝 Observaciones</h4>
+                <p class="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">${ficha.observaciones}</p>
+            </div>
+        `;
+    }
+    
+    document.getElementById('modalDetalleContenido').innerHTML = html;
+    document.getElementById('modalDetalleExtracto').classList.add('active');
+}
+
+function renderStock() {
+    const search = document.getElementById('searchStock').value.toLowerCase();
+    const filterTipo = document.getElementById('filterTipoFraccion').value;
+    const filterEstado = document.getElementById('filterEstado').value;
+    
+    let fraccionesFiltradas = fracciones.filter(f => {
+        const matchSearch = f.codigo.toLowerCase().includes(search) || 
+                           (f.fichacodigo || '').toLowerCase().includes(search);
+        const matchTipo = !filterTipo || f.tipo === filterTipo;
+        const matchEstado = !filterEstado || f.estado === filterEstado;
+        return matchSearch && matchTipo && matchEstado;
+    });
+    
+    fraccionesFiltradas.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+    
+    // Actualizar resumen de stock
+    const stockPorTipo = {
+        extracto: 0, salsa: 0, cristales: 0, budder: 0, destilado: 0, otros: 0
+    };
+    
+    fracciones.forEach(f => {
+        if (stockPorTipo.hasOwnProperty(f.tipo)) {
+            stockPorTipo[f.tipo] += f.cantidadDisponible;
+        } else {
+            stockPorTipo.otros += f.cantidadDisponible;
+        }
+    });
+    
+    document.getElementById('stockExtracto').textContent = stockPorTipo.extracto.toFixed(2) + 'g';
+    document.getElementById('stockSalsa').textContent = stockPorTipo.salsa.toFixed(2) + 'g';
+    document.getElementById('stockCristales').textContent = stockPorTipo.cristales.toFixed(2) + 'g';
+    document.getElementById('stockBudder').textContent = stockPorTipo.budder.toFixed(2) + 'g';
+    document.getElementById('stockDestilado').textContent = stockPorTipo.destilado.toFixed(2) + 'g';
+    document.getElementById('stockOtros').textContent = stockPorTipo.otros.toFixed(2) + 'g';
+    
+    const container = document.getElementById('stockList');
+    
+    if (fraccionesFiltradas.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">No hay fracciones en stock</p></div>';
+        return;
+    }
+    
+    container.innerHTML = fraccionesFiltradas.map(f => {
+        const tipoInfo = TIPOS_FRACCION[f.tipo] || TIPOS_FRACCION.otros;
+        const estadoClass = f.estado === 'disponible' ? 'status-disponible' : 
+                           f.estado === 'parcial' ? 'status-parcial' : 'status-agotado';
+        const porcentajeUsado = ((f.cantidadOriginal - f.cantidadDisponible) / f.cantidadOriginal * 100).toFixed(0);
+        
+        return `
+            <div class="bg-white border-2 border-gray-200 rounded-xl p-5 card-hover fade-in ${f.estado === 'agotado' ? 'opacity-60' : ''}">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 ${tipoInfo.clase} rounded-xl flex items-center justify-center text-xl text-white">
+                            ${tipoInfo.emoji}
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-800">${f.codigo}</div>
+                            <div class="text-sm text-gray-600">${tipoInfo.nombre}</div>
+                            <div class="text-xs text-gray-500">Ficha: ${f.fichacodigo}</div>
+                            ${f.ubicacion ? `<div class="text-xs text-gray-500">📍 ${f.ubicacion}</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold ${f.cantidadDisponible > 0 ? 'text-green-600' : 'text-gray-400'}">${f.cantidadDisponible.toFixed(2)}g</div>
+                        <div class="text-xs text-gray-500">de ${f.cantidadOriginal.toFixed(2)}g (${porcentajeUsado}% usado)</div>
+                        <span class="stock-badge ${estadoClass} mt-1">${f.estado}</span>
+                    </div>
+                </div>
+                ${f.cantidadDisponible > 0 ? `
+                    <div class="mt-4 flex gap-2">
+                        <button onclick="abrirModalAsignar('${f.id}')" class="flex-1 py-2 bg-purple-100 text-purple-700 rounded-lg text-sm font-semibold hover:bg-purple-200 transition-all">
+                            📤 Asignar/Egresar
+                        </button>
+                    </div>
+                ` : ''}
+                ${f.usosRegistrados && f.usosRegistrados.length > 0 ? `
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <div class="text-xs text-gray-600 font-semibold mb-1">Últimos movimientos:</div>
+                        <div class="text-xs text-gray-500 space-y-1">
+                            ${f.usosRegistrados.slice(-2).map(u => `
+                                <div>• ${u.cantidad}g - ${u.tipo} ${u.referencia ? `(${u.referencia})` : ''}</div>
+                            `).join('')}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function renderDestilados() {
+    const container = document.getElementById('destiladosList');
+    
+    if (destilados.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">No hay lotes de destilado registrados</p></div>';
+        return;
+    }
+    
+    const destiladosOrdenados = [...destilados].sort((a, b) => 
+        new Date(b.fechaCreacion) - new Date(a.fechaCreacion)
+    );
+    
+    container.innerHTML = destiladosOrdenados.map(d => {
+        return `
+            <div class="bg-white border-2 border-green-200 rounded-xl p-5 card-hover fade-in">
+                <div class="flex justify-between items-start">
+                    <div class="flex items-start gap-4">
+                        <div class="w-14 h-14 tipo-destilado rounded-xl flex items-center justify-center text-2xl text-white">
+                            ⚗️
+                        </div>
+                        <div>
+                            <div class="font-bold text-lg text-gray-800">${d.codigo}</div>
+                            <div class="text-sm text-gray-600">${d.fraccionesOrigen.length} fracciones combinadas</div>
+                            <div class="text-xs text-gray-500">👤 ${d.operador} | ${new Date(d.fechaCreacion).toLocaleDateString('es-CL')}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-green-600">${d.cantidadObtenida.toFixed(2)}g</div>
+                        <div class="text-xs text-gray-500">Entrada: ${d.cantidadEntrada.toFixed(2)}g</div>
+                        <div class="text-sm text-amber-600 font-semibold">Rend: ${d.rendimiento.toFixed(1)}%</div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <div class="text-xs text-gray-600 font-semibold mb-2">Fracciones de origen:</div>
+                    <div class="flex flex-wrap gap-2">
+                        ${d.fraccionesOrigen.map(fo => `
+                            <span class="px-2 py-1 bg-gray-100 rounded-full text-xs">${fo.fraccionCodigo} (${fo.cantidadUsada}g)</span>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderMovimientos() {
+    const search = document.getElementById('searchMovimientos').value.toLowerCase();
+    const filterTipo = document.getElementById('filterTipoMov').value;
+    
+    let movsFiltrados = movimientos.filter(m => {
+        const matchSearch = (m.fraccionCodigo || '').toLowerCase().includes(search) || 
+                           (m.descripcion || '').toLowerCase().includes(search);
+        const matchTipo = !filterTipo || m.tipo === filterTipo;
+        return matchSearch && matchTipo;
+    });
+    
+    movsFiltrados.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    const container = document.getElementById('movimientosList');
+    
+    if (movsFiltrados.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">No hay movimientos registrados</p></div>';
+        return;
+    }
+    
+    container.innerHTML = movsFiltrados.slice(0, 50).map(m => {
+        const tipoInfo = {
+            ingreso: { emoji: '📥', color: 'text-green-600', bg: 'bg-green-50' },
+            egreso: { emoji: '📤', color: 'text-red-600', bg: 'bg-red-50' },
+            asignacion: { emoji: '📋', color: 'text-blue-600', bg: 'bg-blue-50' },
+            destilado: { emoji: '⚗️', color: 'text-purple-600', bg: 'bg-purple-50' },
+            ajuste: { emoji: '⚖️', color: 'text-amber-600', bg: 'bg-amber-50' },
+            merma: { emoji: '🗑️', color: 'text-gray-600', bg: 'bg-gray-100' }
+        }[m.tipo] || { emoji: '📝', color: 'text-gray-600', bg: 'bg-gray-50' };
+        
+        const cantidadStr = m.cantidad >= 0 ? `+${m.cantidad.toFixed(2)}g` : `${m.cantidad.toFixed(2)}g`;
+        
+        return `
+            <div class="flex items-center gap-4 p-4 ${tipoInfo.bg} rounded-lg">
+                <div class="text-2xl">${tipoInfo.emoji}</div>
+                <div class="flex-1">
+                    <div class="font-semibold text-gray-800">${m.fraccionCodigo}</div>
+                    <div class="text-sm text-gray-600">${m.descripcion || m.tipo}</div>
+                    <div class="text-xs text-gray-500">👤 ${m.usuario} | ${new Date(m.fecha).toLocaleString('es-CL')}</div>
+                </div>
+                <div class="${tipoInfo.color} font-bold text-lg">${cantidadStr}</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderConfig() {
+    document.getElementById('infoFichas').textContent = fichasExtracto.length;
+    document.getElementById('infoFracciones').textContent = fracciones.filter(f => f.cantidadDisponible > 0).length;
+    document.getElementById('infoDestilados').textContent = destilados.length;
+    document.getElementById('infoMovimientos').textContent = movimientos.length;
+    
+    const ultimaActualizacion = localStorage.getItem(STORAGE_KEYS.VERSION);
+    document.getElementById('infoUltimaActualizacion').textContent = ultimaActualizacion 
+        ? new Date(ultimaActualizacion).toLocaleString('es-CL') 
+        : '-';
+    
+    verificarIntegraciones();
+}
+
+// ========== UTILIDADES ==========
+function cerrarModal(modalId) {
+    document.getElementById(modalId).classList.remove('active');
+}
+
+function exportarDatos() {
+    const data = {
+        version: '1.0',
+        fecha: new Date().toISOString(),
+        fichas: fichasExtracto,
+        fracciones: fracciones,
+        destilados: destilados,
+        movimientos: movimientos
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `BCP_Extractos_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    mostrarNotificacion('Datos exportados correctamente', 'success');
+}
+
+function importarDatos(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (data.fichas) fichasExtracto = data.fichas;
+            if (data.fracciones) fracciones = data.fracciones;
+            if (data.destilados) destilados = data.destilados;
+            if (data.movimientos) movimientos = data.movimientos;
+            
+            guardarDatos();
+            mostrarNotificacion('Datos importados correctamente', 'success');
+            showTab('dashboard');
+        } catch (error) {
+            mostrarNotificacion('Error al importar: archivo inválido', 'error');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+function confirmarLimpiarDatos() {
+    if (confirm('⚠️ ¿Está seguro de eliminar TODOS los datos?\n\nEsta acción no se puede deshacer.')) {
+        if (confirm('⚠️ ÚLTIMA CONFIRMACIÓN\n\n¿Realmente desea eliminar todos los datos de extractos?')) {
+            fichasExtracto = [];
+            fracciones = [];
+            destilados = [];
+            movimientos = [];
+            guardarDatos();
+            mostrarNotificacion('Todos los datos han sido eliminados', 'success');
+            showTab('dashboard');
+        }
+    }
+}
+
+function cargarDatosDemo() {
+    // Verificar si hay lotes en recepción
+    const lotesDisponibles = obtenerLotesExtraccionDisponibles();
+    
+    // Crear ficha demo 1 - con lote interno si hay disponibles
+    const ficha1 = {
+        id: generarIdFicha(),
+        codigo: 'BCP-EXT-251210-001',
+        tipoOrigen: lotesDisponibles.length > 0 ? 'interno' : 'externo',
+        loteOrigenId: lotesDisponibles.length > 0 ? lotesDisponibles[0].id : null,
+        loteOrigenCodigo: lotesDisponibles.length > 0 ? lotesDisponibles[0].nombreLote : 'EXT-DEMO-001',
+        tipoExtraccion: 'BHO',
+        cantidadMP: 500,
+        fechaProcesamiento: '2025-12-10',
+        operador: 'Juan Pérez',
+        totalFracciones: 3,
+        pesoTotal: 95.5,
+        rendimiento: 19.1,
+        observaciones: 'Proceso de demostración',
+        estado: 'completado',
+        ...crearMetadataAuditoria('Juan Pérez')
+    };
+    
+    fichasExtracto.push(ficha1);
+    
+    // Fracciones para ficha 1
+    const fracciones1 = [
+        { tipo: 'extracto', cantidad: 50, pureza: 75, ubicacion: 'Cámara A' },
+        { tipo: 'salsa', cantidad: 25.5, pureza: 85, ubicacion: 'Cámara A' },
+        { tipo: 'cristales', cantidad: 20, pureza: 95, ubicacion: 'Cámara B' }
+    ];
+    
+    fracciones1.forEach(f => {
+        const nuevaFraccion = {
+            id: `FRC-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            codigo: generarCodigoFraccion(f.tipo),
+            fichaId: ficha1.id,
+            fichacodigo: ficha1.codigo,
+            tipo: f.tipo,
+            cantidadOriginal: f.cantidad,
+            cantidadDisponible: f.cantidad,
+            pureza: f.pureza,
+            ubicacion: f.ubicacion,
+            observaciones: '',
+            estado: 'disponible',
+            usosRegistrados: [],
+            ...crearMetadataAuditoria('Juan Pérez')
+        };
+        fracciones.push(nuevaFraccion);
+    });
+    
+    // Ficha demo 2
+    const ficha2 = {
+        id: generarIdFicha(),
+        codigo: 'BCP-EXT-251208-001',
+        tipoOrigen: 'externo',
+        loteOrigenId: null,
+        loteOrigenCodigo: 'PROV-LAB-2025-001',
+        proveedorExterno: 'Laboratorio Externo SpA',
+        tipoExtraccion: 'RSO',
+        cantidadMP: 800,
+        fechaProcesamiento: '2025-12-08',
+        operador: 'María González',
+        totalFracciones: 2,
+        pesoTotal: 140,
+        rendimiento: 17.5,
+        observaciones: 'Extracto de proveedor externo',
+        estado: 'completado',
+        ...crearMetadataAuditoria('María González')
+    };
+    
+    fichasExtracto.push(ficha2);
+    
+    // Fracciones para ficha 2
+    const fracciones2 = [
+        { tipo: 'extracto', cantidad: 100, pureza: 70, ubicacion: 'Cámara A' },
+        { tipo: 'budder', cantidad: 40, pureza: 80, ubicacion: 'Cámara B' }
+    ];
+    
+    fracciones2.forEach(f => {
+        const nuevaFraccion = {
+            id: `FRC-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
+            codigo: generarCodigoFraccion(f.tipo),
+            fichaId: ficha2.id,
+            fichacodigo: ficha2.codigo,
+            tipo: f.tipo,
+            cantidadOriginal: f.cantidad,
+            cantidadDisponible: f.cantidad,
+            pureza: f.pureza,
+            ubicacion: f.ubicacion,
+            observaciones: '',
+            estado: 'disponible',
+            usosRegistrados: [],
+            ...crearMetadataAuditoria('María González')
+        };
+        fracciones.push(nuevaFraccion);
+    });
+    
+    // Registrar movimientos de ingreso
+    fracciones.forEach(f => {
+        registrarMovimiento({
+            tipo: 'ingreso',
+            fraccionId: f.id,
+            fraccionCodigo: f.codigo,
+            cantidad: f.cantidadOriginal,
+            descripcion: `Ingreso desde ficha ${f.fichacodigo}`,
+            referencia: f.fichacodigo,
+            usuario: 'Sistema Demo'
+        });
+    });
+    
+    guardarDatos();
+    mostrarNotificacion('Datos de demostración cargados', 'success');
+    showTab('dashboard');
+}
+
+// ========== EXPORTAR STOCK PARA SOLICITUDES ==========
+// Esta función permite que otros módulos consulten el stock disponible
+window.BCP_ExtractosStock = {
+    obtenerStockDisponible: function() {
+        return fracciones.filter(f => f.cantidadDisponible > 0).map(f => ({
+            id: f.id,
+            codigo: f.codigo,
+            tipo: f.tipo,
+            cantidadDisponible: f.cantidadDisponible,
+            pureza: f.pureza,
+            ubicacion: f.ubicacion,
+            fichaOrigen: f.fichacodigo
+        }));
+    },
+    descontarStock: function(fraccionId, cantidad, referencia, usuario) {
+        const fraccion = fracciones.find(f => f.id === fraccionId);
+        if (!fraccion || cantidad > fraccion.cantidadDisponible) return false;
+        
+        fraccion.cantidadDisponible -= cantidad;
+        if (fraccion.cantidadDisponible <= 0) {
+            fraccion.estado = 'agotado';
+            fraccion.cantidadDisponible = 0;
+        } else {
+            fraccion.estado = 'parcial';
+        }
+        
+        fraccion.usosRegistrados.push({
+            tipo: 'asignacion',
+            referencia,
+            cantidad,
+            fecha: new Date().toISOString(),
+            usuario
+        });
+        
+        registrarMovimiento({
+            tipo: 'asignacion',
+            fraccionId: fraccion.id,
+            fraccionCodigo: fraccion.codigo,
+            cantidad: -cantidad,
+            descripcion: `Asignado a ${referencia}`,
+            referencia,
+            usuario
+        });
+        
+        guardarDatos();
+        return true;
+    }
+};
+
+// Cerrar modal al hacer clic fuera
+document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+});
+    </script>
+</body>
+</html>

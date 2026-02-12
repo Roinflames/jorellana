@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BCP MVP - Recepcion</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --card: #121c2f;
+      --line: #24324b;
+      --txt: #e7eefb;
+      --muted: #97a6c0;
+      --ok: #1fb575;
+      --err: #f04f5d;
+      --btn: #3b82f6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1000px 600px at 20% -10%, #1f325c 0, var(--bg) 60%);
+      color: var(--txt);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+    .card {
+      border: 1px solid var(--line);
+      background: linear-gradient(160deg, #131f33, #0f1829);
+      border-radius: 14px;
+      padding: 16px;
+    }
+    h1, h2 { margin: 0 0 10px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 18px; color: #cfdcff; }
+    p { color: var(--muted); margin: 8px 0 0; }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .row3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (max-width: 860px) {
+      .row, .row3 { grid-template-columns: 1fr; }
+    }
+    input, button, textarea {
+      width: 100%;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #0a1221;
+      color: var(--txt);
+      padding: 10px 12px;
+      font-size: 14px;
+    }
+    textarea { min-height: 70px; resize: vertical; }
+    button {
+      cursor: pointer;
+      background: linear-gradient(160deg, var(--btn), #2456b4);
+      border: 0;
+      font-weight: 600;
+    }
+    button.secondary { background: #213558; border: 1px solid #2e4671; }
+    .status {
+      margin-top: 8px;
+      font-size: 13px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      display: none;
+    }
+    .status.ok { display: block; background: #133427; color: #8af3bf; border: 1px solid #1f714d; }
+    .status.err { display: block; background: #3a1620; color: #ff9aa4; border: 1px solid #7b2d3f; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    th, td {
+      border-bottom: 1px solid #223351;
+      padding: 10px 8px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { color: #bfd1f3; font-weight: 700; }
+    .meta {
+      font-size: 12px;
+      color: #9ab0d9;
+      margin-top: 8px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      border: 1px solid #36538a;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #162744;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>Modulo MVP: Recepcion de Flores</h1>
+      <p>Este modulo ya usa API real y Neon. Pensado para pruebas remotas via Cloudflare.</p>
+      <div class="meta">
+        <span class="tag">Ruta: /modulos/mvp-recepcion.html</span>
+        <span class="tag">API: /api</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Login</h2>
+      <div class="row">
+        <input id="username" placeholder="Usuario (ej: admin)" value="admin">
+        <input id="password" placeholder="Password" type="password" value="Admin123!">
+      </div>
+      <div class="row" style="margin-top:10px;">
+        <button id="btnLogin">Iniciar sesion</button>
+        <button id="btnWhoami" class="secondary">Ver sesion actual</button>
+      </div>
+      <div id="loginStatus" class="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>Nuevo ingreso de flores</h2>
+      <div class="row3">
+        <input id="lotCode" placeholder="LOT code (ej: QR-MP-0001)">
+        <input id="supplier" placeholder="Proveedor">
+        <input id="strain" placeholder="Variedad">
+      </div>
+      <div class="row3" style="margin-top:10px;">
+        <input id="weight" placeholder="Peso en gramos" type="number" min="0.01" step="0.01">
+        <input id="receivedAt" type="datetime-local">
+        <button id="btnCreate">Guardar ingreso</button>
+      </div>
+      <textarea id="notes" placeholder="Notas"></textarea>
+      <div id="formStatus" class="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>Ultimos ingresos</h2>
+      <div class="row">
+        <button id="btnRefresh" class="secondary">Actualizar tabla</button>
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Lote</th>
+              <th>Proveedor</th>
+              <th>Variedad</th>
+              <th>Peso (g)</th>
+              <th>Recibido en</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const tokenKey = "bcp_mvp_token";
+    let token = localStorage.getItem(tokenKey) || "";
+
+    const $ = (id) => document.getElementById(id);
+
+    function setStatus(id, ok, text) {
+      const el = $(id);
+      el.className = `status ${ok ? "ok" : "err"}`;
+      el.textContent = text;
+    }
+
+    async function api(path, options = {}) {
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      if (token) headers.Authorization = `Bearer ${token}`;
+      const res = await fetch(`/api${path}`, { ...options, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.detail || `Error ${res.status}`);
+      return data;
+    }
+
+    function toIsoLocal(dtLocalValue) {
+      if (!dtLocalValue) return new Date().toISOString();
+      const dt = new Date(dtLocalValue);
+      return dt.toISOString();
+    }
+
+    async function login() {
+      try {
+        const data = await api("/auth/login", {
+          method: "POST",
+          body: JSON.stringify({
+            username: $("username").value.trim(),
+            password: $("password").value
+          })
+        });
+        token = data.access_token;
+        localStorage.setItem(tokenKey, token);
+        setStatus("loginStatus", true, `Sesion iniciada: ${data.user.username} (${data.user.role})`);
+      } catch (err) {
+        setStatus("loginStatus", false, err.message);
+      }
+    }
+
+    async function whoami() {
+      try {
+        const data = await api("/auth/me");
+        setStatus("loginStatus", true, `Sesion activa: ${data.user.username} (${data.user.role})`);
+      } catch (err) {
+        setStatus("loginStatus", false, err.message);
+      }
+    }
+
+    async function createReception() {
+      try {
+        await api("/flower-receptions", {
+          method: "POST",
+          body: JSON.stringify({
+            lot_code: $("lotCode").value.trim(),
+            supplier: $("supplier").value.trim(),
+            strain: $("strain").value.trim(),
+            weight_grams: Number($("weight").value),
+            received_at: toIsoLocal($("receivedAt").value),
+            notes: $("notes").value.trim() || null
+          })
+        });
+        setStatus("formStatus", true, "Ingreso creado correctamente");
+        await loadRows();
+      } catch (err) {
+        setStatus("formStatus", false, err.message);
+      }
+    }
+
+    async function loadRows() {
+      try {
+        const data = await api("/flower-receptions?limit=30");
+        const html = data.items.map(r => `
+          <tr>
+            <td>${r.id}</td>
+            <td>${r.lot_code}</td>
+            <td>${r.supplier}</td>
+            <td>${r.strain}</td>
+            <td>${Number(r.weight_grams).toFixed(2)}</td>
+            <td>${new Date(r.received_at).toLocaleString()}</td>
+          </tr>
+        `).join("");
+        $("rows").innerHTML = html || `<tr><td colspan="6">Sin registros aun.</td></tr>`;
+      } catch (err) {
+        $("rows").innerHTML = `<tr><td colspan="6">No se pudo cargar: ${err.message}</td></tr>`;
+      }
+    }
+
+    $("btnLogin").addEventListener("click", login);
+    $("btnWhoami").addEventListener("click", whoami);
+    $("btnCreate").addEventListener("click", createReception);
+    $("btnRefresh").addEventListener("click", loadRows);
+    $("receivedAt").value = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+
+    if (token) whoami();
+    loadRows();
+  </script>
+</body>
+</html>
+

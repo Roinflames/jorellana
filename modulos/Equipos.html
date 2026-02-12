@@ -1,0 +1,2313 @@
+Partí de tu archivo actual y lo extendí para que **los documentos cargados queden ligados al equipo y puedan visualizarse** mediante un visor integrado (para archivos subidos) o enlaces directos (para URLs). 
+
+Aquí está el HTML completo actualizado (puedes reemplazar tu archivo `equiposGPTV4.html` por este):
+
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>BCP – Gestión de Equipos y Mantenciones</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        :root {
+            --bcp-page: #f3f4f6;
+            --bcp-surface: #ffffff;
+            --bcp-surface-soft: #f9fafb;
+            --bcp-border: #e5e7eb;
+            --bcp-border-strong: #d1d5db;
+            --bcp-accent: #16a34a;
+            --bcp-accent-soft: rgba(22, 163, 74, 0.12);
+            --bcp-secondary: #7b5cff;
+            --bcp-secondary-soft: rgba(123, 92, 255, 0.12);
+            --bcp-danger: #ef4444;
+            --bcp-warning: #f59e0b;
+            --bcp-text: #111827;
+            --bcp-text-muted: #6b7280;
+            --bcp-radius-lg: 14px;
+            --bcp-radius-pill: 999px;
+            --bcp-shadow-soft: 0 10px 25px rgba(15, 23, 42, 0.09);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--bcp-page);
+            color: var(--bcp-text);
+        }
+
+        .app-shell {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 14px 20px;
+            background: linear-gradient(120deg, #0f172a, #1e293b);
+            color: #e5e7eb;
+            border-bottom: 1px solid rgba(148,163,184,0.35);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 16px;
+            background: conic-gradient(from 180deg, #22c55e, #7b5cff, #22c55e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #020617;
+            font-weight: 800;
+            font-size: 18px;
+            box-shadow: 0 14px 30px rgba(15,23,42,0.6);
+        }
+
+        .brand-title {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .brand-title-main {
+            font-weight: 650;
+            letter-spacing: 0.04em;
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+
+        .brand-title-sub {
+            font-size: 12px;
+            color: #cbd5f5;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-size: 11px;
+            color: #cbd5f5;
+        }
+
+        .header-meta span { display: block; }
+
+        .btn-test-clean {
+            border-radius: var(--bcp-radius-pill);
+            border: 1px solid rgba(248,113,113,0.8);
+            background: rgba(254,226,226,0.16);
+            color: #fee2e2;
+            font-size: 11px;
+            padding: 5px 12px;
+            cursor: pointer;
+        }
+
+        /* NAV MÓDULOS */
+        .nav-modulos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 10px 20px 4px;
+            border-bottom: 1px solid var(--bcp-border);
+            background: #ffffff;
+        }
+
+        .nav-btn {
+            border-radius: var(--bcp-radius-pill);
+            border: 1px solid #d1d5db;
+            padding: 6px 14px;
+            font-size: 12px;
+            color: var(--bcp-text-muted);
+            background: #ffffff;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-btn span.icon {
+            font-size: 13px;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(120deg, #22c55e, #7b5cff);
+            color: #f9fafb;
+            border-color: transparent;
+            box-shadow: 0 10px 22px rgba(15,23,42,0.18);
+        }
+
+        main {
+            flex: 1;
+            padding: 14px 20px 20px;
+        }
+
+        .module {
+            display: none;
+        }
+        .module.active {
+            display: block;
+        }
+
+        .panel {
+            background: var(--bcp-surface);
+            border-radius: var(--bcp-radius-lg);
+            border: 1px solid var(--bcp-border);
+            padding: 14px 14px 10px;
+            box-shadow: var(--bcp-shadow-soft);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0f172a;
+        }
+
+        .panel-title-pill {
+            font-size: 10px;
+            padding: 2px 9px;
+            border-radius: var(--bcp-radius-pill);
+            background: var(--bcp-secondary-soft);
+            color: var(--bcp-secondary);
+            border: 1px solid rgba(123,92,255,0.4);
+        }
+
+        .panel-body {
+            max-height: calc(100vh - 190px);
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .panel-body::-webkit-scrollbar {
+            width: 7px;
+        }
+        .panel-body::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 999px;
+        }
+
+        .btn {
+            border-radius: 999px;
+            padding: 6px 14px;
+            border: none;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, #22c55e, #7b5cff);
+            color: #f9fafb;
+            box-shadow: 0 10px 24px rgba(15,23,42,0.18);
+        }
+
+        .btn-outline {
+            background: #ffffff;
+            color: var(--bcp-text-muted);
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            font-size: 14px;
+            background: #ffffff;
+            color: var(--bcp-text-muted);
+        }
+
+        .split {
+            display: grid;
+            grid-template-columns: minmax(260px, 320px) minmax(360px, 1.5fr);
+            gap: 14px;
+        }
+
+        @media (max-width: 960px) {
+            .split {
+                grid-template-columns: minmax(0,1fr);
+            }
+            .panel-body {
+                max-height: none;
+            }
+        }
+
+        /* CAMPOS */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        label {
+            font-size: 11px;
+            color: var(--bcp-text-muted);
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
+            background: #ffffff;
+            border-radius: 9px;
+            border: 1px solid #d1d5db;
+            padding: 6px 8px;
+            color: var(--bcp-text);
+            font-size: 12px;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #9ca3af;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 48px;
+            max-height: 120px;
+        }
+
+        input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+        }
+
+        .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            font-size: 11px;
+            color: var(--bcp-text-muted);
+        }
+
+        .section-label {
+            font-size: 11px;
+            color: var(--bcp-text-muted);
+            margin-bottom: 2px;
+            margin-top: 4px;
+        }
+
+        .section-divider {
+            margin: 6px 0 4px;
+            border-top: 1px dashed #d1d5db;
+        }
+
+        /* LISTA EQUIPOS */
+        .equipment-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .equipment-item {
+            border-radius: 10px;
+            padding: 8px 9px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            transition: transform 0.08s ease-out, box-shadow 0.08s ease-out, border-color 0.08s;
+        }
+
+        .equipment-item:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(15,23,42,0.12);
+            border-color: #a5b4fc;
+        }
+
+        .equipment-item.selected {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 1px rgba(34,197,94,0.5), 0 10px 20px rgba(15,23,42,0.16);
+        }
+
+        .equipment-row-main {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .equipment-name-code {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .equipment-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .equipment-code {
+            font-size: 10px;
+            color: var(--bcp-text-muted);
+        }
+
+        .pill-status {
+            border-radius: 999px;
+            font-size: 10px;
+            padding: 2px 8px;
+            border: 1px solid transparent;
+        }
+
+        .pill-operativo {
+            background: rgba(22,163,74,0.08);
+            border-color: rgba(22,163,74,0.4);
+            color: #15803d;
+        }
+
+        .pill-restringido {
+            background: rgba(245,158,11,0.08);
+            border-color: rgba(245,158,11,0.5);
+            color: #b45309;
+        }
+
+        .pill-fuera-servicio {
+            background: rgba(239,68,68,0.08);
+            border-color: rgba(239,68,68,0.7);
+            color: #b91c1c;
+        }
+
+        .pill-ubicacion {
+            background: #eef2ff;
+            border-color: #c7d2fe;
+            color: #4b5563;
+            border-radius: 999px;
+            font-size: 10px;
+            padding: 2px 8px;
+            border: 1px solid;
+        }
+
+        .pill-criticidad {
+            background: #fef9c3;
+            border-color: #facc15;
+            color: #b45309;
+            border-radius: 999px;
+            font-size: 10px;
+            padding: 2px 8px;
+        }
+
+        .pill-alerta {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+            border-radius: 999px;
+            font-size: 10px;
+            padding: 2px 8px;
+            border: 1px solid;
+        }
+
+        .pill-docs {
+            background: #e0f2fe;
+            border-color: #bfdbfe;
+            color: #0369a1;
+            border-radius: 999px;
+            font-size: 10px;
+            padding: 2px 8px;
+            border: 1px solid;
+        }
+
+        .equipment-row-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-top: 3px;
+        }
+
+        .no-data {
+            font-size: 11px;
+            color: var(--bcp-text-muted);
+            margin-top: 8px;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        /* TARJETAS RESUMEN EQUIPO */
+        .detail-card {
+            border-radius: 10px;
+            border: 1px solid var(--bcp-border);
+            background: var(--bcp-surface-soft);
+            padding: 8px 10px;
+            margin-top: 6px;
+        }
+
+        .detail-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .detail-sub {
+            font-size: 11px;
+            color: var(--bcp-text-muted);
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 6px 10px;
+            margin-top: 6px;
+        }
+
+        .detail-item-label {
+            font-size: 10px;
+            color: var(--bcp-text-muted);
+        }
+
+        .detail-item-value {
+            font-size: 11px;
+        }
+
+        .metrics-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .metric-card {
+            flex: 1;
+            min-width: 120px;
+            border-radius: 10px;
+            border: 1px dashed var(--bcp-border-strong);
+            padding: 6px 8px;
+            font-size: 11px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            background: #ffffff;
+        }
+
+        .metric-label {
+            color: var(--bcp-text-muted);
+            font-size: 10px;
+        }
+
+        .metric-value { font-weight: 600; }
+        .metric-highlight { color: #16a34a; }
+        .metric-alert { color: #b91c1c; }
+        .metric-info { color: #0369a1; }
+
+        /* TABLAS BITÁCORA */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            background: #ffffff;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: #f3f4f6;
+            z-index: 1;
+        }
+
+        th, td {
+            padding: 4px 6px;
+            border-bottom: 1px solid #e5e7eb;
+            text-align: left;
+        }
+
+        th {
+            font-weight: 500;
+            color: var(--bcp-text-muted);
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9fafb;
+        }
+
+        .badge-uso,
+        .badge-mantencion {
+            font-size: 10px;
+            border-radius: 999px;
+            padding: 1px 7px;
+            border: 1px solid transparent;
+        }
+
+        .badge-uso {
+            background: var(--bcp-secondary-soft);
+            border-color: rgba(123,92,255,0.4);
+            color: #4c1d95;
+        }
+
+        .badge-mantencion {
+            background: var(--bcp-accent-soft);
+            border-color: rgba(22,163,74,0.6);
+            color: #166534;
+        }
+
+        .badge-condicion-normal { color: #166534; }
+        .badge-condicion-advertencia { color: #b45309; }
+        .badge-condicion-critico { color: #b91c1c; }
+
+        .tag-small {
+            font-size: 9px;
+            padding: 2px 6px;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            color: var(--bcp-text-muted);
+            background: #f9fafb;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 10px;
+        }
+
+        .kpi-card {
+            border-radius: 12px;
+            border: 1px solid var(--bcp-border);
+            background: #ffffff;
+            padding: 8px 10px;
+            font-size: 12px;
+        }
+
+        .kpi-label {
+            font-size: 11px;
+            color: var(--bcp-text-muted);
+        }
+
+        .kpi-value {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .kpi-sub {
+            font-size: 10px;
+            color: var(--bcp-text-muted);
+        }
+
+        .kpi-alert { color: #b91c1c; }
+        .kpi-ok { color: #16a34a; }
+
+        /* VISOR DE DOCUMENTOS */
+        .doc-viewer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15,23,42,0.55);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .doc-viewer-dialog {
+            width: min(900px, 96vw);
+            height: min(600px, 90vh);
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 25px 60px rgba(15,23,42,0.45);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .doc-viewer-header {
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e5e7eb;
+            background: linear-gradient(120deg, #22c55e11, #7b5cff11);
+        }
+
+        .doc-viewer-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .doc-viewer-close {
+            border: none;
+            background: #f3f4f6;
+            border-radius: 999px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .doc-viewer-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            background: #0f172a;
+        }
+
+        .doc-viewer-footer {
+            padding: 6px 10px;
+            font-size: 10px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            background: #f9fafb;
+        }
+    </style>
+</head>
+<body>
+<div class="app-shell">
+    <header>
+        <div class="brand">
+            <div class="brand-logo">BCP</div>
+            <div class="brand-title">
+                <div class="brand-title-main">BioCannaPharma – ERP de Laboratorio</div>
+                <div class="brand-title-sub">Módulo de Gestión y Mantención de Equipos</div>
+            </div>
+        </div>
+        <div class="header-right">
+            <button class="btn-test-clean" id="btn-master-clean">
+                LIMPIEZA TOTAL (TEST)
+            </button>
+            <div class="header-meta">
+                <span id="header-date"></span>
+                <span>Entorno: <strong>Laboratorio BCP</strong></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAV MÓDULOS -->
+    <nav class="nav-modulos">
+        <button class="nav-btn active" data-module="mod-maestro">
+            <span class="icon">📁</span> Maestro de equipos
+        </button>
+        <button class="nav-btn" data-module="mod-uso">
+            <span class="icon">⏱️</span> Registro de uso
+        </button>
+        <button class="nav-btn" data-module="mod-mant">
+            <span class="icon">🛠️</span> Mantenciones
+        </button>
+        <button class="nav-btn" data-module="mod-dashboard">
+            <span class="icon">📊</span> Dashboard & bitácora
+        </button>
+    </nav>
+
+    <main>
+        <!-- MÓDULO 1: MAESTRO DE EQUIPOS -->
+        <section id="mod-maestro" class="module active">
+            <div class="split">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Equipos BCP
+                            <span class="panel-title-pill" id="equip-count">0 equipos</span>
+                        </div>
+                        <button class="btn-icon" id="btn-refresh">
+                            &#10227;
+                        </button>
+                    </div>
+                    <div class="panel-body">
+                        <div class="filter-row">
+                            <input type="text" id="filter-text" placeholder="Buscar por nombre, código o ubicación…" />
+                            <select id="filter-estado">
+                                <option value="">Estado</option>
+                                <option value="Operativo">Operativo</option>
+                                <option value="Con restricciones">Con restricciones</option>
+                                <option value="Fuera de servicio">Fuera de servicio</option>
+                            </select>
+                        </div>
+                        <div class="equipment-list" id="equipment-list"></div>
+                        <div class="no-data" id="no-equipment-msg" style="display:none;">
+                            No hay equipos registrados. Cree la ficha en el formulario de la derecha.
+                        </div>
+                    </div>
+                    <div class="section-label" style="margin-top:4px;">
+                        Los datos se almacenan localmente mediante <strong>localStorage</strong>.
+                    </div>
+                    <div style="margin-top:4px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn-outline" id="btn-export-json">Exportar JSON</button>
+                        <button class="btn-outline" id="btn-new-equipment">Nuevo equipo</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Fichas de equipos
+                            <span class="panel-title-pill">Creación y edición</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form id="form-equipo">
+                            <div class="section-label">Datos generales</div>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-code">Código interno *</label>
+                                    <input type="text" id="eq-code" required placeholder="Ej. EQ-EXT-001" />
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-name">Nombre del equipo *</label>
+                                    <input type="text" id="eq-name" required placeholder="Ej. Sistema de extracción butano" />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-category">Categoría</label>
+                                    <select id="eq-category">
+                                        <option value="">Seleccione…</option>
+                                        <option value="Extracción">Extracción</option>
+                                        <option value="Temperatura">Temperatura / Horno / Estufa</option>
+                                        <option value="Cromatografía">Cromatografía / HPLC / GC</option>
+                                        <option value="Pesaje">Balanzas y pesaje</option>
+                                        <option value="Seguridad">Seguridad / HVAC</option>
+                                        <option value="Utilidad">Utilidades</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-location">Ubicación física</label>
+                                    <input type="text" id="eq-location" placeholder="Ej. Sala extracción 1" />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-model">Marca / Modelo</label>
+                                    <input type="text" id="eq-model" placeholder="Ej. Büchi / Rotavapor R-300" />
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-serial">N° de serie</label>
+                                    <input type="text" id="eq-serial" placeholder="SN-XXXXXX" />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-responsible">Responsable</label>
+                                    <input type="text" id="eq-responsible" placeholder="Ej. Responsable de área" />
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-acq-date">Fecha de alta / adquisición</label>
+                                    <input type="date" id="eq-acq-date" />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-supplier">Proveedor / servicio técnico</label>
+                                    <input type="text" id="eq-supplier" placeholder="Proveedor o empresa de servicio" />
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-status">Estado inicial</label>
+                                    <select id="eq-status">
+                                        <option value="Operativo">Operativo</option>
+                                        <option value="Con restricciones">Con restricciones</option>
+                                        <option value="Fuera de servicio">Fuera de servicio</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="eq-critical" />
+                                <label for="eq-critical">Equipo crítico para la continuidad operacional</label>
+                            </div>
+
+                            <div class="section-divider"></div>
+                            <div class="section-label">Estrategia de mantención</div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-maint-strategy">Tipo de estrategia</label>
+                                    <select id="eq-maint-strategy">
+                                        <option value="Horas de uso">Horas de uso</option>
+                                        <option value="Calendario">Calendario (días)</option>
+                                        <option value="Mixto">Mixto (horas + días)</option>
+                                        <option value="Condición">Basado en condición</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-maint-hours">Intervalo de mantención (horas)</label>
+                                    <input type="number" id="eq-maint-hours" min="0" step="0.1" placeholder="Ej. 100" />
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="eq-maint-days">Intervalo de mantención (días)</label>
+                                    <input type="number" id="eq-maint-days" min="0" step="1" placeholder="Ej. 90" />
+                                </div>
+                                <div class="form-field">
+                                    <label for="eq-last-maint-date">Fecha última mantención</label>
+                                    <input type="date" id="eq-last-maint-date" />
+                                </div>
+                            </div>
+
+                            <div class="form-field">
+                                <label for="eq-notes">Notas / condiciones especiales</label>
+                                <textarea id="eq-notes" placeholder="Condiciones de operación, restricciones, riesgos, etc."></textarea>
+                            </div>
+
+                            <div class="form-row" style="margin-top:4px;">
+                                <button class="btn btn-primary" type="submit">Guardar ficha de equipo</button>
+                                <button class="btn-outline" type="button" id="btn-reset-form">Limpiar formulario</button>
+                            </div>
+                        </form>
+
+                        <!-- RESUMEN Y DOCUMENTACIÓN -->
+                        <div id="maestro-detail" class="detail-card" style="display:none;">
+                            <div class="detail-title" id="maestro-detail-title"></div>
+                            <div class="detail-sub" id="maestro-detail-sub"></div>
+                            <div class="detail-grid">
+                                <div>
+                                    <div class="detail-item-label">Estado</div>
+                                    <div class="detail-item-value" id="maestro-detail-status"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Estrategia</div>
+                                    <div class="detail-item-value" id="maestro-detail-strategy"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Horas desde última mantención</div>
+                                    <div class="detail-item-value" id="maestro-detail-hours-since"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Próxima mantención estimada</div>
+                                    <div class="detail-item-value" id="maestro-detail-next-maint"></div>
+                                </div>
+                            </div>
+                            <div class="metrics-row">
+                                <div class="metric-card">
+                                    <div class="metric-label">Horas acumuladas</div>
+                                    <div class="metric-value metric-highlight" id="maestro-metric-hours">0 h</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Alertas activas</div>
+                                    <div class="metric-value metric-alert" id="maestro-metric-alerts">0</div>
+                                </div>
+                                <div class="metric-card">
+                                    <div class="metric-label">Documentos asociados</div>
+                                    <div class="metric-value metric-info" id="maestro-metric-docs">0</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="docs-section" class="detail-card" style="display:none; margin-top:8px;">
+                            <div class="detail-title">Documentación técnica asociada</div>
+                            <div class="detail-sub">
+                                Ficha técnica, manual de usuario, certificados, POE, etc.
+                                Toda la documentación queda ligada a la ficha del equipo (<strong>eq.documents</strong>).
+                            </div>
+                            <form id="form-doc" style="margin-top:6px;">
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="doc-type">Tipo de documento *</label>
+                                        <select id="doc-type" required>
+                                            <option value="">Seleccione…</option>
+                                            <option value="Ficha técnica">Ficha técnica</option>
+                                            <option value="Manual de usuario">Manual de usuario</option>
+                                            <option value="Certificado de calibración">Certificado de calibración</option>
+                                            <option value="POE / Procedimiento interno">POE / Procedimiento interno</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="doc-desc">Descripción breve *</label>
+                                        <input type="text" id="doc-desc" required placeholder="Ej. Ficha técnica proveedor 2025" />
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-field">
+                                        <label for="doc-ref">Enlace / ruta o referencia *</label>
+                                        <input type="text" id="doc-ref" required placeholder="URL, ruta en servidor o código interno" />
+                                    </div>
+                                    <div class="form-field">
+                                        <label for="doc-file">Archivo (opcional)</label>
+                                        <input type="file" id="doc-file" />
+                                    </div>
+                                </div>
+                                <div class="form-row" style="margin-top:4px;">
+                                    <button class="btn btn-primary" type="submit">Agregar documento</button>
+                                </div>
+                            </form>
+                            <div style="margin-top:8px; max-height:180px; overflow:auto;">
+                                <table>
+                                    <thead>
+                                    <tr>
+                                        <th>Tipo</th>
+                                        <th>Descripción</th>
+                                        <th>Referencia / enlace</th>
+                                        <th>Archivo / visor</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody id="docs-table-body"></tbody>
+                                </table>
+                                <div class="no-data" id="docs-no-data">
+                                    No hay documentos asociados aún. Puede agregarlos cuando estén disponibles.
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 2: REGISTRO DE USO -->
+        <section id="mod-uso" class="module">
+            <div class="split">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Selección de equipo
+                            <span class="panel-title-pill">Uso</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-field">
+                            <label for="uso-eq-select">Equipo</label>
+                            <select id="uso-eq-select"></select>
+                        </div>
+                        <div id="uso-eq-summary" class="detail-card" style="margin-top:8px; display:none;">
+                            <div class="detail-title" id="uso-detail-title"></div>
+                            <div class="detail-sub" id="uso-detail-sub"></div>
+                            <div class="detail-grid">
+                                <div>
+                                    <div class="detail-item-label">Estado</div>
+                                    <div class="detail-item-value" id="uso-detail-status"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Horas acumuladas</div>
+                                    <div class="detail-item-value" id="uso-detail-total-hours"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Horas desde última mantención</div>
+                                    <div class="detail-item-value" id="uso-detail-hours-since"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Alertas mantención</div>
+                                    <div class="detail-item-value" id="uso-detail-alerts"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+                        <div class="section-label">Últimos registros de uso</div>
+                        <div style="max-height:260px; overflow:auto;">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Horas</th>
+                                    <th>Condición</th>
+                                    <th>Observaciones</th>
+                                    <th>Responsable</th>
+                                </tr>
+                                </thead>
+                                <tbody id="uso-table-body"></tbody>
+                            </table>
+                            <div class="no-data" id="uso-no-data">No hay registros de uso para este equipo.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Registro de uso
+                            <span class="panel-title-pill">Bitácora de operación</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form id="form-uso">
+                            <div class="form-field">
+                                <label for="uso-date">Fecha</label>
+                                <input type="date" id="uso-date" />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="uso-hours">Horas de uso en el período *</label>
+                                    <input type="number" id="uso-hours" min="0" step="0.1" required placeholder="Ej. 3.5" />
+                                </div>
+                                <div class="form-field">
+                                    <label for="uso-condition">Condición al finalizar *</label>
+                                    <select id="uso-condition" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="Normal">Normal</option>
+                                        <option value="Advertencia">Advertencia</option>
+                                        <option value="Crítico">Crítico</option>
+                                        <option value="Fuera de servicio">Fuera de servicio</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label for="uso-operator">Operador / responsable</label>
+                                <input type="text" id="uso-operator" placeholder="Nombre del operador" />
+                            </div>
+                            <div class="form-field">
+                                <label for="uso-notes">Observaciones de uso</label>
+                                <textarea id="uso-notes" placeholder="Ej. Ruidos inusuales, fugas, desviaciones, etc."></textarea>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="uso-force-alert" />
+                                <label for="uso-force-alert">Levantar alerta de mantención manualmente</label>
+                            </div>
+                            <div class="form-row" style="margin-top:4px;">
+                                <button class="btn btn-primary" type="submit">Registrar uso</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 3: MANTENCIONES -->
+        <section id="mod-mant" class="module">
+            <div class="split">
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Selección de equipo
+                            <span class="panel-title-pill">Mantención</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-field">
+                            <label for="mnt-eq-select">Equipo</label>
+                            <select id="mnt-eq-select"></select>
+                        </div>
+                        <div id="mnt-eq-summary" class="detail-card" style="margin-top:8px; display:none;">
+                            <div class="detail-title" id="mnt-detail-title"></div>
+                            <div class="detail-sub" id="mnt-detail-sub"></div>
+                            <div class="detail-grid">
+                                <div>
+                                    <div class="detail-item-label">Estado actual</div>
+                                    <div class="detail-item-value" id="mnt-detail-status"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Última mantención</div>
+                                    <div class="detail-item-value" id="mnt-detail-last"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Horas desde última mantención</div>
+                                    <div class="detail-item-value" id="mnt-detail-hours-since"></div>
+                                </div>
+                                <div>
+                                    <div class="detail-item-label">Próxima mantención estimada</div>
+                                    <div class="detail-item-value" id="mnt-detail-next"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="section-divider"></div>
+                        <div class="section-label">Historial de mantenciones</div>
+                        <div style="max-height:260px; overflow:auto;">
+                            <table>
+                                <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Tipo</th>
+                                    <th>Horas</th>
+                                    <th>Acciones</th>
+                                    <th>Estado posterior</th>
+                                    <th>Responsable</th>
+                                </tr>
+                                </thead>
+                                <tbody id="mnt-table-body"></tbody>
+                            </table>
+                            <div class="no-data" id="mnt-no-data">No hay mantenciones registradas para este equipo.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            Registro de mantención
+                            <span class="panel-title-pill">Bitácora técnica</span>
+                        </div>
+                    </div>
+                    <div class="panel-body">
+                        <form id="form-mantencion">
+                            <div class="form-field">
+                                <label for="mnt-date">Fecha de mantención *</label>
+                                <input type="date" id="mnt-date" required />
+                            </div>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="mnt-type">Tipo de mantención *</label>
+                                    <select id="mnt-type" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="Preventiva">Preventiva</option>
+                                        <option value="Correctiva">Correctiva</option>
+                                        <option value="Calibración">Calibración</option>
+                                        <option value="Verificación">Verificación</option>
+                                        <option value="Otra">Otra</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label for="mnt-hours-at">Horas de equipo a la fecha</label>
+                                    <input type="number" id="mnt-hours-at" min="0" step="0.1" placeholder="Opcional" />
+                                </div>
+                            </div>
+                            <div class="form-field">
+                                <label for="mnt-responsible">Responsable / servicio técnico</label>
+                                <input type="text" id="mnt-responsible" placeholder="Nombre o empresa responsable" />
+                            </div>
+                            <div class="form-field">
+                                <label for="mnt-actions">Actividades realizadas *</label>
+                                <textarea id="mnt-actions" required placeholder="Detalle de la intervención, repuestos, pruebas, etc."></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-field">
+                                    <label for="mnt-status">Estado posterior *</label>
+                                    <select id="mnt-status" required>
+                                        <option value="">Seleccione…</option>
+                                        <option value="Operativo">Operativo</option>
+                                        <option value="Con restricciones">Con restricciones</option>
+                                        <option value="Fuera de servicio">Fuera de servicio</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="checkbox-row">
+                                <input type="checkbox" id="mnt-reset-hours" />
+                                <label for="mnt-reset-hours">Reiniciar contador de horas desde esta mantención</label>
+                            </div>
+                            <div class="form-row" style="margin-top:4px;">
+                                <button class="btn btn-primary" type="submit">Registrar mantención</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MÓDULO 4: DASHBOARD & BITÁCORA -->
+        <section id="mod-dashboard" class="module">
+            <div class="panel" style="margin-bottom:12px;">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        Indicadores generales
+                        <span class="panel-title-pill">Dashboard</span>
+                    </div>
+                </div>
+                <div class="panel-body" style="max-height:none;">
+                    <div class="kpi-grid">
+                        <div class="kpi-card">
+                            <div class="kpi-label">Equipos registrados</div>
+                            <div class="kpi-value" id="kpi-equipos">0</div>
+                            <div class="kpi-sub">Total maestro de equipos</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Equipos críticos</div>
+                            <div class="kpi-value kpi-alert" id="kpi-criticos">0</div>
+                            <div class="kpi-sub">Marcados como críticos</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Alertas de mantención</div>
+                            <div class="kpi-value kpi-alert" id="kpi-alertas">0</div>
+                            <div class="kpi-sub">Próximas / vencidas por horas o días</div>
+                        </div>
+                        <div class="kpi-card">
+                            <div class="kpi-label">Horas totales registradas</div>
+                            <div class="kpi-value kpi-ok" id="kpi-horas">0 h</div>
+                            <div class="kpi-sub">Suma de todas las bitácoras de uso</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        Bitácora detallada
+                        <span class="panel-title-pill" id="bitacora-count">0 registros</span>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <span class="tag-small">No se sobrescribe: trazabilidad completa.</span>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label for="bitacora-eq-select">Equipo</label>
+                            <select id="bitacora-eq-select"></select>
+                        </div>
+                    </div>
+                    <div style="margin-top:6px; max-height:340px; overflow:auto;">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Detalle</th>
+                                <th>Condición / Estado</th>
+                                <th>Horas</th>
+                                <th>Responsable</th>
+                            </tr>
+                            </thead>
+                            <tbody id="bitacora-body"></tbody>
+                        </table>
+                        <div class="no-data" id="no-bitacora-msg">
+                            Seleccione un equipo para visualizar su bitácora completa.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- VISOR DE DOCUMENTOS -->
+    <div class="doc-viewer-overlay" id="doc-viewer-overlay">
+        <div class="doc-viewer-dialog">
+            <div class="doc-viewer-header">
+                <div class="doc-viewer-title" id="doc-viewer-title"></div>
+                <button class="doc-viewer-close" id="doc-viewer-close" title="Cerrar">✕</button>
+            </div>
+            <iframe id="doc-viewer-frame" class="doc-viewer-frame"></iframe>
+            <div class="doc-viewer-footer">
+                El visor utiliza los archivos almacenados en este navegador (localStorage). Para documentos muy pesados
+                se recomienda mantener solo el enlace al repositorio interno.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ------- UTILIDADES FECHA -------
+    function todayISO() {
+        const d = new Date();
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDateDisplay(iso) {
+        if (!iso) return "-";
+        const d = new Date(iso);
+        if (isNaN(d.getTime())) return iso;
+        return d.toLocaleDateString("es-CL", { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+
+    function daysBetween(fromIso, toIso) {
+        if (!fromIso || !toIso) return null;
+        const from = new Date(fromIso);
+        const to = new Date(toIso);
+        if (isNaN(from.getTime()) || isNaN(to.getTime())) return null;
+        const ms = to - from;
+        return ms / (1000 * 60 * 60 * 24);
+    }
+
+    function addDays(isoDate, days) {
+        if (!isoDate || days == null) return null;
+        const d = new Date(isoDate);
+        if (isNaN(d.getTime())) return null;
+        d.setDate(d.getDate() + days);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
+        return `${year}-${month}-${day}`;
+    }
+
+    // ------- ALMACENAMIENTO -------
+    const STORAGE_KEY = "bcp_equipment_module_v3";
+
+    function loadEquipments() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return [];
+            const parsed = JSON.parse(raw);
+            if (!Array.isArray(parsed)) return [];
+            return parsed;
+        } catch (e) {
+            console.error("Error al cargar equipos:", e);
+            return [];
+        }
+    }
+
+    function saveEquipments(list) {
+        try {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch (e) {
+            console.error("Error al guardar equipos:", e);
+        }
+    }
+
+    // ------- ESTADO GLOBAL -------
+    let equipments = [];
+    let selectedEquipmentId = null;
+
+    // ------- CÁLCULO DE ALERTAS -------
+    function computeMaintenanceStatus(equipment) {
+        const strategy = equipment.maintenanceStrategy || "Horas de uso";
+        const intervalHours = Number(equipment.maintenanceIntervalHours) || 0;
+               const intervalDays = Number(equipment.maintenanceIntervalDays) || 0;
+        const lastDate = equipment.lastMaintenanceDate || equipment.acquisitionDate || null;
+        const hoursSince = Number(equipment.hoursSinceLastMaintenance) || 0;
+        const today = todayISO();
+
+        let alerts = 0;
+        let nextByDays = null;
+        let alertByHours = false;
+        let alertByDays = false;
+
+        if ((strategy === "Horas de uso" || strategy === "Mixto") && intervalHours > 0) {
+            if (hoursSince >= intervalHours * 0.8) {
+                alertByHours = true;
+            }
+        }
+
+        if ((strategy === "Calendario" || strategy === "Mixto") && intervalDays > 0 && lastDate) {
+            nextByDays = addDays(lastDate, intervalDays);
+            const diff = daysBetween(today, nextByDays);
+            if (diff !== null && diff <= 7) {
+                alertByDays = true;
+            }
+        }
+
+        if (alertByHours) alerts++;
+        if (alertByDays) alerts++;
+
+        return { alerts, nextByDays, hoursSince };
+    }
+
+    // ------- LISTA MAESTRO -------
+    function renderEquipmentList() {
+        const listContainer = document.getElementById("equipment-list");
+        const noMsg = document.getElementById("no-equipment-msg");
+        const countSpan = document.getElementById("equip-count");
+        listContainer.innerHTML = "";
+
+        const filterText = document.getElementById("filter-text").value.trim().toLowerCase();
+               const filterEstado = document.getElementById("filter-estado").value;
+
+        let filtered = equipments.slice().sort((a, b) => a.code.localeCompare(b.code));
+
+        if (filterText) {
+            filtered = filtered.filter(eq =>
+                (eq.name || "").toLowerCase().includes(filterText) ||
+                (eq.code || "").toLowerCase().includes(filterText) ||
+                (eq.location || "").toLowerCase().includes(filterText)
+            );
+        }
+
+        if (filterEstado) {
+            filtered = filtered.filter(eq => (eq.status || "Operativo") === filterEstado);
+        }
+
+        countSpan.textContent = `${equipments.length} equipo${equipments.length === 1 ? "" : "s"}`;
+
+        if (filtered.length === 0) {
+            noMsg.style.display = "block";
+            return;
+        } else {
+            noMsg.style.display = "none";
+        }
+
+        filtered.forEach(eq => {
+            const statusInfo = computeMaintenanceStatus(eq);
+            const item = document.createElement("div");
+            item.className = "equipment-item" + (eq.id === selectedEquipmentId ? " selected" : "");
+
+            const rowMain = document.createElement("div");
+            rowMain.className = "equipment-row-main";
+
+            const nameCode = document.createElement("div");
+            nameCode.className = "equipment-name-code";
+
+            const nameDiv = document.createElement("div");
+            nameDiv.className = "equipment-name";
+            nameDiv.textContent = eq.name || "(sin nombre)";
+
+            const codeDiv = document.createElement("div");
+            codeDiv.className = "equipment-code";
+            const cat = eq.category ? ` · ${eq.category}` : "";
+            codeDiv.textContent = `${eq.code || ""}${cat}`;
+
+            nameCode.appendChild(nameDiv);
+            nameCode.appendChild(codeDiv);
+
+            const statusPill = document.createElement("span");
+            const status = eq.status || "Operativo";
+            statusPill.className = "pill-status";
+            if (status === "Operativo") statusPill.classList.add("pill-operativo");
+            else if (status === "Con restricciones") statusPill.classList.add("pill-restringido");
+            else statusPill.classList.add("pill-fuera-servicio");
+            statusPill.textContent = status;
+
+            rowMain.appendChild(nameCode);
+            rowMain.appendChild(statusPill);
+
+            const tagsRow = document.createElement("div");
+            tagsRow.className = "equipment-row-tags";
+
+            if (eq.location) {
+                const loc = document.createElement("span");
+                loc.className = "pill-ubicacion";
+                loc.textContent = eq.location;
+                tagsRow.appendChild(loc);
+            }
+
+            if (eq.critical) {
+                const crit = document.createElement("span");
+                crit.className = "pill-criticidad";
+                crit.textContent = "Crítico";
+                tagsRow.appendChild(crit);
+            }
+
+            if (statusInfo.alerts > 0) {
+                const alert = document.createElement("span");
+                alert.className = "pill-alerta";
+                alert.textContent = "Alerta de mantención";
+                tagsRow.appendChild(alert);
+            }
+
+            if (statusInfo.hoursSince > 0) {
+                const hoursTag = document.createElement("span");
+                hoursTag.className = "pill-ubicacion";
+                hoursTag.textContent = `${statusInfo.hoursSince.toFixed(1)} h desde última mantención`;
+                tagsRow.appendChild(hoursTag);
+            }
+
+            const docsCount = Array.isArray(eq.documents) ? eq.documents.length : 0;
+            if (docsCount > 0) {
+                const docsTag = document.createElement("span");
+                docsTag.className = "pill-docs";
+                docsTag.textContent = `Docs: ${docsCount}`;
+                tagsRow.appendChild(docsTag);
+            }
+
+            item.appendChild(rowMain);
+            item.appendChild(tagsRow);
+
+            item.addEventListener("click", () => {
+                selectedEquipmentId = eq.id;
+                renderEquipmentList();
+                populateMaestroDetail(eq);
+                renderDocuments(eq);
+                updateAllSelectors();
+            });
+
+            listContainer.appendChild(item);
+        });
+    }
+
+    // ------- DETALLE MAESTRO -------
+    function populateMaestroDetail(eq) {
+        const card = document.getElementById("maestro-detail");
+        card.style.display = "block";
+        document.getElementById("maestro-detail-title").textContent =
+            `${eq.code || ""} – ${eq.name || ""}`;
+        document.getElementById("maestro-detail-sub").textContent =
+            `${eq.category || "Sin categoría"} · Ubicación: ${eq.location || "No registrada"}`;
+
+        const statusInfo = computeMaintenanceStatus(eq);
+        document.getElementById("maestro-detail-status").textContent = eq.status || "Operativo";
+        document.getElementById("maestro-detail-strategy").textContent =
+            `${eq.maintenanceStrategy || "No definida"} · ${eq.maintenanceIntervalHours || 0} h / ${eq.maintenanceIntervalDays || 0} días`;
+        document.getElementById("maestro-detail-hours-since").textContent =
+            `${statusInfo.hoursSince.toFixed(1)} h`;
+
+        const nextMaint = statusInfo.nextByDays
+            ? formatDateDisplay(statusInfo.nextByDays)
+            : (eq.maintenanceStrategy === "Condición" ? "Según condición" : "No estimada");
+
+        document.getElementById("maestro-detail-next-maint").textContent = nextMaint;
+        document.getElementById("maestro-metric-hours").textContent =
+            `${(Number(eq.totalHours || 0)).toFixed(1)} h`;
+        document.getElementById("maestro-metric-alerts").textContent =
+            statusInfo.alerts.toString();
+
+        const docsCount = Array.isArray(eq.documents) ? eq.documents.length : 0;
+        document.getElementById("maestro-metric-docs").textContent = docsCount.toString();
+    }
+
+    // ------- FORMULARIO EQUIPO -------
+    function clearEquipmentForm() {
+        document.getElementById("form-equipo").reset();
+        document.getElementById("eq-status").value = "Operativo";
+        document.getElementById("eq-maint-strategy").value = "Horas de uso";
+        document.getElementById("maestro-detail").style.display = "none";
+        document.getElementById("docs-section").style.display = "none";
+        document.getElementById("docs-table-body").innerHTML = "";
+        document.getElementById("docs-no-data").style.display = "block";
+        selectedEquipmentId = null;
+        renderEquipmentList();
+        updateAllSelectors();
+    }
+
+    function handleEquipmentSubmit(ev) {
+        ev.preventDefault();
+        const code = document.getElementById("eq-code").value.trim();
+        const name = document.getElementById("eq-name").value.trim();
+        if (!code || !name) {
+            alert("Debe indicar código interno y nombre del equipo.");
+            return;
+        }
+
+        const existing = equipments.find(eq => eq.id === selectedEquipmentId);
+        const isEdit = !!existing;
+
+        const data = {
+            id: isEdit ? existing.id : ("EQ-" + Date.now()),
+            code,
+            name,
+            category: document.getElementById("eq-category").value,
+            location: document.getElementById("eq-location").value.trim(),
+            model: document.getElementById("eq-model").value.trim(),
+            serial: document.getElementById("eq-serial").value.trim(),
+            responsible: document.getElementById("eq-responsible").value.trim(),
+            acquisitionDate: document.getElementById("eq-acq-date").value || null,
+            supplier: document.getElementById("eq-supplier").value.trim(),
+            status: document.getElementById("eq-status").value,
+            critical: document.getElementById("eq-critical").checked,
+            maintenanceStrategy: document.getElementById("eq-maint-strategy").value,
+            maintenanceIntervalHours: Number(document.getElementById("eq-maint-hours").value) || 0,
+            maintenanceIntervalDays: Number(document.getElementById("eq-maint-days").value) || 0,
+            lastMaintenanceDate: document.getElementById("eq-last-maint-date").value || null,
+            notes: document.getElementById("eq-notes").value.trim()
+        };
+
+        if (isEdit) {
+            data.logs = existing.logs || [];
+            data.totalHours = existing.totalHours || 0;
+            data.hoursSinceLastMaintenance = existing.hoursSinceLastMaintenance || 0;
+            data.documents = existing.documents || [];
+        } else {
+            data.logs = [];
+            data.totalHours = 0;
+            data.hoursSinceLastMaintenance = 0;
+            data.documents = [];
+        }
+
+        if (isEdit) {
+            equipments = equipments.map(eq => eq.id === existing.id ? data : eq);
+        } else {
+            equipments.push(data);
+            selectedEquipmentId = data.id;
+        }
+
+        saveEquipments(equipments);
+        renderEquipmentList();
+        populateMaestroDetail(data);
+        renderDocuments(data);
+        updateAllSelectors();
+        updateDashboardKpis();
+        alert(isEdit ? "Ficha de equipo actualizada." : "Equipo creado correctamente.");
+    }
+
+    // ------- VISOR DE DOCUMENTOS -------
+    function openDocViewer(doc) {
+        const overlay = document.getElementById("doc-viewer-overlay");
+        const title = document.getElementById("doc-viewer-title");
+        const frame = document.getElementById("doc-viewer-frame");
+
+        title.textContent = `${doc.type || "Documento"} – ${doc.description || ""}`;
+        if (doc.fileData) {
+            frame.src = doc.fileData;
+        } else if (doc.ref && /^https?:\/\//i.test(doc.ref)) {
+            // Si no hay archivo almacenado pero sí URL, se muestra la URL
+            frame.src = doc.ref;
+        } else {
+            frame.srcdoc = "<html><body style='font-family:system-ui;padding:12px;font-size:13px;'>No hay archivo embebido para este documento. Utilice la referencia o enlace indicado en la ficha.</body></html>";
+        }
+
+        overlay.style.display = "flex";
+    }
+
+    function closeDocViewer() {
+        const overlay = document.getElementById("doc-viewer-overlay");
+        const frame = document.getElementById("doc-viewer-frame");
+        frame.src = "about:blank";
+        overlay.style.display = "none";
+    }
+
+    // ------- DOCUMENTOS -------
+    function renderDocuments(eq) {
+        const section = document.getElementById("docs-section");
+        const body = document.getElementById("docs-table-body");
+        const noData = document.getElementById("docs-no-data");
+        if (!eq) {
+            section.style.display = "none";
+            return;
+        }
+        section.style.display = "block";
+        body.innerHTML = "";
+
+        const docs = Array.isArray(eq.documents) ? eq.documents : [];
+        if (docs.length === 0) {
+            noData.style.display = "block";
+            document.getElementById("maestro-metric-docs").textContent = "0";
+            return;
+        }
+        noData.style.display = "none";
+
+        docs.forEach(doc => {
+            const tr = document.createElement("tr");
+            const tdType = document.createElement("td");
+            const tdDesc = document.createElement("td");
+            const tdRef = document.createElement("td");
+            const tdFile = document.createElement("td");
+
+            tdType.textContent = doc.type || "-";
+            tdDesc.textContent = doc.description || "-";
+
+            if (doc.ref && /^https?:\/\//i.test(doc.ref)) {
+                const a = document.createElement("a");
+                a.href = doc.ref;
+                a.target = "_blank";
+                a.rel = "noopener noreferrer";
+                a.textContent = "Abrir enlace";
+                tdRef.appendChild(a);
+            } else {
+                tdRef.textContent = doc.ref || "-";
+            }
+
+            if (doc.fileData || (doc.ref && /^https?:\/\//i.test(doc.ref))) {
+                const btn = document.createElement("button");
+                btn.type = "button";
+                btn.className = "btn-outline";
+                btn.style.fontSize = "10px";
+                btn.style.padding = "2px 8px";
+                btn.textContent = "Ver documento";
+                btn.addEventListener("click", () => openDocViewer(doc));
+                tdFile.appendChild(btn);
+
+                if (doc.fileName) {
+                    const nameSpan = document.createElement("div");
+                    nameSpan.style.fontSize = "9px";
+                    nameSpan.style.color = "#6b7280";
+                    nameSpan.textContent = doc.fileName;
+                    tdFile.appendChild(nameSpan);
+                }
+            } else {
+                tdFile.textContent = doc.fileName || "-";
+            }
+
+            tr.appendChild(tdType);
+            tr.appendChild(tdDesc);
+            tr.appendChild(tdRef);
+            tr.appendChild(tdFile);
+            body.appendChild(tr);
+        });
+
+        document.getElementById("maestro-metric-docs").textContent = docs.length.toString();
+    }
+
+    function handleDocSubmit(ev) {
+        ev.preventDefault();
+        if (!selectedEquipmentId) {
+            alert("Debe seleccionar o guardar primero un equipo para asociar documentos.");
+            return;
+        }
+        const eq = equipments.find(e => e.id === selectedEquipmentId);
+        if (!eq) {
+            alert("Equipo no encontrado.");
+            return;
+        }
+
+        const type = document.getElementById("doc-type").value;
+        const desc = document.getElementById("doc-desc").value.trim();
+        const ref = document.getElementById("doc-ref").value.trim();
+        const fileInput = document.getElementById("doc-file");
+        const file = fileInput.files[0];
+
+        if (!type || !desc || !ref) {
+            alert("Complete tipo, descripción y referencia del documento.");
+            return;
+        }
+
+        const baseDoc = {
+            id: "DOC-" + Date.now(),
+            type: type,
+            description: desc,
+            ref: ref,
+            fileName: file ? file.name : "",
+            fileData: null
+        };
+
+        // Si hay archivo, se lee como DataURL para poder visualizarlo después.
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                baseDoc.fileData = e.target.result; // DataURL
+                eq.documents = eq.documents || [];
+                eq.documents.push(baseDoc);
+                saveEquipments(equipments);
+                renderDocuments(eq);
+                renderEquipmentList();
+                updateDashboardKpis();
+            };
+            reader.readAsDataURL(file);
+        } else {
+            eq.documents = eq.documents || [];
+            eq.documents.push(baseDoc);
+            saveEquipments(equipments);
+            renderDocuments(eq);
+            renderEquipmentList();
+            updateDashboardKpis();
+        }
+
+        document.getElementById("form-doc").reset();
+        alert("Documento asociado correctamente a la ficha del equipo.");
+    }
+
+    // ------- REGISTRO DE USO -------
+    function handleUsoSubmit(ev) {
+        ev.preventDefault();
+        const select = document.getElementById("uso-eq-select");
+        const eqId = select.value;
+        if (!eqId) {
+            alert("Debe seleccionar un equipo para registrar su uso.");
+            return;
+        }
+        const eq = equipments.find(e => e.id === eqId);
+        if (!eq) {
+            alert("Equipo no encontrado.");
+            return;
+        }
+
+        const hours = Number(document.getElementById("uso-hours").value);
+        if (!hours || hours <= 0) {
+            alert("Las horas de uso deben ser un valor positivo.");
+            return;
+        }
+
+        const date = document.getElementById("uso-date").value || todayISO();
+        const condition = document.getElementById("uso-condition").value;
+        if (!condition) {
+            alert("Debe indicar la condición al finalizar.");
+            return;
+        }
+
+        const operator = document.getElementById("uso-operator").value.trim();
+        const notes = document.getElementById("uso-notes").value.trim();
+        const forceAlert = document.getElementById("uso-force-alert").checked;
+
+        eq.totalHours = Number(eq.totalHours || 0) + hours;
+        eq.hoursSinceLastMaintenance = Number(eq.hoursSinceLastMaintenance || 0) + hours;
+
+        if (condition === "Crítico" || condition === "Fuera de servicio") {
+            eq.status = "Fuera de servicio";
+        } else if (condition === "Advertencia" && eq.status === "Operativo") {
+            eq.status = "Con restricciones";
+        }
+
+        const logEntry = {
+            type: "uso",
+            date: date,
+            hours: hours,
+            condition: condition,
+            description: notes || `Uso del equipo (${hours.toFixed(1)} h).`,
+            responsible: operator || eq.responsible || "",
+            createdAt: todayISO(),
+            forceAlert: forceAlert
+        };
+
+        eq.logs = eq.logs || [];
+        eq.logs.push(logEntry);
+
+        saveEquipments(equipments);
+        renderEquipmentList();
+        populateUsoSummary(eq);
+        populateUsoTable(eq);
+        updateDashboardKpis();
+        updateAllSelectors();
+
+        document.getElementById("form-uso").reset();
+        document.getElementById("uso-date").value = todayISO();
+        alert("Uso registrado correctamente.");
+    }
+
+    function populateUsoSummary(eq) {
+        const card = document.getElementById("uso-eq-summary");
+        if (!eq) {
+            card.style.display = "none";
+            return;
+        }
+        card.style.display = "block";
+        document.getElementById("uso-detail-title").textContent =
+            `${eq.code || ""} – ${eq.name || ""}`;
+        document.getElementById("uso-detail-sub").textContent =
+            `${eq.category || "Sin categoría"} · Ubicación: ${eq.location || "No registrada"}`;
+        const statusInfo = computeMaintenanceStatus(eq);
+        document.getElementById("uso-detail-status").textContent = eq.status || "Operativo";
+        document.getElementById("uso-detail-total-hours").textContent =
+            `${(Number(eq.totalHours || 0)).toFixed(1)} h`;
+        document.getElementById("uso-detail-hours-since").textContent =
+            `${statusInfo.hoursSince.toFixed(1)} h`;
+        document.getElementById("uso-detail-alerts").textContent = statusInfo.alerts.toString();
+    }
+
+    function populateUsoTable(eq) {
+        const body = document.getElementById("uso-table-body");
+        const noData = document.getElementById("uso-no-data");
+        body.innerHTML = "";
+        if (!eq || !Array.isArray(eq.logs)) {
+            noData.style.display = "block";
+            return;
+        }
+        const usos = eq.logs.filter(l => l.type === "uso")
+            .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+        if (usos.length === 0) {
+            noData.style.display = "block";
+            return;
+        }
+        noData.style.display = "none";
+
+        usos.slice(0, 50).forEach(log => {
+            const tr = document.createElement("tr");
+            const tdDate = document.createElement("td");
+            tdDate.textContent = formatDateDisplay(log.date);
+            const tdH = document.createElement("td");
+            tdH.textContent = `${Number(log.hours || 0).toFixed(1)} h`;
+            const tdCond = document.createElement("td");
+            const span = document.createElement("span");
+            span.textContent = log.condition || "";
+            if (log.condition === "Normal") span.className = "badge-condicion-normal";
+            else if (log.condition === "Advertencia") span.className = "badge-condicion-advertencia";
+            else span.className = "badge-condicion-critico";
+            tdCond.appendChild(span);
+            const tdObs = document.createElement("td");
+            tdObs.textContent = log.description || "-";
+            const tdResp = document.createElement("td");
+            tdResp.textContent = log.responsible || "-";
+            tr.appendChild(tdDate);
+            tr.appendChild(tdH);
+            tr.appendChild(tdCond);
+            tr.appendChild(tdObs);
+            tr.appendChild(tdResp);
+            body.appendChild(tr);
+        });
+    }
+
+    // ------- REGISTRO MANTENCIÓN -------
+    function handleMantencionSubmit(ev) {
+        ev.preventDefault();
+        const select = document.getElementById("mnt-eq-select");
+        const eqId = select.value;
+        if (!eqId) {
+            alert("Debe seleccionar un equipo para registrar su mantención.");
+            return;
+        }
+        const eq = equipments.find(e => e.id === eqId);
+        if (!eq) {
+            alert("Equipo no encontrado.");
+            return;
+        }
+
+        const date = document.getElementById("mnt-date").value;
+        const type = document.getElementById("mnt-type").value;
+        const hoursAt = document.getElementById("mnt-hours-at").value;
+        const responsible = document.getElementById("mnt-responsible").value.trim();
+        const actions = document.getElementById("mnt-actions").value.trim();
+        const statusAfter = document.getElementById("mnt-status").value;
+        const resetHours = document.getElementById("mnt-reset-hours").checked;
+
+        if (!date || !type || !actions || !statusAfter) {
+            alert("Complete todos los campos obligatorios de la mantención.");
+            return;
+        }
+
+        eq.lastMaintenanceDate = date;
+        eq.status = statusAfter;
+
+        if (resetHours) {
+            eq.hoursSinceLastMaintenance = 0;
+        }
+
+        if (hoursAt) {
+            const num = Number(hoursAt);
+            if (!isNaN(num) && num >= 0) {
+                eq.totalHours = num;
+            }
+        }
+
+        const logEntry = {
+            type: "mantencion",
+            date: date,
+            hours: hoursAt ? Number(hoursAt) : null,
+            statusAfter: statusAfter,
+            description: `${type}: ${actions}`,
+            responsible: responsible || eq.responsible || "",
+            maintType: type,
+            resetHours: resetHours,
+            createdAt: todayISO()
+        };
+
+        eq.logs = eq.logs || [];
+        eq.logs.push(logEntry);
+
+        saveEquipments(equipments);
+        renderEquipmentList();
+        populateMantSummary(eq);
+        populateMantTable(eq);
+        updateDashboardKpis();
+        updateAllSelectors();
+
+        document.getElementById("form-mantencion").reset();
+        alert("Mantención registrada correctamente.");
+    }
+
+    function populateMantSummary(eq) {
+        const card = document.getElementById("mnt-eq-summary");
+        if (!eq) {
+            card.style.display = "none";
+            return;
+        }
+        card.style.display = "block";
+        document.getElementById("mnt-detail-title").textContent =
+            `${eq.code || ""} – ${eq.name || ""}`;
+        document.getElementById("mnt-detail-sub").textContent =
+            `${eq.category || "Sin categoría"} · Ubicación: ${eq.location || "No registrada"}`;
+
+        const statusInfo = computeMaintenanceStatus(eq);
+        document.getElementById("mnt-detail-status").textContent = eq.status || "Operativo";
+        document.getElementById("mnt-detail-last").textContent =
+            formatDateDisplay(eq.lastMaintenanceDate);
+        document.getElementById("mnt-detail-hours-since").textContent =
+            `${statusInfo.hoursSince.toFixed(1)} h`;
+        const nextMaint = statusInfo.nextByDays
+            ? formatDateDisplay(statusInfo.nextByDays)
+            : (eq.maintenanceStrategy === "Condición" ? "Según condición" : "No estimada");
+        document.getElementById("mnt-detail-next").textContent = nextMaint;
+    }
+
+    function populateMantTable(eq) {
+        const body = document.getElementById("mnt-table-body");
+        const noData = document.getElementById("mnt-no-data");
+        body.innerHTML = "";
+        if (!eq || !Array.isArray(eq.logs)) {
+            noData.style.display = "block";
+            return;
+        }
+        const mants = eq.logs.filter(l => l.type === "mantencion")
+            .sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+
+        if (mants.length === 0) {
+            noData.style.display = "block";
+            return;
+        }
+        noData.style.display = "none";
+
+        mants.slice(0, 50).forEach(log => {
+            const tr = document.createElement("tr");
+            const tdDate = document.createElement("td");
+            tdDate.textContent = formatDateDisplay(log.date);
+            const tdType = document.createElement("td");
+            tdType.textContent = log.maintType || "-";
+            const tdH = document.createElement("td");
+            tdH.textContent = log.hours != null ? `${Number(log.hours).toFixed(1)} h` : "-";
+            const tdAct = document.createElement("td");
+            tdAct.textContent = log.description || "-";
+            const tdStatus = document.createElement("td");
+            tdStatus.textContent = log.statusAfter || "-";
+            const tdResp = document.createElement("td");
+            tdResp.textContent = log.responsible || "-";
+            tr.appendChild(tdDate);
+            tr.appendChild(tdType);
+            tr.appendChild(tdH);
+            tr.appendChild(tdAct);
+            tr.appendChild(tdStatus);
+            tr.appendChild(tdResp);
+            body.appendChild(tr);
+        });
+    }
+
+    // ------- BITÁCORA Y DASHBOARD -------
+    function populateBitacora(eq) {
+        const body = document.getElementById("bitacora-body");
+        const noMsg = document.getElementById("no-bitacora-msg");
+        const countSpan = document.getElementById("bitacora-count");
+        body.innerHTML = "";
+
+        if (!eq || !Array.isArray(eq.logs) || eq.logs.length === 0) {
+            noMsg.style.display = "block";
+            countSpan.textContent = "0 registros";
+            return;
+        }
+
+        noMsg.style.display = "none";
+
+        const sortedLogs = eq.logs.slice().sort((a, b) => {
+            const da = a.date || a.createdAt || "";
+            const db = b.date || b.createdAt || "";
+            return da.localeCompare(db);
+        });
+
+        sortedLogs.forEach(log => {
+            const tr = document.createElement("tr");
+
+            const tdDate = document.createElement("td");
+            tdDate.textContent = formatDateDisplay(log.date || log.createdAt);
+
+            const tdType = document.createElement("td");
+            const badge = document.createElement("span");
+            if (log.type === "uso") {
+                badge.className = "badge-uso";
+                badge.textContent = "Uso";
+            } else {
+                badge.className = "badge-mantencion";
+                badge.textContent = "Mantención";
+            }
+            tdType.appendChild(badge);
+
+            const tdDetail = document.createElement("td");
+            tdDetail.textContent = log.description || "-";
+
+            const tdCondition = document.createElement("td");
+            if (log.type === "uso") {
+                const cond = log.condition || "Normal";
+                const span = document.createElement("span");
+                span.textContent = cond;
+                if (cond === "Normal") span.className = "badge-condicion-normal";
+                else if (cond === "Advertencia") span.className = "badge-condicion-advertencia";
+                else span.className = "badge-condicion-critico";
+                tdCondition.appendChild(span);
+            } else {
+                tdCondition.textContent = log.statusAfter || "-";
+            }
+
+            const tdHours = document.createElement("td");
+            const h = Number(log.hours || 0);
+            tdHours.textContent = h > 0 ? `${h.toFixed(1)} h` : "-";
+
+            const tdResp = document.createElement("td");
+            tdResp.textContent = log.responsible || "-";
+
+            tr.appendChild(tdDate);
+            tr.appendChild(tdType);
+            tr.appendChild(tdDetail);
+            tr.appendChild(tdCondition);
+            tr.appendChild(tdHours);
+            tr.appendChild(tdResp);
+            body.appendChild(tr);
+        });
+
+        countSpan.textContent = `${eq.logs.length} registro${eq.logs.length === 1 ? "" : "s"}`;
+    }
+
+    function updateDashboardKpis() {
+        const totalEq = equipments.length;
+        const totalCrit = equipments.filter(e => e.critical).length;
+
+        let totalHours = 0;
+        let totalAlertas = 0;
+        equipments.forEach(eq => {
+            totalHours += Number(eq.totalHours || 0);
+            const info = computeMaintenanceStatus(eq);
+            totalAlertas += info.alerts;
+        });
+
+        document.getElementById("kpi-equipos").textContent = totalEq;
+        document.getElementById("kpi-criticos").textContent = totalCrit;
+        document.getElementById("kpi-alertas").textContent = totalAlertas;
+        document.getElementById("kpi-horas").textContent = `${totalHours.toFixed(1)} h`;
+    }
+
+    // ------- SELECTORES COMUNES -------
+    function fillSelect(selectId) {
+        const select = document.getElementById(selectId);
+        if (!select) return;
+        const prev = select.value;
+        select.innerHTML = "";
+        const theOpt = document.createElement("option");
+        theOpt.value = "";
+        theOpt.textContent = "Seleccione un equipo…";
+        select.appendChild(theOpt);
+
+        equipments.slice().sort((a, b) => a.code.localeCompare(b.code)).forEach(eq => {
+            const opt = document.createElement("option");
+            opt.value = eq.id;
+            opt.textContent = `${eq.code} – ${eq.name}`;
+            select.appendChild(opt);
+        });
+
+        if (prev && equipments.find(e => e.id === prev)) {
+            select.value = prev;
+        } else if (selectedEquipmentId && equipments.find(e => e.id === selectedEquipmentId)) {
+            select.value = selectedEquipmentId;
+        }
+    }
+
+    function updateAllSelectors() {
+        fillSelect("uso-eq-select");
+        fillSelect("mnt-eq-select");
+        fillSelect("bitacora-eq-select");
+    }
+
+    // ------- EXPORTAR JSON -------
+    function exportJSON() {
+        if (!equipments.length) {
+            alert("No hay datos para exportar.");
+            return;
+        }
+        const blob = new Blob([JSON.stringify(equipments, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "bcp_equipos_bitacoras.json";
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
+
+    // ------- CAMBIO DE MÓDULO -------
+    function setupModulesNav() {
+        const buttons = document.querySelectorAll(".nav-btn");
+        buttons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const target = btn.getAttribute("data-module");
+                buttons.forEach(b => b.classList.remove("active"));
+                btn.classList.add("active");
+                document.querySelectorAll(".module").forEach(m => {
+                    if (m.id === target) m.classList.add("active");
+                    else m.classList.remove("active");
+                });
+            });
+        });
+    }
+
+    // ------- LIMPIEZA TOTAL (TEST) -------
+    function setupMasterClean() {
+        const btn = document.getElementById("btn-master-clean");
+        btn.addEventListener("click", () => {
+            const confirmMsg =
+                "Esta acción eliminará TODOS los equipos, bitácoras y documentación almacenados en este navegador para este módulo.\n\n" +
+                "Use este botón solo en etapa de pruebas.\n\n¿Confirma la limpieza total?";
+            if (confirm(confirmMsg)) {
+                localStorage.removeItem(STORAGE_KEY);
+                equipments = [];
+                selectedEquipmentId = null;
+                renderEquipmentList();
+                updateAllSelectors();
+                updateDashboardKpis();
+                document.getElementById("bitacora-body").innerHTML = "";
+                document.getElementById("bitacora-count").textContent = "0 registros";
+                alert("Todos los datos del módulo han sido eliminados.");
+            }
+        });
+    }
+
+    // ------- INIT -------
+    document.addEventListener("DOMContentLoaded", () => {
+        const headerDate = document.getElementById("header-date");
+        const now = new Date();
+        headerDate.textContent = now.toLocaleString("es-CL", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+
+        equipments = loadEquipments();
+        renderEquipmentList();
+        updateAllSelectors();
+        updateDashboardKpis();
+
+        document.getElementById("form-equipo").addEventListener("submit", handleEquipmentSubmit);
+        document.getElementById("btn-reset-form").addEventListener("click", clearEquipmentForm);
+        document.getElementById("btn-new-equipment").addEventListener("click", clearEquipmentForm);
+
+        document.getElementById("filter-text").addEventListener("input", renderEquipmentList);
+        document.getElementById("filter-estado").addEventListener("change", renderEquipmentList);
+        document.getElementById("btn-refresh").addEventListener("click", () => {
+            equipments = loadEquipments();
+            renderEquipmentList();
+            updateAllSelectors();
+            updateDashboardKpis();
+        });
+
+        document.getElementById("btn-export-json").addEventListener("click", exportJSON);
+
+        document.getElementById("form-uso").addEventListener("submit", handleUsoSubmit);
+        document.getElementById("uso-eq-select").addEventListener("change", (e) => {
+            const eq = equipments.find(x => x.id === e.target.value);
+            populateUsoSummary(eq);
+            populateUsoTable(eq);
+        });
+        document.getElementById("uso-date").value = todayISO();
+
+        document.getElementById("form-mantencion").addEventListener("submit", handleMantencionSubmit);
+        document.getElementById("mnt-eq-select").addEventListener("change", (e) => {
+            const eq = equipments.find(x => x.id === e.target.value);
+            populateMantSummary(eq);
+            populateMantTable(eq);
+        });
+
+        document.getElementById("bitacora-eq-select").addEventListener("change", (e) => {
+            const eq = equipments.find(x => x.id === e.target.value);
+            populateBitacora(eq);
+        });
+
+        document.getElementById("form-doc").addEventListener("submit", handleDocSubmit);
+
+        document.getElementById("doc-viewer-close").addEventListener("click", closeDocViewer);
+        document.getElementById("doc-viewer-overlay").addEventListener("click", (e) => {
+            if (e.target.id === "doc-viewer-overlay") {
+                closeDocViewer();
+            }
+        });
+
+        setupModulesNav();
+        setupMasterClean();
+    });
+</script>
+</body>
+</html>
+```

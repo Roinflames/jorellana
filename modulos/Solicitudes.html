@@ -1,0 +1,3065 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioCannaPharma (BCP) – Sistema de Órdenes de Producción, Formulación, Envasado y Despacho de Productos Cannabis – V3.4</title>
+
+    <!-- Chart.js para métricas gráficas -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* PALETA BCP basada en el logo
+           Morado principal: #5A2CA0
+           Verde principal:  #3DB54A
+        */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 40%, #FFFFFF 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #F8FAFB;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+            overflow: hidden;
+        }
+
+        /* ENCABEZADO CORPORATIVO BCP (versión mejorada) */
+        .bcp-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 22px 35px;
+            background: linear-gradient(135deg, #5A2CA0 0%, #3DB54A 100%);
+            color: white;
+            border-radius: 0 0 18px 18px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.20);
+            backdrop-filter: blur(6px);
+        }
+
+        .bcp-header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Logo: usa el archivo BCP-3.png en la misma carpeta */
+        .bcp-logo {
+            height: 80px;
+            width: auto;
+            object-fit: contain;
+            display: block;
+        }
+
+        .bcp-title-block h1 {
+            margin: 0;
+            font-size: 2em;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+
+        .bcp-title-block h2 {
+            margin: 4px 0 8px;
+            font-size: 1.1em;
+            font-weight: 400;
+            max-width: 650px;
+            opacity: 0.95;
+        }
+
+        .bcp-meta {
+            font-size: 0.9em;
+            opacity: 0.85;
+        }
+
+        .bcp-datetime {
+            text-align: right;
+            font-size: 0.95em;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .bcp-datetime span {
+            display: block;
+        }
+
+        .main-content { padding: 25px 30px 30px 30px; }
+
+        /* Barra de usuario */
+        .user-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            background: #EFF5FB;
+            border-radius: 10px;
+            border: 1px solid #D0D9E4;
+            padding: 10px 15px;
+            flex-wrap: wrap;
+        }
+
+        .user-bar form {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .user-bar input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #C0C9D6;
+            font-size: 0.95em;
+        }
+
+        .user-bar small {
+            display: block;
+            font-size: 0.8em;
+            color: #435063;
+            margin-top: 5px;
+        }
+
+        #userInfo { display: none; align-items: center; gap: 10px; }
+
+        .role-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: #5A2CA0;
+            color: white;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #5A2CA0 0%, #3DB54A 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover { transform: translateY(-4px); }
+
+        .stat-card h3 { font-size: 2em; margin-bottom: 5px; }
+        .stat-card p { opacity: 0.9; font-size: 0.9em; }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #5A2CA0 0%, #3DB54A 100%);
+            color: white;
+        }
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.28);
+        }
+
+        .btn-secondary { background: #546E7A; color: white; }
+        .btn-secondary:hover:not(:disabled) { background: #455A64; }
+
+        .btn-success { background: #3DB54A; color: white; }
+        .btn-success:hover:not(:disabled) { background: #2E8D39; }
+
+        .btn-danger { background: #C62828; color: white; }
+        .btn-danger:hover:not(:disabled) { background: #B71C1C; }
+
+        .btn-info { background: #5A2CA0; color: white; }
+        .btn-info:hover:not(:disabled) { background: #45227E; }
+
+        .btn-warning { background: #FFB300; color: #000; }
+        .btn-warning:hover:not(:disabled) { background: #FFA000; }
+
+        .search-box { flex: 1; min-width: 250px; }
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #D0D9E4;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: #FFFFFF;
+        }
+        .search-box input:focus { outline: none; border-color: #5A2CA0; }
+
+        .filter-section {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-section select {
+            padding: 10px 15px;
+            border: 2px solid #D0D9E4;
+            border-radius: 8px;
+            font-size: 0.95em;
+            background: #FFFFFF;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #5A2CA0 0%, #3DB54A 100%);
+            color: white;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            font-size: 0.9em;
+        }
+
+        th {
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #E0E0E0;
+            transition: background-color 0.3s;
+        }
+
+        tbody tr:hover { background-color: #EEF5F9; }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-solicitada { background: #00838F; color: white; }
+        .status-aprobada { background: #3DB54A; color: white; }
+        .status-en-proceso { background: #5A2CA0; color: white; }
+        .status-en-pausa { background: #FFB300; color: #000; }
+        .status-completada { background: #8E24AA; color: white; }
+        .status-finalizado { background: #2E7D32; color: white; }
+        .status-enviado { background: #546E7A; color: white; }
+        .status-rechazada { background: #C62828; color: white; }
+        .status-cancelada { background: #757575; color: white; }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .priority-critica { background: #C62828; color: white; }
+        .priority-alta { background: #FF6F00; color: white; }
+        .priority-media { background: #FFB300; color: #000; }
+        .priority-baja { background: #3DB54A; color: white; }
+
+        /* Modales */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            max-width: 900px;
+            margin: 50px auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, #5A2CA0 0%, #3DB54A 100%);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 15px 15px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 { font-size: 1.6em; }
+
+        .close {
+            font-size: 2em;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: white;
+            width: 40px; height: 40px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            transition: background 0.3s;
+        }
+
+        .close:hover { background: rgba(255,255,255,0.2); }
+
+        .modal-body { padding: 25px; }
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: #28313F;
+            font-size: 0.9em;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #D0D9E4;
+            border-radius: 8px;
+            font-size: 0.9em;
+            transition: border-color 0.3s;
+            font-family: inherit;
+            background: #FFFFFF;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #5A2CA0;
+        }
+
+        .form-group textarea { resize: vertical; min-height: 90px; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 15px;
+        }
+
+        .materias-primas-section {
+            border: 2px solid #D0D9E4;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background: #F3F7FB;
+        }
+
+        .materias-primas-section h3 {
+            margin-bottom: 10px;
+            color: #28313F;
+            font-size: 1em;
+        }
+
+        .materia-prima-item {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 8px;
+            align-items: center;
+            padding: 8px;
+            background: #EFF5FB;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .materia-prima-item input,
+        .materia-prima-item select {
+            padding: 6px 8px;
+            border: 2px solid #D0D9E4;
+            border-radius: 6px;
+            font-size: 0.85em;
+        }
+
+        .historial-item {
+            padding: 12px;
+            background: #EFF5FB;
+            border-left: 4px solid #5A2CA0;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .historial-item strong { color: #28313F; }
+        .historial-item small { color: #546E7A; display: block; margin-top: 4px; }
+
+        .incidencia-item {
+            padding: 12px;
+            background: #FFF3CD;
+            border-left: 4px solid #FFB300;
+            margin-bottom: 8px;
+            border-radius: 5px;
+            font-size: 0.85em;
+        }
+
+        .incidencia-item.critica {
+            background: #F8D7DA;
+            border-left-color: #C62828;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 2000;
+            display: none;
+            min-width: 260px;
+            border-left: 5px solid #3DB54A;
+            font-size: 0.9em;
+        }
+
+        .toast.success { border-left-color: #3DB54A; }
+        .toast.error { border-left-color: #C62828; }
+        .toast.info { border-left-color: #5A2CA0; }
+        .toast.warning { border-left-color: #FFB300; }
+
+        .action-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons button {
+            padding: 6px 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+        }
+
+        .detail-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .detail-item {
+            padding: 10px;
+            background: #EFF5FB;
+            border-radius: 8px;
+            border-left: 4px solid #5A2CA0;
+            font-size: 0.9em;
+        }
+
+        .detail-item label {
+            display: block;
+            font-weight: 600;
+            color: #28313F;
+            margin-bottom: 4px;
+            font-size: 0.8em;
+        }
+
+        .detail-item p { font-size: 0.95em; color: #333; }
+
+        .alert-box {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            border-left: 4px solid;
+            font-size: 0.9em;
+        }
+
+        .alert-warning { background: #FFF3CD; border-left-color: #FFB300; color: #7C5A02; }
+        .alert-danger  { background: #F8D7DA; border-left-color: #C62828; color: #7B1015; }
+        .alert-info    { background: #D1ECF1; border-left-color: #5A2CA0; color: #0C5460; }
+        .alert-success { background: #D4EDDA; border-left-color: #3DB54A; color: #155724; }
+
+        .tiempo-produccion {
+            padding: 10px;
+            background: #E3F2FD;
+            border-radius: 8px;
+            border-left: 4px solid #5A2CA0;
+            margin: 15px 0;
+            font-size: 0.9em;
+        }
+
+        .tiempo-produccion h4 { color: #5A2CA0; margin-bottom: 5px; }
+
+        .required::after { content: " *"; color: #C62828; }
+
+        .estado-flow {
+            padding: 15px;
+            background: #EFF5FB;
+            border-radius: 10px;
+            margin: 10px 0 15px;
+        }
+
+        .estado-flow h4 { color: #28313F; margin-bottom: 10px; font-size: 0.95em; }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .flow-state {
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .flow-arrow { color: #5A2CA0; font-size: 1.2em; }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #D0D9E4;
+            margin-bottom: 20px;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tab-button {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            background: #E0E6F2;
+            color: #28313F;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .tab-button.active {
+            background: #5A2CA0;
+            color: white;
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Métricas */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .metrics-card {
+            background: #FFFFFF;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #D0D9E4;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.06);
+        }
+
+        .metrics-card h3 {
+            font-size: 1em;
+            margin-bottom: 8px;
+            color: #28313F;
+        }
+
+        .metrics-summary {
+            font-size: 0.85em;
+            color: #546E7A;
+            margin-bottom: 8px;
+        }
+
+        .metrics-canvas-wrapper {
+            width: 100%;
+            height: 220px;
+        }
+
+        @media print {
+            body * { visibility: hidden; }
+            .print-area, .print-area * { visibility: visible; }
+            .print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .bcp-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            .bcp-datetime {
+                text-align: left;
+            }
+            .form-row { grid-template-columns: 1fr; }
+            .materia-prima-item { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- ENCABEZADO PRINCIPAL BCP -->
+    <div class="bcp-header">
+        <div class="bcp-header-left">
+            <!-- Usa el archivo BCP-3.png en la misma carpeta -->
+            <img src="BCP-3.png" class="bcp-logo" alt="BioCannaPharma Logo">
+            <div class="bcp-title-block">
+                <h1>BioCannaPharma (BCP)</h1>
+                <h2>Sistema de Órdenes de Producción, Formulación, Envasado y Despacho de Productos Cannabis</h2>
+                <p class="bcp-meta">Módulo: MES-OP | Código Interno: BCP-MES-OP-001</p>
+            </div>
+        </div>
+        <div class="bcp-datetime">
+            <span id="bcp-fecha"></span>
+            <span id="bcp-hora"></span>
+        </div>
+    </div>
+
+    <div class="main-content">
+
+        <!-- Barra de usuario -->
+        <div class="user-bar">
+            <div id="loginSection">
+                <form onsubmit="loginSistema(event)">
+                    <input type="text" id="loginUsuario" placeholder="Usuario (solicitante / laboratorio / master)" required>
+                    <input type="password" id="loginClave" placeholder="Clave" required>
+                    <button type="submit" class="btn btn-secondary">Iniciar sesión</button>
+                </form>
+                <small>
+                    Usuarios demo:
+                    <strong>solicitante/solicitante</strong>,
+                    <strong>laboratorio/laboratorio</strong>,
+                    <strong>master/master</strong>
+                </small>
+            </div>
+            <div id="userInfo">
+                <span>Sesión activa: <span id="userRoleLabel" class="role-badge"></span></span>
+                <button class="btn btn-secondary" onclick="cerrarSesion()">Cerrar sesión</button>
+            </div>
+        </div>
+
+        <!-- Tabs principales -->
+        <div class="tabs">
+            <button class="tab-button active" onclick="cambiarPestaña('tab-ordenes', this)">Órdenes</button>
+            <button class="tab-button" onclick="cambiarPestaña('tab-metricas-solicitudes', this)">Métricas Solicitudes</button>
+            <button class="tab-button" onclick="cambiarPestaña('tab-metricas-envios', this)">Métricas Envíos</button>
+        </div>
+
+        <!-- PESTAÑA ÓRDENES -->
+        <div id="tab-ordenes" class="tab-content active">
+            <!-- Estadísticas rápidas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="statTotal">0</h3>
+                    <p>Total Órdenes</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statSolicitadas">0</h3>
+                    <p>Solicitadas</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statEnProceso">0</h3>
+                    <p>En Proceso</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statFinalizadas">0</h3>
+                    <p>Finalizadas</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="statEnviadas">0</h3>
+                    <p>Enviadas</p>
+                </div>
+            </div>
+
+            <!-- Controles -->
+            <div class="controls">
+                <button class="btn btn-primary" onclick="accionNuevaOrden()">
+                    ➕ Nueva Solicitud de Producción
+                </button>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar por ID, producto, solicitante..."
+                           oninput="buscarOrdenes()">
+                </div>
+                <button class="btn btn-success" onclick="exportarDatos()">
+                    💾 Exportar Datos
+                </button>
+                <button class="btn btn-info" onclick="importarDatos()">
+                    📥 Importar Datos
+                </button>
+            </div>
+
+            <!-- Filtros -->
+            <div class="filter-section">
+                <select id="filterEstado" onchange="filtrarOrdenes()">
+                    <option value="">Todos los estados</option>
+                    <option value="solicitada">Solicitada</option>
+                    <option value="aprobada">Aprobada</option>
+                    <option value="en-proceso">En Proceso</option>
+                    <option value="en-pausa">En Pausa</option>
+                    <option value="completada">Completada</option>
+                    <option value="finalizado">Finalizado</option>
+                    <option value="enviado">Enviado</option>
+                    <option value="rechazada">Rechazada</option>
+                    <option value="cancelada">Cancelada</option>
+                </select>
+                <select id="filterPrioridad" onchange="filtrarOrdenes()">
+                    <option value="">Todas las prioridades</option>
+                    <option value="critica">Crítica</option>
+                    <option value="alta">Alta</option>
+                    <option value="media">Media</option>
+                    <option value="baja">Baja</option>
+                </select>
+            </div>
+
+            <!-- Tabla de órdenes -->
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>ID Orden</th>
+                        <th>Producto</th>
+                        <th>Cantidad</th>
+                        <th>Fecha Solicitud</th>
+                        <th>Solicitante</th>
+                        <th>Prioridad</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody id="ordenesTableBody">
+                    <!-- dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- PESTAÑA MÉTRICAS SOLICITUDES -->
+        <div id="tab-metricas-solicitudes" class="tab-content">
+            <div class="alert-box alert-info">
+                <strong>Métricas de solicitudes</strong><br>
+                Visualización del volumen de trabajo ingresado al sistema por estado y tipo de producto.
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metrics-card">
+                    <h3>Solicitudes por estado</h3>
+                    <div class="metrics-summary" id="summarySolicitudesEstado"></div>
+                    <div class="metrics-canvas-wrapper">
+                        <canvas id="chartSolicitudesEstado"></canvas>
+                    </div>
+                </div>
+
+                <div class="metrics-card">
+                    <h3>Solicitudes por tipo de producto</h3>
+                    <div class="metrics-summary" id="summarySolicitudesTipo"></div>
+                    <div class="metrics-canvas-wrapper">
+                        <canvas id="chartSolicitudesTipo"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑA MÉTRICAS ENVÍOS -->
+        <div id="tab-metricas-envios" class="tab-content">
+            <div class="alert-box alert-success">
+                <strong>Métricas de productos enviados</strong><br>
+                Control del flujo de salida: cantidad total enviada por tipo de producto (solo órdenes en estado “Enviado”).
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metrics-card">
+                    <h3>Cantidad enviada por tipo de producto</h3>
+                    <div class="metrics-summary" id="summaryEnviosTipo"></div>
+                    <div class="metrics-canvas-wrapper">
+                        <canvas id="chartEnviosTipo"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Modal Nueva Orden -->
+<div id="modalNuevaOrden" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Nueva Solicitud de Producción</h2>
+            <button class="close" onclick="cerrarModal('modalNuevaOrden')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="formNuevaOrden" onsubmit="guardarOrden(event)">
+                <div class="alert-box alert-info">
+                    Complete los campos para solicitar la producción. El laboratorio aprobará y gestionará los estados posteriores.
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required">ID Orden</label>
+                        <input type="text" id="ordenId" readonly required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Fecha Solicitada</label>
+                        <input type="date" id="ordenFechaPlanificada" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Solicitante</label>
+                    <input type="text" id="ordenSolicitante" placeholder="Nombre completo del solicitante" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required">Tipo de producto</label>
+                        <select id="ordenTipoProducto" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="aceite-thc">Aceite THC</option>
+                            <option value="aceite-cbd">Aceite CBD</option>
+                            <option value="cartridge-live-resin">Cartucho live resin (sabores)</option>
+                            <option value="cartridge-destilado">Cartucho destilado</option>
+                            <option value="cartridge-destilado-terpenos">Cartucho destilado con terpenos (sabores)</option>
+                            <option value="diamantes">Diamantes</option>
+                            <option value="salsa">Salsa</option>
+                            <option value="salsa-diamantes">Salsa con diamantes</option>
+                            <option value="budder">Budder</option>
+                            <option value="preroll-infuse">Preroll infuse</option>
+                            <option value="moon-rock">Moon rock</option>
+                            <option value="unguento">Ungüento</option>
+                            <option value="gomitas">Gomitas (sabores)</option>
+                            <option value="otros-especiales">Otros pedidos especiales / producto magistral</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Código Producto</label>
+                        <input type="text" id="ordenCodigoProducto" placeholder="Ej: PROD-ACEITE-THC-010" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Detalle / Potencia / Sabor</label>
+                        <input type="text" id="ordenDescripcionProducto"
+                               placeholder="Ej: 10% THC, sabor mango, 1 mL por cartucho">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo de orden</label>
+                        <select id="ordenTipoOrden">
+                            <option value="lote-comercial">Lote comercial</option>
+                            <option value="muestra-id">Muestra I+D</option>
+                            <option value="validacion">Validación / estabilidad</option>
+                            <option value="magistral">Preparación magistral / pedido especial</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="required">Cantidad Solicitada</label>
+                        <input type="number" id="ordenCantidad" min="1" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="required">Unidad de Medida</label>
+                        <select id="ordenUnidad" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="kg">Kilogramos (kg)</option>
+                            <option value="L">Litros (L)</option>
+                            <option value="unidades">Unidades</option>
+                            <option value="g">Gramos (g)</option>
+                            <option value="mL">Mililitros (mL)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Prioridad</label>
+                    <select id="ordenPrioridad" required>
+                        <option value="media">Media</option>
+                        <option value="baja">Baja</option>
+                        <option value="alta">Alta</option>
+                        <option value="critica">Crítica</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Documentación de Respaldo / Receta</label>
+                    <textarea id="ordenDocumentacion" required
+                              placeholder="Pegue aquí la receta, fórmula o enlace a documento de respaldo..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Adjuntar receta en PDF</label>
+                    <input type="file" id="ordenArchivoReceta" accept="application/pdf,.pdf">
+                    <small>El PDF se almacena en el navegador (localStorage) para poder abrirlo y descargarlo desde la orden.</small>
+                </div>
+
+                <div class="form-group">
+                    <label>Observaciones / Notas adicionales</label>
+                    <textarea id="ordenObservaciones" placeholder="Comentarios relevantes para la producción..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalNuevaOrden')">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        📤 Enviar Solicitud
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalle Orden -->
+<div id="modalDetalleOrden" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="detalleOrdenTitulo">Detalle de Orden</h2>
+            <button class="close" onclick="cerrarModal('modalDetalleOrden')">&times;</button>
+        </div>
+        <div class="modal-body" id="detalleOrdenBody"></div>
+    </div>
+</div>
+
+<!-- Modal Cambio de Estado -->
+<div id="modalCambioEstado" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Cambiar Estado de Orden</h2>
+            <button class="close" onclick="cerrarModal('modalCambioEstado')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="cambioEstadoContent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Asignar Materias Primas -->
+<div id="modalAsignarMP" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Asignar Materias Primas</h2>
+            <button class="close" onclick="cerrarModal('modalAsignarMP')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="formAsignarMP" onsubmit="guardarMateriasPrimas(event)">
+                <input type="hidden" id="mpOrdenId">
+
+                <div class="alert-box alert-info">
+                    Registre las materias primas, extractos y lotes que se utilizarán para esta orden de producción.
+                </div>
+
+                <div class="materias-primas-section">
+                    <h3>Materias Primas / Extractos</h3>
+                    <div id="materiaPrimaList"></div>
+                    <button type="button" class="btn btn-secondary" onclick="agregarMateriaPrima()">
+                        ➕ Agregar Materia Prima
+                    </button>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalAsignarMP')">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        💾 Guardar Asignación
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Incidencia -->
+<div id="modalIncidencia" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Registrar Incidencia</h2>
+            <button class="close" onclick="cerrarModal('modalIncidencia')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="formIncidencia" onsubmit="guardarIncidencia(event)">
+                <input type="hidden" id="incidenciaOrdenId">
+
+                <div class="form-group">
+                    <label class="required">Tipo de incidencia</label>
+                    <select id="incidenciaTipo" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="falta-materia-prima">Falta de materia prima</option>
+                        <option value="falla-equipo">Falla de equipo</option>
+                        <option value="desviacion-proceso">Desviación del proceso</option>
+                        <option value="personal">Problema de personal</option>
+                        <option value="calidad">Problema de calidad</option>
+                        <option value="otros">Otros</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Severidad</label>
+                    <select id="incidenciaSeveridad" required>
+                        <option value="menor">Menor</option>
+                        <option value="moderada">Moderada</option>
+                        <option value="critica">Crítica</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Descripción detallada</label>
+                    <textarea id="incidenciaDescripcion" required
+                              placeholder="Describa en detalle la incidencia ocurrida..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Acción correctiva propuesta</label>
+                    <textarea id="incidenciaAccion"
+                              placeholder="Acciones a realizar para resolver la incidencia..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalIncidencia')">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-warning">
+                        ⚠️ Registrar Incidencia
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- Input oculto para importar -->
+<input type="file" id="fileInput" accept=".json" style="display: none;" onchange="procesarArchivoImportado(event)">
+
+<script>
+    let ordenes = [];
+    let contadorOrdenes = 1;
+    let materiaPrimaCounter = 0;
+
+    let currentRole = null;       // 'solicitante' | 'laboratorio' | 'master'
+    let currentUsername = null;
+
+    const ESTADOS = {
+        SOLICITADA: 'solicitada',
+        APROBADA: 'aprobada',
+        EN_PROCESO: 'en-proceso',
+        EN_PAUSA: 'en-pausa',
+        COMPLETADA: 'completada',
+        FINALIZADO: 'finalizado',
+        ENVIADO: 'enviado',
+        RECHAZADA: 'rechazada',
+        CANCELADA: 'cancelada'
+    };
+
+    const TRANSICIONES_PERMITIDAS = {
+        'solicitada': ['aprobada', 'rechazada', 'cancelada'],
+        'aprobada': ['en-proceso', 'cancelada'],
+        'en-proceso': ['en-pausa', 'completada', 'cancelada'],
+        'en-pausa': ['en-proceso', 'cancelada'],
+        'completada': ['finalizado'],
+        'finalizado': ['enviado'],
+        'enviado': [],
+        'rechazada': [],
+        'cancelada': []
+    };
+
+    const MOTIVOS_PAUSA = [
+        'Falta de materia prima',
+        'Falla de equipo',
+        'Turno finalizado',
+        'Esperando control de calidad',
+        'Mantenimiento preventivo',
+        'Problema de calidad detectado',
+        'Falta de personal',
+        'Otros'
+    ];
+
+    // Gráficos (Chart.js)
+    let chartSolicitudesEstado = null;
+    let chartSolicitudesTipo = null;
+    let chartEnviosTipo = null;
+
+    // Login
+    function loginSistema(event) {
+        event.preventDefault();
+        const usuario = document.getElementById('loginUsuario').value.trim().toLowerCase();
+        const clave = document.getElementById('loginClave').value.trim();
+
+        if (usuario === 'solicitante' && clave === 'solicitante') {
+            currentRole = 'solicitante';
+            currentUsername = 'Solicitante BCP';
+        } else if (usuario === 'laboratorio' && clave === 'laboratorio') {
+            currentRole = 'laboratorio';
+            currentUsername = 'Laboratorio BCP';
+        } else if (usuario === 'master' && clave === 'master') {
+            currentRole = 'master';
+            currentUsername = 'Master BCP';
+        } else {
+            mostrarToast('Credenciales inválidas. Use solicitante/solicitante, laboratorio/laboratorio o master/master.', 'error');
+            return;
+        }
+
+        document.getElementById('loginUsuario').value = '';
+        document.getElementById('loginClave').value = '';
+        actualizarBarraUsuario();
+        renderizarOrdenes();
+        actualizarMetricas();
+        mostrarToast(`Sesión iniciada como ${currentRole}`, 'success');
+    }
+
+    function cerrarSesion() {
+        currentRole = null;
+        currentUsername = null;
+        actualizarBarraUsuario();
+        renderizarOrdenes();
+        actualizarMetricas();
+        mostrarToast('Sesión cerrada', 'info');
+    }
+
+    function actualizarBarraUsuario() {
+        const loginSection = document.getElementById('loginSection');
+        const userInfo = document.getElementById('userInfo');
+        const roleLabel = document.getElementById('userRoleLabel');
+
+        if (currentRole) {
+            loginSection.style.display = 'none';
+            userInfo.style.display = 'flex';
+            roleLabel.textContent = currentRole;
+        } else {
+            loginSection.style.display = 'block';
+            userInfo.style.display = 'none';
+        }
+    }
+
+    function accionNuevaOrden() {
+        if (!currentRole) {
+            mostrarToast('Debe iniciar sesión para crear solicitudes', 'error');
+            return;
+        }
+        if (currentRole !== 'solicitante' && currentRole !== 'master') {
+            mostrarToast('Solo SOLICITANTE o MASTER pueden crear nuevas órdenes', 'error');
+            return;
+        }
+        abrirModalNuevaOrden();
+    }
+
+    // Tabs
+    function cambiarPestaña(tabId, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+
+        document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+
+        if (tabId === 'tab-metricas-solicitudes' || tabId === 'tab-metricas-envios') {
+            actualizarMetricas();
+        }
+    }
+
+    // Fecha y hora en encabezado
+    function actualizarFechaHora() {
+        const now = new Date();
+        const fecha = now.toLocaleDateString('es-CL', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        const hora = now.toLocaleTimeString('es-CL', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+
+        const fechaEl = document.getElementById('bcp-fecha');
+        const horaEl = document.getElementById('bcp-hora');
+        if (fechaEl) fechaEl.textContent = fecha;
+        if (horaEl) horaEl.textContent = hora;
+    }
+
+    // Inicialización
+    function inicializar() {
+        cargarDatos();
+        if (ordenes.length === 0) {
+            cargarDatosDemo();
+        }
+        generarNuevoIdOrden();
+        renderizarOrdenes();
+        actualizarEstadisticas();
+        actualizarMetricas();
+
+        const hoy = new Date().toISOString().split('T')[0];
+        const fechaPlan = document.getElementById('ordenFechaPlanificada');
+        if (fechaPlan) fechaPlan.value = hoy;
+
+        actualizarBarraUsuario();
+
+        // reloj encabezado
+        actualizarFechaHora();
+        setInterval(actualizarFechaHora, 1000);
+    }
+
+    // LocalStorage
+    function cargarDatos() {
+        const datosGuardados = localStorage.getItem('bcpOrdenesProduccionV3_4');
+        if (datosGuardados) {
+            const datos = JSON.parse(datosGuardados);
+            ordenes = datos.ordenes || [];
+            contadorOrdenes = datos.contadorOrdenes || 1;
+        }
+    }
+
+    function guardarDatos() {
+        const datos = {
+            ordenes: ordenes,
+            contadorOrdenes: contadorOrdenes,
+            ultimaActualizacion: new Date().toISOString(),
+            version: '3.4'
+        };
+        localStorage.setItem('bcpOrdenesProduccionV3_4', JSON.stringify(datos));
+    }
+
+    // Datos demo
+    function cargarDatosDemo() {
+        ordenes = [
+            {
+                id: 'BCP-OP-20241115-001',
+                fechaPlanificada: '2024-11-20',
+                solicitante: 'Dr. María González',
+                producto: 'Aceite CBD 10%',
+                tipoProducto: 'aceite-cbd',
+                descripcionProducto: 'Aceite CBD 10%',
+                tipoOrden: 'lote-comercial',
+                archivoRecetaNombre: '',
+                codigoProducto: 'PROD-CBD-010',
+                cantidad: 500,
+                unidad: 'mL',
+                prioridad: 'alta',
+                estado: 'solicitada',
+                documentacionRespaldo: 'Receta: Aceite CBD 10%\nExtracto CBD: 50g\nAceite MCT: 450mL\nProtocolo: PT-001',
+                observaciones: 'Solicitud urgente para stock',
+                materiasPrimas: [],
+                pausas: [],
+                incidencias: [],
+                historial: [
+                    {
+                        fecha: '2024-11-15T09:00:00',
+                        usuario: 'Dr. María González',
+                        accion: 'Solicitud creada',
+                        estadoAnterior: null,
+                        estadoNuevo: 'solicitada',
+                        comentario: 'Solicitud de producción enviada'
+                    }
+                ],
+                creadoPor: 'Dr. María González',
+                fechaCreacion: '2024-11-15T09:00:00',
+                modificadoPor: 'Dr. María González',
+                fechaModificacion: '2024-11-15T09:00:00'
+            }
+        ];
+        contadorOrdenes = 2;
+        guardarDatos();
+    }
+
+    // ID Orden
+    function generarNuevoIdOrden() {
+        const fecha = new Date();
+        const año = fecha.getFullYear();
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        const numero = String(contadorOrdenes).padStart(3, '0');
+
+        const nuevoId = `BCP-OP-${año}${mes}${dia}-${numero}`;
+        const idInput = document.getElementById('ordenId');
+        if (idInput) idInput.value = nuevoId;
+        return nuevoId;
+    }
+
+    // Materias primas
+    function agregarMateriaPrima() {
+        materiaPrimaCounter++;
+        const container = document.getElementById('materiaPrimaList');
+        const div = document.createElement('div');
+        div.className = 'materia-prima-item';
+        div.id = `mp-${materiaPrimaCounter}`;
+        div.innerHTML = `
+            <input type="text" placeholder="Nombre de materia prima / extracto" required>
+            <input type="text" placeholder="Lote" required>
+            <input type="number" placeholder="Cantidad" min="0" step="0.01" required>
+            <select required>
+                <option value="">Unidad...</option>
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="mL">mL</option>
+                <option value="unidades">unidades</option>
+            </select>
+            <button type="button" class="btn btn-danger" onclick="eliminarMateriaPrima(${materiaPrimaCounter})">
+                ❌
+            </button>
+        `;
+        container.appendChild(div);
+    }
+
+    function eliminarMateriaPrima(id) {
+        const elemento = document.getElementById(`mp-${id}`);
+        if (elemento) elemento.remove();
+    }
+
+    function obtenerMateriasPrimas() {
+        const items = document.querySelectorAll('.materia-prima-item');
+        const materiasPrimas = [];
+
+        items.forEach(item => {
+            const inputs = item.querySelectorAll('input');
+            const select = item.querySelector('select');
+
+            if (inputs[0].value && inputs[1].value && inputs[2].value && select.value) {
+                materiasPrimas.push({
+                    nombre: inputs[0].value,
+                    lote: inputs[1].value,
+                    cantidad: parseFloat(inputs[2].value),
+                    unidad: select.value
+                });
+            }
+        });
+
+        return materiasPrimas;
+    }
+
+    function leerArchivoComoDataURL(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = () => reject(new Error('No se pudo leer el archivo'));
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Guardar Orden (solicitante / master)
+    async function guardarOrden(event) {
+        event.preventDefault();
+
+        if (!currentRole || (currentRole !== 'solicitante' && currentRole !== 'master')) {
+            mostrarToast('Solo SOLICITANTE o MASTER pueden registrar órdenes', 'error');
+            return;
+        }
+
+        const solicitante = document.getElementById('ordenSolicitante').value;
+        const tipoProductoSelect = document.getElementById('ordenTipoProducto');
+        const tipoProducto = tipoProductoSelect.value;
+        const tipoProductoTexto = tipoProductoSelect.options[tipoProductoSelect.selectedIndex].text;
+        const descripcionProducto = document.getElementById('ordenDescripcionProducto').value.trim();
+        const tipoOrden = document.getElementById('ordenTipoOrden').value;
+
+        const archivoRecetaInput = document.getElementById('ordenArchivoReceta');
+        let archivoRecetaNombre = '';
+        let archivoRecetaDataUrl = '';
+        let archivoRecetaMimeType = '';
+        if (archivoRecetaInput && archivoRecetaInput.files && archivoRecetaInput.files.length > 0) {
+            const archivo = archivoRecetaInput.files[0];
+            archivoRecetaNombre = archivo.name;
+
+            const esPdf = archivo.type === 'application/pdf' || archivo.name.toLowerCase().endsWith('.pdf');
+            if (!esPdf) {
+                mostrarToast('Solo se permiten archivos PDF', 'error');
+                return;
+            }
+
+            const maxBytes = 3 * 1024 * 1024; // 3 MB para no saturar localStorage
+            if (archivo.size > maxBytes) {
+                mostrarToast('El PDF excede 3MB. Use un archivo más liviano.', 'error');
+                return;
+            }
+
+            try {
+                archivoRecetaDataUrl = await leerArchivoComoDataURL(archivo);
+                archivoRecetaMimeType = archivo.type || 'application/pdf';
+            } catch (error) {
+                mostrarToast('No se pudo procesar el PDF adjunto', 'error');
+                return;
+            }
+        }
+
+        const productoCompuesto = descripcionProducto
+            ? `${tipoProductoTexto} - ${descripcionProducto}`
+            : tipoProductoTexto;
+
+        const nuevaOrden = {
+            id: document.getElementById('ordenId').value,
+            fechaPlanificada: document.getElementById('ordenFechaPlanificada').value,
+            solicitante: solicitante,
+            producto: productoCompuesto,
+            tipoProducto: tipoProducto,
+            descripcionProducto: descripcionProducto,
+            tipoOrden: tipoOrden,
+            archivoRecetaNombre: archivoRecetaNombre,
+            archivoRecetaDataUrl: archivoRecetaDataUrl,
+            archivoRecetaMimeType: archivoRecetaMimeType,
+            codigoProducto: document.getElementById('ordenCodigoProducto').value,
+            cantidad: parseFloat(document.getElementById('ordenCantidad').value),
+            unidad: document.getElementById('ordenUnidad').value,
+            prioridad: document.getElementById('ordenPrioridad').value,
+            estado: ESTADOS.SOLICITADA,
+            documentacionRespaldo: document.getElementById('ordenDocumentacion').value,
+            observaciones: document.getElementById('ordenObservaciones').value,
+            materiasPrimas: [],
+            pausas: [],
+            incidencias: [],
+            historial: [
+                {
+                    fecha: new Date().toISOString(),
+                    usuario: solicitante,
+                    accion: 'Solicitud creada',
+                    estadoAnterior: null,
+                    estadoNuevo: ESTADOS.SOLICITADA,
+                    comentario: 'Solicitud de producción enviada'
+                }
+            ],
+            creadoPor: solicitante,
+            fechaCreacion: new Date().toISOString(),
+            modificadoPor: solicitante,
+            fechaModificacion: new Date().toISOString()
+        };
+
+        ordenes.unshift(nuevaOrden);
+        contadorOrdenes++;
+        guardarDatos();
+
+        cerrarModal('modalNuevaOrden');
+        renderizarOrdenes();
+        actualizarEstadisticas();
+        actualizarMetricas();
+        mostrarToast('Solicitud de producción enviada exitosamente', 'success');
+
+        document.getElementById('formNuevaOrden').reset();
+        generarNuevoIdOrden();
+        const hoy = new Date().toISOString().split('T')[0];
+        document.getElementById('ordenFechaPlanificada').value = hoy;
+    }
+
+    // Asignar MP (lab / master)
+    function abrirModalAsignarMP(ordenId) {
+        if (!esLaboratorioOMaster()) {
+            mostrarToast('Solo LABORATORIO o MASTER pueden asignar materias primas', 'error');
+            return;
+        }
+
+        const orden = ordenes.find(o => o.id === ordenId);
+        if (!orden) return;
+
+        document.getElementById('mpOrdenId').value = ordenId;
+
+        const container = document.getElementById('materiaPrimaList');
+        container.innerHTML = '';
+        materiaPrimaCounter = 0;
+
+        if (orden.materiasPrimas && orden.materiasPrimas.length > 0) {
+            orden.materiasPrimas.forEach(mp => {
+                materiaPrimaCounter++;
+                const div = document.createElement('div');
+                div.className = 'materia-prima-item';
+                div.id = `mp-${materiaPrimaCounter}`;
+                div.innerHTML = `
+                    <input type="text" value="${mp.nombre}" placeholder="Nombre de materia prima / extracto" required>
+                    <input type="text" value="${mp.lote}" placeholder="Lote" required>
+                    <input type="number" value="${mp.cantidad}" placeholder="Cantidad" min="0" step="0.01" required>
+                    <select required>
+                        <option value="">Unidad...</option>
+                        <option value="kg" ${mp.unidad === 'kg' ? 'selected' : ''}>kg</option>
+                        <option value="g" ${mp.unidad === 'g' ? 'selected' : ''}>g</option>
+                        <option value="L" ${mp.unidad === 'L' ? 'selected' : ''}>L</option>
+                        <option value="mL" ${mp.unidad === 'mL' ? 'selected' : ''}>mL</option>
+                        <option value="unidades" ${mp.unidad === 'unidades' ? 'selected' : ''}>unidades</option>
+                    </select>
+                    <button type="button" class="btn btn-danger" onclick="eliminarMateriaPrima(${materiaPrimaCounter})">
+                        ❌
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        document.getElementById('modalAsignarMP').style.display = 'block';
+    }
+
+    function guardarMateriasPrimas(event) {
+        event.preventDefault();
+
+        if (!esLaboratorioOMaster()) {
+            mostrarToast('Solo LABORATORIO o MASTER pueden asignar materias primas', 'error');
+            return;
+        }
+
+        const ordenId = document.getElementById('mpOrdenId').value;
+        const orden = ordenes.find(o => o.id === ordenId);
+        if (!orden) return;
+
+        const materiasPrimas = obtenerMateriasPrimas();
+        if (materiasPrimas.length === 0) {
+            mostrarToast('Debe agregar al menos una materia prima', 'error');
+            return;
+        }
+
+        const usuario = prompt('Ingrese su nombre (Usuario del laboratorio):') || currentUsername || 'Laboratorio';
+
+        const detalleMPs = materiasPrimas.map(mp =>
+            `${mp.nombre} (Lote: ${mp.lote}) - ${mp.cantidad}${mp.unidad}`
+        ).join(', ');
+
+        orden.materiasPrimas = materiasPrimas;
+        orden.historial.push({
+            fecha: new Date().toISOString(),
+            usuario: usuario,
+            accion: 'Asignación de MP',
+            estadoAnterior: orden.estado,
+            estadoNuevo: orden.estado,
+            comentario: `Asignadas materias primas: ${detalleMPs}`
+        });
+
+        orden.modificadoPor = usuario;
+        orden.fechaModificacion = new Date().toISOString();
+
+        guardarDatos();
+        cerrarModal('modalAsignarMP');
+
+        if (document.getElementById('modalDetalleOrden').style.display === 'block') {
+            verDetalleOrden(ordenId);
+        }
+
+        renderizarOrdenes();
+        actualizarMetricas();
+        mostrarToast('Materias primas asignadas correctamente', 'success');
+    }
+
+    // Render tabla
+    function renderizarOrdenes() {
+        const tbody = document.getElementById('ordenesTableBody');
+        const ordenesAMostrar = filtrarYBuscarOrdenes();
+
+        if (ordenesAMostrar.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 30px;">
+                        No se encontraron órdenes de producción
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = ordenesAMostrar.map(orden => {
+            let accionesHTML = `
+                <button onclick="verDetalleOrden('${orden.id}')"
+                        style="background: #5A2CA0; color: white;"
+                        title="Ver Detalle">
+                    👁️
+                </button>
+            `;
+
+            if (esLaboratorioOMaster()) {
+                accionesHTML += `
+                    <button onclick="abrirCambioEstado('${orden.id}')"
+                            style="background: #3DB54A; color: white;"
+                            title="Cambiar Estado"
+                            ${['enviado', 'rechazada', 'cancelada'].includes(orden.estado) ? 'disabled' : ''}>
+                        🔄
+                    </button>
+                `;
+
+                if (orden.estado === 'aprobada') {
+                    accionesHTML += `
+                        <button onclick="abrirModalAsignarMP('${orden.id}')"
+                                style="background: #00897B; color: white;"
+                                title="Asignar MP">
+                            📦
+                        </button>
+                    `;
+                }
+
+                if (['en-proceso', 'en-pausa'].includes(orden.estado)) {
+                    accionesHTML += `
+                        <button onclick="abrirModalIncidencia('${orden.id}')"
+                                style="background: #FFB300; color: #000;"
+                                title="Registrar Incidencia">
+                            ⚠️
+                        </button>
+                    `;
+                }
+
+                accionesHTML += `
+                    <button onclick="imprimirOrden('${orden.id}')"
+                            style="background: #546E7A; color: white;"
+                            title="Imprimir Orden">
+                        🖨️
+                    </button>
+                `;
+
+                if (currentRole === 'master') {
+                    accionesHTML += `
+                        <button onclick="eliminarOrden('${orden.id}')"
+                                style="background: #C62828; color: white;"
+                                title="Eliminar Solicitud">
+                            🗑️
+                        </button>
+                    `;
+                }
+            } else if (currentRole === 'solicitante') {
+                accionesHTML += `
+                    <button onclick="imprimirOrden('${orden.id}')"
+                            style="background: #546E7A; color: white;"
+                            title="Imprimir Orden">
+                        🖨️
+                    </button>
+                `;
+            }
+
+            return `
+                <tr>
+                    <td><strong>${orden.id}</strong></td>
+                    <td>
+                        ${orden.producto}
+                        ${orden.incidencias && orden.incidencias.length > 0 ? '<br><span style="color: #C62828; font-size: 0.8em;">⚠️ Con incidencias</span>' : ''}
+                    </td>
+                    <td>${orden.cantidad} ${orden.unidad}</td>
+                    <td>${formatearFecha(orden.fechaPlanificada)}</td>
+                    <td>${orden.solicitante}</td>
+                    <td>
+                        <span class="priority-badge priority-${orden.prioridad}">
+                            ${orden.prioridad.toUpperCase()}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${orden.estado}">
+                            ${formatearEstado(orden.estado)}
+                        </span>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            ${accionesHTML}
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+
+        actualizarEstadisticas();
+    }
+
+    function actualizarEstadisticas() {
+        document.getElementById('statTotal').textContent = ordenes.length;
+        document.getElementById('statSolicitadas').textContent =
+            ordenes.filter(o => o.estado === 'solicitada').length;
+        document.getElementById('statEnProceso').textContent =
+            ordenes.filter(o => o.estado === 'en-proceso').length;
+        document.getElementById('statFinalizadas').textContent =
+            ordenes.filter(o => o.estado === 'finalizado').length;
+        document.getElementById('statEnviadas').textContent =
+            ordenes.filter(o => o.estado === 'enviado').length;
+    }
+
+    // Cambio de estado
+    function abrirCambioEstado(id) {
+        if (!esLaboratorioOMaster()) {
+            mostrarToast('Solo LABORATORIO o MASTER pueden cambiar estados', 'error');
+            return;
+        }
+
+        const orden = ordenes.find(o => o.id === id);
+        if (!orden) return;
+
+        const estadosPermitidos = TRANSICIONES_PERMITIDAS[orden.estado];
+        if (!estadosPermitidos || estadosPermitidos.length === 0) {
+            mostrarToast('Esta orden no puede cambiar de estado', 'error');
+            return;
+        }
+
+        const content = document.getElementById('cambioEstadoContent');
+
+        let flowHTML = `
+            <div class="estado-flow">
+                <h4>Flujo de estados posibles</h4>
+                <div class="flow-diagram">
+                    <div class="flow-state status-badge status-${orden.estado}">
+                        ${formatearEstado(orden.estado)} (actual)
+                    </div>
+                    ${estadosPermitidos.map(e => `
+                        <span class="flow-arrow">→</span>
+                        <div class="flow-state status-badge status-${e}">
+                            ${formatearEstado(e)}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+
+        let infoHTML = '';
+        if (orden.estado === 'solicitada') {
+            infoHTML = `
+                <div class="alert-box alert-info">
+                    Esta orden requiere revisión del laboratorio para ser aprobada o rechazada.
+                </div>
+            `;
+        }
+
+        if (orden.estado === 'en-pausa' && orden.pausas && orden.pausas.length > 0) {
+            const ultimaPausa = orden.pausas[orden.pausas.length - 1];
+            infoHTML = `
+                <div class="alert-box alert-warning">
+                    <strong>Orden en pausa</strong><br>
+                    Motivo: ${ultimaPausa.motivo}<br>
+                    ${ultimaPausa.descripcion ? `Detalle: ${ultimaPausa.descripcion}` : ''}
+                </div>
+            `;
+        }
+
+        content.innerHTML = `
+            ${flowHTML}
+            ${infoHTML}
+
+            <form id="formCambioEstado" onsubmit="procesarCambioEstado(event, '${orden.id}')">
+                <div class="form-group">
+                    <label class="required">Nuevo estado</label>
+                    <select id="nuevoEstado" required onchange="mostrarCamposAdicionales()">
+                        <option value="">Seleccionar...</option>
+                        ${estadosPermitidos.map(e => `
+                            <option value="${e}">${formatearEstado(e)}</option>
+                        `).join('')}
+                    </select>
+                </div>
+
+                <div id="camposAdicionales"></div>
+
+                <div class="form-group">
+                    <label class="required">Usuario</label>
+                    <input type="text" id="usuarioCambio" required placeholder="Nombre completo">
+                </div>
+
+                <div class="form-group">
+                    <label class="required">Comentario</label>
+                    <textarea id="comentarioCambio" required
+                              placeholder="Describa el motivo o contexto del cambio de estado..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                    <button type="button" class="btn btn-secondary" onclick="cerrarModal('modalCambioEstado')">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        💾 Confirmar cambio
+                    </button>
+                </div>
+            </form>
+        `;
+
+        document.getElementById('modalCambioEstado').style.display = 'block';
+    }
+
+    function mostrarCamposAdicionales() {
+        const nuevoEstado = document.getElementById('nuevoEstado').value;
+        const container = document.getElementById('camposAdicionales');
+        container.innerHTML = '';
+
+        if (nuevoEstado === 'rechazada') {
+            container.innerHTML = `
+                <div class="alert-box alert-danger">
+                    Debe indicar claramente el motivo del rechazo.
+                </div>
+                <div class="form-group">
+                    <label class="required">Motivo del rechazo</label>
+                    <textarea id="motivoRechazo" required
+                              placeholder="Explique por qué se rechaza esta solicitud..."></textarea>
+                </div>
+            `;
+        } else if (nuevoEstado === 'aprobada') {
+            container.innerHTML = `
+                <div class="alert-box alert-success">
+                    La solicitud queda aprobada. Posteriormente puede asignar materias primas y pasar a “En Proceso”.
+                </div>
+            `;
+        } else if (nuevoEstado === 'en-pausa') {
+            container.innerHTML = `
+                <div class="form-group">
+                    <label class="required">Motivo de pausa</label>
+                    <select id="motivoPausa" required>
+                        <option value="">Seleccionar...</option>
+                        ${MOTIVOS_PAUSA.map(m => `<option value="${m}">${m}</option>`).join('')}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descripción adicional</label>
+                    <textarea id="descripcionPausa"
+                              placeholder="Detalles sobre la pausa..."></textarea>
+                </div>
+            `;
+        } else if (nuevoEstado === 'completada') {
+            container.innerHTML = `
+                <div class="alert-box alert-info">
+                    La producción ha finalizado a nivel de proceso interno, pendiente control de calidad y cierre.
+                </div>
+            `;
+        } else if (nuevoEstado === 'finalizado') {
+            container.innerHTML = `
+                <div class="alert-box alert-success">
+                    Al marcar como FINALIZADO se generará automáticamente un número de lote de producto.
+                </div>
+            `;
+        } else if (nuevoEstado === 'enviado') {
+            container.innerHTML = `
+                <div class="alert-box alert-info">
+                    Registre la información básica del envío. Se generará una hoja de despacho / envío.
+                </div>
+                <div class="form-group">
+                    <label>Destino</label>
+                    <input type="text" id="destinoEnvio"
+                           placeholder="Ej: Farmacia Central, Cliente XYZ">
+                </div>
+                <div class="form-group">
+                    <label>Número de guía / tracking</label>
+                    <input type="text" id="guiaEnvio"
+                           placeholder="Número de guía de despacho o tracking">
+                </div>
+            `;
+        }
+    }
+
+    function procesarCambioEstado(event, ordenId) {
+        event.preventDefault();
+
+        if (!esLaboratorioOMaster()) {
+            mostrarToast('Solo LABORATORIO o MASTER pueden cambiar estados', 'error');
+            return;
+        }
+
+        const orden = ordenes.find(o => o.id === ordenId);
+        if (!orden) return;
+
+        const estadoAnterior = orden.estado;
+        const estadoNuevo = document.getElementById('nuevoEstado').value;
+        const usuario = document.getElementById('usuarioCambio').value;
+        const comentario = document.getElementById('comentarioCambio').value;
+
+        if (estadoNuevo === 'rechazada') {
+            const motivoRechazo = document.getElementById('motivoRechazo').value;
+            if (!motivoRechazo) {
+                mostrarToast('Debe indicar el motivo del rechazo', 'error');
+                return;
+            }
+            orden.motivoRechazoSolicitud = motivoRechazo;
+        }
+
+        if (estadoNuevo === 'en-proceso' && estadoAnterior === 'aprobada') {
+            if (!orden.materiasPrimas || orden.materiasPrimas.length === 0) {
+                if (!confirm('No se han asignado materias primas. ¿Desea continuar de todos modos?')) {
+                    return;
+                }
+            }
+        }
+
+        if (estadoNuevo === 'en-pausa') {
+            const motivoPausa = document.getElementById('motivoPausa').value;
+            const descripcionPausa = document.getElementById('descripcionPausa')?.value || '';
+
+            if (!orden.pausas) orden.pausas = [];
+            orden.pausas.push({
+                fecha: new Date().toISOString(),
+                motivo: motivoPausa,
+                descripcion: descripcionPausa,
+                usuario: usuario
+            });
+
+            if (orden.tiempoProduccion && orden.tiempoProduccion.inicio) {
+                orden.tiempoProduccion.pausaInicio = new Date().toISOString();
+            }
+
+        } else if (estadoNuevo === 'en-proceso') {
+            if (estadoAnterior === 'en-pausa' && orden.tiempoProduccion?.pausaInicio) {
+                const pausaInicio = new Date(orden.tiempoProduccion.pausaInicio);
+                const ahora = new Date();
+                const tiempoPausa = (ahora - pausaInicio) / 1000 / 60;
+                orden.tiempoProduccion.pausaTotal = (orden.tiempoProduccion.pausaTotal || 0) + tiempoPausa;
+                delete orden.tiempoProduccion.pausaInicio;
+            }
+
+            if (!orden.tiempoProduccion) {
+                orden.tiempoProduccion = {
+                    inicio: new Date().toISOString(),
+                    pausaTotal: 0,
+                    tiempoEfectivo: 0
+                };
+            }
+
+        } else if (estadoNuevo === 'completada') {
+            if (orden.tiempoProduccion && orden.tiempoProduccion.inicio) {
+                const inicio = new Date(orden.tiempoProduccion.inicio);
+                const fin = new Date();
+                const tiempoTotal = (fin - inicio) / 1000 / 60;
+                orden.tiempoProduccion.fin = fin.toISOString();
+                orden.tiempoProduccion.tiempoEfectivo = tiempoTotal - (orden.tiempoProduccion.pausaTotal || 0);
+            }
+
+        } else if (estadoNuevo === 'finalizado') {
+            // Generación automática de número de lote de producto
+            if (!orden.loteGenerado) {
+                const fechaHoy = new Date();
+                const base = `BCP-LP-${fechaHoy.getFullYear()}${String(fechaHoy.getMonth()+1).padStart(2,'0')}${String(fechaHoy.getDate()).padStart(2,'0')}`;
+                const correlativo = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+                orden.loteGenerado = `${base}-${correlativo}`;
+            }
+
+        } else if (estadoNuevo === 'enviado') {
+            const destino = document.getElementById('destinoEnvio')?.value || '';
+            const guia = document.getElementById('guiaEnvio')?.value || '';
+
+            if (destino || guia) {
+                orden.infoEnvio = {
+                    destino: destino,
+                    guia: guia,
+                    fecha: new Date().toISOString(),
+                    usuario: usuario
+                };
+            } else {
+                orden.infoEnvio = {
+                    destino: '',
+                    guia: '',
+                    fecha: new Date().toISOString(),
+                    usuario: usuario
+                };
+            }
+        }
+
+        orden.estado = estadoNuevo;
+
+        orden.historial.push({
+            fecha: new Date().toISOString(),
+            usuario: usuario,
+            accion: estadoNuevo === 'rechazada' ? 'Solicitud rechazada' :
+                    estadoNuevo === 'aprobada' ? 'Solicitud aprobada' :
+                    'Cambio de estado',
+            estadoAnterior: estadoAnterior,
+            estadoNuevo: estadoNuevo,
+            comentario: comentario
+        });
+
+        orden.modificadoPor = usuario;
+        orden.fechaModificacion = new Date().toISOString();
+
+        guardarDatos();
+        cerrarModal('modalCambioEstado');
+        renderizarOrdenes();
+        actualizarMetricas();
+        mostrarToast(`Estado cambiado a: ${formatearEstado(estadoNuevo)}`, 'success');
+
+        // Al finalizar producción o enviar, generar documento de impresión de envío/producto
+        if (estadoNuevo === 'finalizado' || estadoNuevo === 'enviado') {
+            imprimirOrdenEnvio(ordenId);
+        }
+    }
+
+    // Incidencias
+    function abrirModalIncidencia(ordenId) {
+        if (!esLaboratorioOMaster()) {
+            mostrarToast('Solo LABORATORIO o MASTER pueden registrar incidencias', 'error');
+            return;
+        }
+        document.getElementById('incidenciaOrdenId').value = ordenId;
+        document.getElementById('formIncidencia').reset();
+        document.getElementById('modalIncidencia').style.display = 'block';
+    }
+
+    function guardarIncidencia(event) {
+        event.preventDefault();
+
+        if (!esLaboratorioOMaster()) {
+            mostrarToast('Solo LABORATORIO o MASTER pueden registrar incidencias', 'error');
+            return;
+        }
+
+        const ordenId = document.getElementById('incidenciaOrdenId').value;
+        const orden = ordenes.find(o => o.id === ordenId);
+        if (!orden) return;
+
+        if (!orden.incidencias) orden.incidencias = [];
+
+        const usuario = prompt('Ingrese su nombre:') || currentUsername || 'Usuario';
+
+        const nuevaIncidencia = {
+            fecha: new Date().toISOString(),
+            tipo: document.getElementById('incidenciaTipo').value,
+            severidad: document.getElementById('incidenciaSeveridad').value,
+            descripcion: document.getElementById('incidenciaDescripcion').value,
+            accion: document.getElementById('incidenciaAccion').value,
+            usuario: usuario
+        };
+
+        orden.incidencias.push(nuevaIncidencia);
+        orden.modificadoPor = usuario;
+        orden.fechaModificacion = new Date().toISOString();
+
+        if (nuevaIncidencia.severidad === 'critica' && orden.estado === 'en-proceso') {
+            if (confirm('Incidencia crítica. ¿Desea pausar la producción?')) {
+                orden.estado = 'en-pausa';
+                if (!orden.pausas) orden.pausas = [];
+                orden.pausas.push({
+                    fecha: new Date().toISOString(),
+                    motivo: 'Incidencia crítica',
+                    descripcion: nuevaIncidencia.descripcion,
+                    usuario: usuario
+                });
+
+                orden.historial.push({
+                    fecha: new Date().toISOString(),
+                    usuario: usuario,
+                    accion: 'Producción pausada',
+                    estadoAnterior: 'en-proceso',
+                    estadoNuevo: 'en-pausa',
+                    comentario: 'Pausa automática por incidencia crítica'
+                });
+            }
+        }
+
+        guardarDatos();
+        cerrarModal('modalIncidencia');
+        renderizarOrdenes();
+        actualizarMetricas();
+        mostrarToast('Incidencia registrada correctamente', 'warning');
+    }
+
+    // Detalle orden + comentarios
+    function verDetalleOrden(id) {
+        const orden = ordenes.find(o => o.id === id);
+        if (!orden) return;
+
+        document.getElementById('detalleOrdenTitulo').textContent = `Orden ${orden.id}`;
+
+        let tiempoHTML = '';
+        if (orden.tiempoProduccion && orden.tiempoProduccion.inicio) {
+            const tiempoEfectivo = orden.tiempoProduccion.tiempoEfectivo || 0;
+            const pausaTotal = orden.tiempoProduccion.pausaTotal || 0;
+
+            tiempoHTML = `
+                <div class="tiempo-produccion">
+                    <h4>⏱️ Tiempos de producción</h4>
+                    <p><strong>Inicio:</strong> ${formatearFechaHora(orden.tiempoProduccion.inicio)}</p>
+                    ${orden.tiempoProduccion.fin ? `<p><strong>Fin:</strong> ${formatearFechaHora(orden.tiempoProduccion.fin)}</p>` : ''}
+                    ${pausaTotal > 0 ? `<p><strong>Tiempo en pausa:</strong> ${Math.round(pausaTotal)} minutos</p>` : ''}
+                    ${tiempoEfectivo > 0 ? `<p><strong>Tiempo efectivo:</strong> ${Math.round(tiempoEfectivo)} minutos</p>` : ''}
+                </div>
+            `;
+        }
+
+        let incidenciasHTML = '';
+        if (orden.incidencias && orden.incidencias.length > 0) {
+            incidenciasHTML = `
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #FFB300; margin-bottom: 10px;">Incidencias registradas</h3>
+                    ${orden.incidencias.map(inc => `
+                        <div class="incidencia-item ${inc.severidad === 'critica' ? 'critica' : ''}">
+                            <strong>${inc.tipo.toUpperCase()} - ${inc.severidad.toUpperCase()}</strong><br>
+                            ${inc.descripcion}
+                            ${inc.accion ? `<br><em>Acción: ${inc.accion}</em>` : ''}
+                            <small>${formatearFechaHora(inc.fecha)} - ${inc.usuario}</small>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        let pausasHTML = '';
+        if (orden.pausas && orden.pausas.length > 0) {
+            pausasHTML = `
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #FF6F00; margin-bottom: 10px;">Historial de pausas</h3>
+                    ${orden.pausas.map(pausa => `
+                        <div class="historial-item" style="border-left-color: #FF6F00;">
+                            <strong>${pausa.motivo}</strong><br>
+                            ${pausa.descripcion ? `${pausa.descripcion}<br>` : ''}
+                            <small>${formatearFechaHora(pausa.fecha)} - ${pausa.usuario}</small>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        let mpHTML = '';
+        if (orden.materiasPrimas && orden.materiasPrimas.length > 0) {
+            mpHTML = `
+                <div class="detail-item" style="margin: 15px 0;">
+                    <label>Materias primas asignadas</label>
+                    <div style="margin-top: 8px;">
+                        ${orden.materiasPrimas.map(mp => `
+                            <div style="padding: 8px; background: #F8FAFB; margin-bottom: 4px; border-radius: 5px;">
+                                <strong>${mp.nombre}</strong>: ${mp.cantidad} ${mp.unidad}
+                                <span style="color: #3DB54A;"> (Lote: ${mp.lote})</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } else if (orden.estado === 'aprobada' && esLaboratorioOMaster()) {
+            mpHTML = `
+                <div class="alert-box alert-warning">
+                    <strong>Materias primas no asignadas.</strong><br>
+                    Esta orden requiere asignación de materias primas antes de iniciar producción.
+                    <button class="btn btn-success" onclick="cerrarModal('modalDetalleOrden'); abrirModalAsignarMP('${orden.id}')" style="margin-top: 8px;">
+                        📦 Asignar materias primas
+                    </button>
+                </div>
+            `;
+        }
+
+        const tipoProductoTexto = orden.tipoProducto ? formatearTipoProducto(orden.tipoProducto) : '';
+        const tipoOrdenTexto = orden.tipoOrden ? formatearTipoOrden(orden.tipoOrden) : '';
+
+        const seccionTipoProductoHTML = tipoProductoTexto ? `
+            <div class="detail-item">
+                <label>Tipo de producto</label>
+                <p>${tipoProductoTexto}</p>
+            </div>
+        ` : '';
+
+        const seccionTipoOrdenHTML = tipoOrdenTexto ? `
+            <div class="detail-item">
+                <label>Tipo de orden</label>
+                <p>${tipoOrdenTexto}</p>
+            </div>
+        ` : '';
+
+        let archivoRecetaHTML = '';
+        if (orden.archivoRecetaNombre && orden.archivoRecetaDataUrl) {
+            archivoRecetaHTML = `
+                <div class="detail-item" style="margin: 15px 0;">
+                    <label>PDF de receta adjunto</label>
+                    <p style="margin-bottom: 8px;">${orden.archivoRecetaNombre}</p>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <a class="btn btn-info" href="${orden.archivoRecetaDataUrl}" target="_blank" rel="noopener noreferrer">📄 Abrir PDF</a>
+                        <a class="btn btn-secondary" href="${orden.archivoRecetaDataUrl}" download="${orden.archivoRecetaNombre}">⬇️ Descargar PDF</a>
+                    </div>
+                </div>
+            `;
+        } else if (orden.archivoRecetaNombre) {
+            archivoRecetaHTML = `
+                <div class="detail-item" style="margin: 15px 0;">
+                    <label>Archivo de receta referenciado</label>
+                    <p>${orden.archivoRecetaNombre} <span style="font-size:0.85em; color:#666;">(registro antiguo sin archivo embebido)</span></p>
+                </div>
+            `;
+        }
+
+        let rolLabel = 'Usuario';
+        if (currentRole === 'solicitante') rolLabel = 'Solicitante';
+        else if (currentRole === 'laboratorio') rolLabel = 'Laboratorio';
+        else if (currentRole === 'master') rolLabel = 'Master';
+
+        let comentarioHTML = '';
+        if (currentRole) {
+            comentarioHTML = `
+                <div style="margin-top: 20px;">
+                    <h3 style="color: #28313F; margin-bottom: 8px;">Comentarios (${rolLabel})</h3>
+                    <form onsubmit="agregarComentarioOrden(event, '${orden.id}')">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="required">Nombre de quien comenta</label>
+                                <input type="text" id="comentarioNombre" placeholder="Nombre completo" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="required">Comentario</label>
+                                <textarea id="comentarioTexto" required placeholder="Escriba su comentario..."></textarea>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-info">➕ Registrar comentario</button>
+                    </form>
+                </div>
+            `;
+        }
+
+        const detalleBody = document.getElementById('detalleOrdenBody');
+        detalleBody.innerHTML = `
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>ID Orden</label>
+                    <p>${orden.id}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Estado actual</label>
+                    <p><span class="status-badge status-${orden.estado}">${formatearEstado(orden.estado)}</span></p>
+                </div>
+                <div class="detail-item">
+                    <label>Prioridad</label>
+                    <p><span class="priority-badge priority-${orden.prioridad}">${orden.prioridad.toUpperCase()}</span></p>
+                </div>
+                <div class="detail-item">
+                    <label>Fecha solicitada</label>
+                    <p>${formatearFecha(orden.fechaPlanificada)}</p>
+                </div>
+            </div>
+
+            <div class="detail-grid">
+                <div class="detail-item">
+                    <label>Solicitante</label>
+                    <p>${orden.solicitante}</p>
+                </div>
+                <div class="detail-item">
+                    <label>Producto (detalle)</label>
+                    <p>${orden.producto}</p>
+                </div>
+                ${seccionTipoProductoHTML}
+                <div class="detail-item">
+                    <label>Código producto</label>
+                    <p>${orden.codigoProducto}</p>
+                </div>
+                ${seccionTipoOrdenHTML}
+                <div class="detail-item">
+                    <label>Cantidad</label>
+                    <p>${orden.cantidad} ${orden.unidad}</p>
+                </div>
+            </div>
+
+            ${orden.documentacionRespaldo ? `
+                <div class="detail-item" style="margin: 15px 0;">
+                    <label>Documentación de respaldo / receta</label>
+                    <p style="white-space: pre-wrap; background: #F8FAFB; padding: 8px; border-radius: 5px;">${orden.documentacionRespaldo}</p>
+                </div>
+            ` : ''}
+
+            ${archivoRecetaHTML}
+            ${mpHTML}
+            ${tiempoHTML}
+
+            ${orden.observaciones ? `
+                <div class="detail-item" style="margin: 15px 0;">
+                    <label>Observaciones</label>
+                    <p style="white-space: pre-wrap;">${orden.observaciones}</p>
+                </div>
+            ` : ''}
+
+            ${orden.loteGenerado ? `
+                <div class="detail-item" style="margin: 15px 0;">
+                    <label>Lote de producto generado</label>
+                    <p><strong style="color: #2E7D32;">${orden.loteGenerado}</strong></p>
+                </div>
+            ` : ''}
+
+            ${orden.motivoRechazoSolicitud ? `
+                <div class="alert-box alert-danger">
+                    <strong>Solicitud rechazada:</strong><br>
+                    ${orden.motivoRechazoSolicitud}
+                </div>
+            ` : ''}
+
+            ${orden.infoEnvio ? `
+                <div class="alert-box alert-success">
+                    <strong>Información de envío:</strong><br>
+                    ${orden.infoEnvio.destino ? `Destino: ${orden.infoEnvio.destino}<br>` : ''}
+                    ${orden.infoEnvio.guia ? `Guía: ${orden.infoEnvio.guia}<br>` : ''}
+                    Enviado por: ${orden.infoEnvio.usuario} el ${formatearFechaHora(orden.infoEnvio.fecha)}
+                </div>
+            ` : ''}
+
+            ${incidenciasHTML}
+            ${pausasHTML}
+
+            <div style="margin-top: 20px;">
+                <h3 style="color: #28313F; margin-bottom: 10px;">Historial completo</h3>
+                ${orden.historial.map(h => `
+                    <div class="historial-item">
+                        <strong>${h.accion}</strong>
+                        ${h.estadoAnterior ? `
+                            <br><span class="status-badge status-${h.estadoAnterior}">${formatearEstado(h.estadoAnterior)}</span>
+                            → <span class="status-badge status-${h.estadoNuevo}">${formatearEstado(h.estadoNuevo)}</span>
+                        ` : ''}
+                        ${h.comentario ? `<br>${h.comentario}` : ''}
+                        <small>${formatearFechaHora(h.fecha)} - ${h.usuario}</small>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div style="margin-top: 20px; padding: 10px; background: #F3F7FB; border-radius: 8px; font-size: 0.85em;">
+                <strong>Auditoría:</strong><br>
+                Creado por: ${orden.creadoPor} - ${formatearFechaHora(orden.fechaCreacion)}<br>
+                Última modificación: ${orden.modificadoPor} - ${formatearFechaHora(orden.fechaModificacion)}
+            </div>
+
+            ${comentarioHTML}
+
+            <div style="margin-top: 20px; display: flex; flex-wrap: wrap; gap: 10px;">
+                ${esLaboratorioOMaster() && !['enviado', 'rechazada', 'cancelada'].includes(orden.estado) ? `
+                    <button class="btn btn-primary" onclick="cerrarModal('modalDetalleOrden'); abrirCambioEstado('${orden.id}')">
+                        🔄 Cambiar estado
+                    </button>
+                ` : ''}
+                ${esLaboratorioOMaster() && orden.estado === 'aprobada' ? `
+                    <button class="btn btn-success" onclick="cerrarModal('modalDetalleOrden'); abrirModalAsignarMP('${orden.id}')">
+                        📦 Asignar materias primas
+                    </button>
+                ` : ''}
+                ${esLaboratorioOMaster() && ['en-proceso', 'en-pausa'].includes(orden.estado) ? `
+                    <button class="btn btn-warning" onclick="cerrarModal('modalDetalleOrden'); abrirModalIncidencia('${orden.id}')">
+                        ⚠️ Registrar incidencia
+                    </button>
+                ` : ''}
+                <button class="btn btn-info" onclick="imprimirOrden('${orden.id}')">
+                    🖨️ Imprimir orden
+                </button>
+                ${(orden.estado === 'finalizado' || orden.estado === 'enviado') ? `
+                    <button class="btn btn-success" onclick="imprimirOrdenEnvio('${orden.id}')">
+                        🧾 Imprimir hoja de envío
+                    </button>
+                ` : ''}
+                <button class="btn btn-secondary" onclick="cerrarModal('modalDetalleOrden')">
+                    Cerrar
+                </button>
+            </div>
+        `;
+
+        document.getElementById('modalDetalleOrden').style.display = 'block';
+    }
+
+    function agregarComentarioOrden(event, ordenId) {
+        event.preventDefault();
+
+        const orden = ordenes.find(o => o.id === ordenId);
+        if (!orden) return;
+
+        if (!currentRole) {
+            mostrarToast('Debe iniciar sesión para comentar', 'error');
+            return;
+        }
+
+        const nombre = document.getElementById('comentarioNombre').value.trim();
+        const texto = document.getElementById('comentarioTexto').value.trim();
+
+        if (!nombre || !texto) {
+            mostrarToast('Debe indicar nombre y comentario', 'error');
+            return;
+        }
+
+        orden.historial.push({
+            fecha: new Date().toISOString(),
+            usuario: `${nombre} (${currentRole})`,
+            accion: 'Comentario',
+            estadoAnterior: orden.estado,
+            estadoNuevo: orden.estado,
+            comentario: texto
+        });
+
+        orden.modificadoPor = `${nombre} (${currentRole})`;
+        orden.fechaModificacion = new Date().toISOString();
+
+        guardarDatos();
+        verDetalleOrden(ordenId);
+        actualizarMetricas();
+        mostrarToast('Comentario registrado correctamente', 'success');
+    }
+
+    // Búsqueda / filtros
+    function buscarOrdenes() { renderizarOrdenes(); }
+    function filtrarOrdenes() { renderizarOrdenes(); }
+
+    function filtrarYBuscarOrdenes() {
+        const busqueda = document.getElementById('searchInput').value.toLowerCase();
+        const filtroEstado = document.getElementById('filterEstado').value;
+        const filtroPrioridad = document.getElementById('filterPrioridad').value;
+
+        return ordenes.filter(orden => {
+            const cumpleBusqueda = !busqueda ||
+                orden.id.toLowerCase().includes(busqueda) ||
+                (orden.producto && orden.producto.toLowerCase().includes(busqueda)) ||
+                (orden.solicitante && orden.solicitante.toLowerCase().includes(busqueda)) ||
+                (orden.codigoProducto && orden.codigoProducto.toLowerCase().includes(busqueda));
+
+            const cumpleEstado = !filtroEstado || orden.estado === filtroEstado;
+            const cumplePrioridad = !filtroPrioridad || orden.prioridad === filtroPrioridad;
+
+            return cumpleBusqueda && cumpleEstado && cumplePrioridad;
+        });
+    }
+
+    // Exportar / importar
+    function exportarDatos() {
+        const datos = {
+            ordenes: ordenes,
+            contadorOrdenes: contadorOrdenes,
+            fechaExportacion: new Date().toISOString(),
+            version: '3.4'
+        };
+
+        const blob = new Blob([JSON.stringify(datos, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `BCP_Ordenes_Produccion_V3_4_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        mostrarToast('Datos exportados correctamente', 'success');
+    }
+
+    function importarDatos() {
+        document.getElementById('fileInput').click();
+    }
+
+    function procesarArchivoImportado(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const datos = JSON.parse(e.target.result);
+
+                if (confirm('¿Desea FUSIONAR los datos importados con los actuales?\n\nSí = Fusionar\nNo = Reemplazar')) {
+                    datos.ordenes.forEach(ordenImportada => {
+                        const existe = ordenes.find(o => o.id === ordenImportada.id);
+                        if (!existe) {
+                            ordenes.push(ordenImportada);
+                        }
+                    });
+                } else {
+                    ordenes = datos.ordenes;
+                    contadorOrdenes = datos.contadorOrdenes;
+                }
+
+                guardarDatos();
+                renderizarOrdenes();
+                actualizarEstadisticas();
+                actualizarMetricas();
+                mostrarToast('Datos importados correctamente', 'success');
+            } catch (error) {
+                mostrarToast('Error al importar: archivo inválido', 'error');
+            }
+        };
+        reader.readAsText(file);
+
+        event.target.value = '';
+    }
+
+    // Eliminar orden (solo master)
+    function eliminarOrden(id) {
+        if (currentRole !== 'master') {
+            mostrarToast('Solo el usuario MASTER puede eliminar solicitudes', 'error');
+            return;
+        }
+
+        const orden = ordenes.find(o => o.id === id);
+        if (!orden) return;
+
+        const confirmado = confirm(`¿Confirma eliminar la orden ${id}?\nEsta acción no se puede deshacer.`);
+        if (!confirmado) return;
+
+        ordenes = ordenes.filter(o => o.id !== id);
+        guardarDatos();
+        renderizarOrdenes();
+        actualizarMetricas();
+        mostrarToast(`Orden ${id} eliminada correctamente`, 'success');
+    }
+
+    // Impresión orden
+    function imprimirOrden(id) {
+        const orden = ordenes.find(o => o.id === id);
+        if (!orden) return;
+
+        let tiempoHTML = '';
+        if (orden.tiempoProduccion && orden.tiempoProduccion.inicio) {
+            tiempoHTML = `
+                <div class="section">
+                    <h2>Tiempos de producción</h2>
+                    <table>
+                        <tr><th>Concepto</th><th>Valor</th></tr>
+                        <tr><td>Inicio</td><td>${formatearFechaHora(orden.tiempoProduccion.inicio)}</td></tr>
+                        ${orden.tiempoProduccion.fin ? `<tr><td>Fin</td><td>${formatearFechaHora(orden.tiempoProduccion.fin)}</td></tr>` : ''}
+                        ${orden.tiempoProduccion.pausaTotal ? `<tr><td>Tiempo en pausa</td><td>${Math.round(orden.tiempoProduccion.pausaTotal)} minutos</td></tr>` : ''}
+                        ${orden.tiempoProduccion.tiempoEfectivo ? `<tr><td>Tiempo efectivo</td><td>${Math.round(orden.tiempoProduccion.tiempoEfectivo)} minutos</td></tr>` : ''}
+                    </table>
+                </div>
+            `;
+        }
+
+        let mpHTML = '';
+        if (orden.materiasPrimas && orden.materiasPrimas.length > 0) {
+            mpHTML = `
+                <div class="section">
+                    <h2>Materias primas asignadas</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Materia prima</th>
+                                <th>Lote</th>
+                                <th>Cantidad</th>
+                                <th>Unidad</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${orden.materiasPrimas.map(mp => `
+                                <tr>
+                                    <td>${mp.nombre}</td>
+                                    <td>${mp.lote}</td>
+                                    <td>${mp.cantidad}</td>
+                                    <td>${mp.unidad}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        const ventana = window.open('', '', 'width=800,height=600');
+        ventana.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Orden de Producción ${orden.id}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; }
+                    .header { text-align: center; border-bottom: 3px solid #5A2CA0; padding-bottom: 20px; margin-bottom: 30px; }
+                    .header h1 { color: #5A2CA0; margin: 0; }
+                    .header p { margin: 2px 0; }
+                    .section { margin-bottom: 20px; page-break-inside: avoid; }
+                    .section h2 { background: #5A2CA0; color: white; padding: 8px; margin: 0 0 10px 0; font-size: 1em; }
+                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+                    .info-item { padding: 8px; background: #F4FAF7; border-left: 3px solid #3DB54A; font-size: 0.9em; }
+                    .info-item label { font-weight: bold; display: block; color: #28313F; margin-bottom: 4px; }
+                    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background: #5A2CA0; color: white; }
+                    .firma { margin-top: 40px; border-top: 2px solid #000; padding-top: 10px; text-align: center; font-size: 0.9em; }
+                    .alert { padding: 10px; margin: 10px 0; border-left: 4px solid #C62828; background: #F8D7DA; font-size: 0.9em; }
+                    @media print { body { padding: 0; } button { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>ORDEN DE PRODUCCIÓN</h1>
+                    <p><strong>${orden.id}</strong></p>
+                    <p>BioCannaPharma (BCP) – Sistema de Órdenes de Producción</p>
+                    <p>Estado: <strong>${formatearEstado(orden.estado).toUpperCase()}</strong></p>
+                </div>
+
+                <div class="section">
+                    <h2>Información general</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Solicitante:</label>
+                            <div>${orden.solicitante}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Fecha solicitada:</label>
+                            <div>${formatearFecha(orden.fechaPlanificada)}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Producto:</label>
+                            <div>${orden.producto}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Código:</label>
+                            <div>${orden.codigoProducto}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Cantidad:</label>
+                            <div>${orden.cantidad} ${orden.unidad}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Prioridad:</label>
+                            <div>${orden.prioridad.toUpperCase()}</div>
+                        </div>
+                        ${orden.loteGenerado ? `
+                            <div class="info-item">
+                                <label>Lote generado:</label>
+                                <div><strong>${orden.loteGenerado}</strong></div>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                ${orden.documentacionRespaldo ? `
+                    <div class="section">
+                        <h2>Documentación / receta</h2>
+                        <p style="white-space: pre-wrap; padding: 10px; background: #F4FAF7;">${orden.documentacionRespaldo}</p>
+                    </div>
+                ` : ''}
+
+                ${mpHTML}
+                ${tiempoHTML}
+
+                ${orden.motivoRechazoSolicitud ? `
+                    <div class="alert">
+                        <strong>Solicitud rechazada</strong><br>
+                        ${orden.motivoRechazoSolicitud}
+                    </div>
+                ` : ''}
+
+                <div class="section">
+                    <div class="firma">
+                        <p>______________________________</p>
+                        <p><strong>Firma responsable</strong></p>
+                        <p>Fecha: _______________</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 8px; background: #E0E0E0; font-size: 0.8em;">
+                    Documento generado automáticamente - Sistema BCP V3.4 - ${new Date().toLocaleString('es-CL')}
+                </div>
+
+                <div style="text-align: center; margin-top: 15px;">
+                    <button onclick="window.print()" style="padding: 8px 20px; background: #5A2CA0; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
+                        🖨️ Imprimir
+                    </button>
+                    <button onclick="window.close()" style="padding: 8px 20px; background: #546E7A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px;">
+                        Cerrar
+                    </button>
+                </div>
+            </body>
+            </html>
+        `);
+        ventana.document.close();
+    }
+
+    // Impresión hoja de envío
+    function imprimirOrdenEnvio(id) {
+        const orden = ordenes.find(o => o.id === id);
+        if (!orden) return;
+
+        const destino = orden.infoEnvio?.destino || '';
+        const guia = orden.infoEnvio?.guia || '';
+        const fechaEnvio = orden.infoEnvio?.fecha ? formatearFechaHora(orden.infoEnvio.fecha) : '';
+        const usuarioEnvio = orden.infoEnvio?.usuario || '';
+
+        const ventana = window.open('', '', 'width=800,height=600');
+        ventana.document.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Hoja de Envío / Producto ${orden.id}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; max-width: 800px; margin: 0 auto; background: #FFFFFF; }
+                    .header { text-align: center; border-bottom: 3px solid #5A2CA0; padding-bottom: 20px; margin-bottom: 30px; }
+                    .header h1 { color: #5A2CA0; margin: 0; }
+                    .header p { margin: 2px 0; }
+                    .section { margin-bottom: 20px; page-break-inside: avoid; }
+                    .section h2 { background: #3DB54A; color: white; padding: 8px; margin: 0 0 10px 0; font-size: 1em; }
+                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+                    .info-item { padding: 8px; background: #F4FAF7; border-left: 3px solid #5A2CA0; font-size: 0.9em; }
+                    .info-item label { font-weight: bold; display: block; color: #28313F; margin-bottom: 4px; }
+                    table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background: #3DB54A; color: white; }
+                    .firma { margin-top: 30px; display: flex; justify-content: space-between; gap: 20px; font-size: 0.9em; }
+                    .firma-block { flex: 1; text-align: center; }
+                    .firma-line { border-top: 2px solid #000; margin-top: 30px; padding-top: 4px; }
+                    @media print { body { padding: 0; } button { display: none; } }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <h1>HOJA DE ENVÍO / PRODUCTO</h1>
+                    <p>BioCannaPharma (BCP)</p>
+                    <p><strong>Orden de Producción: ${orden.id}</strong></p>
+                    ${orden.loteGenerado ? `<p>Lote: <strong>${orden.loteGenerado}</strong></p>` : ''}
+                </div>
+
+                <div class="section">
+                    <h2>Datos del producto</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Producto:</label>
+                            <div>${orden.producto}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Código producto:</label>
+                            <div>${orden.codigoProducto}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Cantidad total:</label>
+                            <div>${orden.cantidad} ${orden.unidad}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Tipo de orden:</label>
+                            <div>${formatearTipoOrden(orden.tipoOrden || '')}</div>
+                        </div>
+                        ${orden.tipoProducto ? `
+                        <div class="info-item">
+                            <label>Categoría:</label>
+                            <div>${formatearTipoProducto(orden.tipoProducto)}</div>
+                        </div>` : ''}
+                        ${orden.fechaPlanificada ? `
+                        <div class="info-item">
+                            <label>Fecha compromiso:</label>
+                            <div>${formatearFecha(orden.fechaPlanificada)}</div>
+                        </div>` : ''}
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Datos de envío</h2>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <label>Destino / cliente:</label>
+                            <div>${destino || '____________________________'}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Número de guía / tracking:</label>
+                            <div>${guia || '____________________________'}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Fecha de envío:</label>
+                            <div>${fechaEnvio || '____/____/________'}</div>
+                        </div>
+                        <div class="info-item">
+                            <label>Responsable de envío:</label>
+                            <div>${usuarioEnvio || '____________________________'}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <h2>Control de embalaje</h2>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Ítem</th>
+                                <th>Descripción</th>
+                                <th>OK</th>
+                                <th>Observaciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1</td>
+                                <td>Integridad de envases primarios</td>
+                                <td>☐</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>2</td>
+                                <td>Etiquetas completas y legibles (lote, concentración, fecha)</td>
+                                <td>☐</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>3</td>
+                                <td>Embalaje secundario adecuado (protección física / luz)</td>
+                                <td>☐</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>4</td>
+                                <td>Documentación adjunta (COA, ficha técnica, otros)</td>
+                                <td>☐</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="section">
+                    <h2>Observaciones generales</h2>
+                    <p style="min-height: 60px; padding: 8px; border: 1px solid #DDD; background: #FAFAFA;"></p>
+                </div>
+
+                <div class="firma">
+                    <div class="firma-block">
+                        <div class="firma-line"></div>
+                        <p><strong>Preparado por</strong></p>
+                        <p>Nombre: ____________________________</p>
+                        <p>Fecha: ____/____/________</p>
+                    </div>
+                    <div class="firma-block">
+                        <div class="firma-line"></div>
+                        <p><strong>Revisado / QC</strong></p>
+                        <p>Nombre: ____________________________</p>
+                        <p>Fecha: ____/____/________</p>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <button onclick="window.print()" style="padding: 8px 20px; background: #5A2CA0; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em;">
+                        🖨️ Imprimir hoja de envío
+                    </button>
+                    <button onclick="window.close()" style="padding: 8px 20px; background: #546E7A; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; margin-left: 8px;">
+                        Cerrar
+                    </button>
+                </div>
+
+                <div style="margin-top: 15px; padding: 8px; font-size: 0.8em; color: #555;">
+                    Documento de despacho generado automáticamente por el Sistema BCP V3.4.
+                </div>
+            </body>
+            </html>
+        `);
+        ventana.document.close();
+    }
+
+    // Modales
+    function abrirModalNuevaOrden() {
+        generarNuevoIdOrden();
+        const hoy = new Date().toISOString().split('T')[0];
+        const fechaPlan = document.getElementById('ordenFechaPlanificada');
+        if (fechaPlan) fechaPlan.value = hoy;
+        document.getElementById('modalNuevaOrden').style.display = 'block';
+    }
+
+    function cerrarModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList && event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    };
+
+    // Métricas (Chart.js)
+    function actualizarMetricas() {
+        if (typeof Chart === 'undefined') return;
+
+        // Solicitudes por estado
+        const conteoEstado = {};
+        ordenes.forEach(o => {
+            conteoEstado[o.estado] = (conteoEstado[o.estado] || 0) + 1;
+        });
+
+        const etiquetasEstado = Object.keys(conteoEstado).map(e => formatearEstado(e));
+        const datosEstado = Object.values(conteoEstado);
+
+        const ctxEstado = document.getElementById('chartSolicitudesEstado');
+        if (ctxEstado) {
+            if (chartSolicitudesEstado) chartSolicitudesEstado.destroy();
+            chartSolicitudesEstado = new Chart(ctxEstado, {
+                type: 'bar',
+                data: {
+                    labels: etiquetasEstado,
+                    datasets: [{
+                        label: 'Número de solicitudes',
+                        data: datosEstado
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            const totalSolicitudes = ordenes.length;
+            document.getElementById('summarySolicitudesEstado').textContent =
+                `Total solicitudes: ${totalSolicitudes}. Estados activos representados en el gráfico.`;
+        }
+
+        // Solicitudes por tipo de producto
+        const conteoTipo = {};
+        ordenes.forEach(o => {
+            const tipo = o.tipoProducto || 'sin-clasificar';
+            conteoTipo[tipo] = (conteoTipo[tipo] || 0) + 1;
+        });
+
+        const etiquetasTipo = Object.keys(conteoTipo).map(t => formatearTipoProducto(t));
+        const datosTipo = Object.values(conteoTipo);
+
+        const ctxTipo = document.getElementById('chartSolicitudesTipo');
+        if (ctxTipo) {
+            if (chartSolicitudesTipo) chartSolicitudesTipo.destroy();
+            chartSolicitudesTipo = new Chart(ctxTipo, {
+                type: 'bar',
+                data: {
+                    labels: etiquetasTipo,
+                    datasets: [{
+                        label: 'Número de solicitudes',
+                        data: datosTipo
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { stepSize: 1 } }
+                    }
+                }
+            });
+
+            document.getElementById('summarySolicitudesTipo').textContent =
+                `Distribución de solicitudes por tipo de producto. Total categorías: ${etiquetasTipo.length}.`;
+        }
+
+        // Productos enviados (estado ENVIADO)
+        const envios = ordenes.filter(o => o.estado === 'enviado');
+        const conteoEnviosTipo = {};
+        envios.forEach(o => {
+            const tipo = o.tipoProducto || 'sin-clasificar';
+            const clave = formatearTipoProducto(tipo);
+            conteoEnviosTipo[clave] = (conteoEnviosTipo[clave] || 0) + (o.cantidad || 0);
+        });
+
+        const etiquetasEnviosTipo = Object.keys(conteoEnviosTipo);
+        const datosEnviosTipo = Object.values(conteoEnviosTipo);
+
+        const ctxEnviosTipo = document.getElementById('chartEnviosTipo');
+        if (ctxEnviosTipo) {
+            if (chartEnviosTipo) chartEnviosTipo.destroy();
+            chartEnviosTipo = new Chart(ctxEnviosTipo, {
+                type: 'bar',
+                data: {
+                    labels: etiquetasEnviosTipo,
+                    datasets: [{
+                        label: 'Cantidad enviada (según unidad original)',
+                        data: datosEnviosTipo
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+
+            const totalEnvios = envios.length;
+            const totalCantidad = datosEnviosTipo.reduce((a, b) => a + b, 0);
+            document.getElementById('summaryEnviosTipo').textContent =
+                `Órdenes enviadas: ${totalEnvios}. Cantidad total enviada (suma de cantidades declaradas): ${totalCantidad}.`;
+        }
+    }
+
+    // Utilidades
+    function formatearFecha(fecha) {
+        if (!fecha) return '-';
+        const d = new Date(fecha + 'T00:00:00');
+        return d.toLocaleDateString('es-CL', {
+            year: 'numeric', month: 'long', day: 'numeric'
+        });
+    }
+
+    function formatearFechaHora(fechaISO) {
+        if (!fechaISO) return '-';
+        const fecha = new Date(fechaISO);
+        return fecha.toLocaleString('es-CL', {
+            year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit'
+        });
+    }
+
+    function formatearEstado(estado) {
+        const estados = {
+            'solicitada': 'Solicitada',
+            'aprobada': 'Aprobada',
+            'en-proceso': 'En Proceso',
+            'en-pausa': 'En Pausa',
+            'completada': 'Completada',
+            'finalizado': 'Finalizado',
+            'enviado': 'Enviado',
+            'rechazada': 'Rechazada',
+            'cancelada': 'Cancelada'
+        };
+        return estados[estado] || estado;
+    }
+
+    function formatearTipoProducto(tipo) {
+        const tipos = {
+            'aceite-thc': 'Aceite THC',
+            'aceite-cbd': 'Aceite CBD',
+            'cartridge-live-resin': 'Cartucho live resin (sabores)',
+            'cartridge-destilado': 'Cartucho destilado',
+            'cartridge-destilado-terpenos': 'Cartucho destilado con terpenos (sabores)',
+            'diamantes': 'Diamantes',
+            'salsa': 'Salsa',
+            'salsa-diamantes': 'Salsa con diamantes',
+            'budder': 'Budder',
+            'preroll-infuse': 'Preroll infuse',
+            'moon-rock': 'Moon rock',
+            'unguento': 'Ungüento',
+            'gomitas': 'Gomitas (sabores)',
+            'otros-especiales': 'Otros pedidos especiales / producto magistral',
+            'sin-clasificar': 'Sin clasificar'
+        };
+        return tipos[tipo] || tipo || 'Sin clasificar';
+    }
+
+    function formatearTipoOrden(tipo) {
+        const tipos = {
+            'lote-comercial': 'Lote comercial',
+            'muestra-id': 'Muestra I+D',
+            'validacion': 'Validación / estabilidad',
+            'magistral': 'Preparación magistral / pedido especial'
+        };
+        return tipos[tipo] || tipo;
+    }
+
+    function mostrarToast(mensaje, tipo = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = mensaje;
+        toast.className = `toast ${tipo}`;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    }
+
+    function esLaboratorioOMaster() {
+        return currentRole === 'laboratorio' || currentRole === 'master';
+    }
+
+    window.onload = inicializar;
+</script>
+</body>
+</html>

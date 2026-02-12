@@ -1,0 +1,189 @@
+﻿INFORME CONFIDENCIAL DE COMUNIDAD VIRTUAL EN ESTIMACIÓN DE COSTOS DE DESARROLLO
+
+
+________________
+
+
+Web Scraping al PJUD simplificado (ETAPA 1 de 3: Ingreso público)
+Sprint 1.1 — Base Técnica + Scraping Inicial + Modelo de Datos
+Objetivo: Dejar operativo el entorno, autenticación, scraping base y primeros datos normalizados.
+Actividades
+1. Configuración del entorno y autenticación PJUD
+
+   * Instalación de dependencias, setup de repositorio, credenciales y versionado de servidor QA/PROD — 8 HH
+
+   * Llamado API para buscar ROL/RIT(causa) en CRM AyM — 2 HH
+
+      2. Extracción y normalización parcial de datos
+
+         * Extracción parcial de datos + scraping automático incremental — 7 HH
+
+         * Control de excepciones y validación inicial — 4 HH
+
+         * Carga de ejemplo a la base de datos QA — 2 HH
+
+Total Sprint: 23 HH x 1 UF
+Sprint 1.2 — Integraciones + Consolidación de Datos + Manejo de Errores Objetivo: Conectar con CRM, estabilizar la base de datos y garantizar flujo confiable. Actividades
+            3. Integración con CRM y Base de Datos
+
+               * Conexión y pruebas con API del CRM QA/PROD — 6 HH
+               * Manejo avanzado de errores de la base de datos CRM QA/PROD — 5 HH
+
+
+               4. Normalización completa y ajustes estructurales
+
+                  * Ajustes y pruebas finales al modelo de datos — 2 HH
+Validaciones transversales (origen ↔ destino) — 2 HH
+
+
+                     5. Bots/schedulers 
+                     * Configuración (CRON, Celery o workers) — 12 HH (Sujeto a ajuste de horas presupuestadas)
+
+Total Sprint: 27 HH x 1 UF
+________________
+
+
+________________
+Sprint 1.3 — Automatizaciones + Notificaciones + Monitoreo (Correo)
+Objetivo: Convertir el scraping en un producto funcional: automatizado, monitoreado y con notificaciones.
+Actividades
+                        4. Sistema de notificaciones al tramitador (mailer/API) — 8 HH
+        
+                           * Validaciones de integridad origen ↔ destino — 2 HH
+
+                           * Monitoreo y alertas — 2 HH
+
+
+
+Total Sprint: 12 HH x 1 UF
+(*Sujeto a variaciones de horas presupuestadas)
+________________
+
+
+Tecnología / Herramienta
+	Tipo
+	Comentario sobre costos
+	Portal del Poder Judicial
+(Causas Civiles)
+	Propietaria / Pública
+	Acceso gratuito, pero regulado. Puede imponer cambios en CAPTCHA, límites de consultas o nuevas restricciones sin previo aviso.
+	Scraping (Selenium, Playwright, Puppeteer, u otro)
+	Código abierto
+	Sin costo de licencia. Costos asociados a configuración, desarrollo y mayor consumo de recursos de servidor.
+	Resolución de CAPTCHA (ej: 2Captcha, AntiCaptcha, AI propia)
+	Servicio propietario
+	Servicios de terceros cobran por solicitud resuelta. Alternativa: desarrollo propio con IA (alto costo inicial, evita gasto recurrente).
+	Lenguajes Backend (Python, Node.js)
+	Código abierto
+	Gratuito. Costos asociados solo al desarrollo e infraestructura (ej. hosting, workers).
+	Base de datos (PostgreSQL / MySQL)
+	Código abierto
+	Sin costo de licencia. Solo costos de hosting/infraestructura.
+	Servidor / Infraestructura (ej: AWS, GCP,Azure, VPS local)
+	Propietario
+	Pago según uso de CPU/RAM/almacenamiento. Escalable según volumen de causas consultadas.
+	Dashboard Web (React, Vue, Angular, o HTML/CSS/JS)
+	Código abierto
+	Gratuito. Solo costos de desarrollo e integración con backend y base de datos.
+	Seguridad y cifrado (Vault, JWT, bcrypt, TLS/SSL)
+	Código abierto
+	Sin costo de licencia. Costos asociados a certificados SSL y configuración.
+	Notificaciones (correo, push)
+	Mixto
+	Email: puede usarse SMTP gratuito (limitado) o servicios pagos (Sendgrid, Amazon SES). Push/websocket: open source, costo de servidor.
+	Scheduler / Workers (Celery, CRON, RabbitMQ, Redis)
+	Código abierto
+	Gratuito. Costos asociados al servidor que mantenga las tareas en ejecución.
+	Exportación (PDF, Excel – librerías tipo Pandas, ReportLab, SheetJS)
+	Código abierto
+	Gratuito. Costos asociados a desarrollo y rendimiento en generación de reportes masivos.
+	El sistema no incluye gestión de suscripciones ni planes de pago, lo que permite optimizar costos al enfocarse solo en los módulos esenciales de scraping, base de datos y panel web (conversable para App Mobile Android/iOS).
+
+
+
+
+
+
+TODAS LAS COMPRAS VIENEN CON 30 DÍAS DE SOPORTE GRATUITO + QA DE PARTE DE COMUNIDAD VIRTUAL.
+CADA COMPRA AL CONTADO RECIBE UN 5% DE DESCUENTO. 
+PARA DAR INICIO AL PROYECTO, SE SOLICITA UN ABONO INICIAL DEL 50% MEDIANTE TRANSFERENCIA ELECTRÓNICA O WEBPAY DENTRO DE UN PLAZO MÁXIMO DE 3 DÍAS HÁBILES. EL SALDO RESTANTE DEBERÁ CANCELARSE CONTRA LA ENTREGA DEL PRODUCTO FINAL.
+LA HORA ADICIONAL DE SOPORTE SE CALCULA A 1.0 UF HORA POR PROFESIONAL ASISTIDOR.
+EL CRONOGRAMA PUEDE AUMENTAR O DISMINUIR EN UN 10% EN EL CÁLCULO ESTIMATIVO POR LA VARIABILIDAD DE LOS COSTOS DE IMPLEMENTACIÓN, RETRASOS TÉCNICOS, DE COMUNICACIÓN U OTRO.
+CUALQUIER DIFUSIÓN DE ESTE DOCUMENTO A OTRA ENTIDAD QUE NO SEA ALFARO Y MADARIAGA ESTÁ ESTRICTAMENTE PROHIBIDA CONFORME A LEY 19.039 DE PROPIEDAD INDUSTRIAL Y EL CÓDIGO CIVIL .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Firma Representante Legal - 
+Contraparte
+	Firma Representante Legal - Comunidad Virtual
+	
+
+	
+
+	
+
+Resumen
+UF al 31/12/25: $39.727,96
+________________
+
+
+Etapa 1 – Acceso Público / Esfuerzo: 62 HH × 1 UF
+Monto: $2.463.134
+                              * Fecha de inicio: 02/01/2026
+
+                              * Fecha QA: 26/01/2026
+
+                              * Fecha PROD: 30/01/2026
+
+Duración estimada: 4 semanas
+Las horas de desarrollo corresponden a horas profesionales estimadas por etapa, ejecutadas de forma no continua, distribuidas según avance de hitos, disponibilidad de información, validaciones del cliente y dependencias externas.
+No constituyen dedicación exclusiva ni ejecución en tiempo corrido, sino una bolsa de horas asociada al cumplimiento de entregables definidos para cada etapa del proyecto.

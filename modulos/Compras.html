@@ -1,0 +1,2747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>BCP - Sistema de Gestión de Compras v3</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --bg-main: #020617;
+      --bg-secondary: #0f172a;
+      --bg-elevated: #020617;
+      --border-subtle: #1f2937;
+      --bcp-green: #16a34a;
+      --bcp-green-dark: #065f46;
+      --bcp-purple: #a855f7;
+      --yellow: #facc15;
+      --red: #ef4444;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --text-strong: #f9fafb;
+      --shadow-soft: 0 12px 30px rgba(0,0,0,0.5);
+      --radius-lg: 16px;
+      --radius-pill: 9999px;
+      --transition-fast: 0.18s ease-out;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #020617 0, #020617 35%, #020617 60%, #020617 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+    }
+
+    /* LOGIN */
+    .login-screen {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      background: radial-gradient(circle at top, #020617, #0f172a);
+      z-index: 50;
+    }
+
+    .login-card {
+      max-width: 360px;
+      width: 100%;
+      background: radial-gradient(circle at 0 0, rgba(168, 85, 247, 0.18), #020617);
+      padding: 16px 18px;
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.95);
+    }
+
+    .login-card h1 {
+      font-size: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-strong);
+      margin-bottom: 4px;
+    }
+
+    .login-card p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .login-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .login-grid .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.8rem;
+    }
+
+    .login-grid label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .login-grid input {
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      padding: 7px 9px;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+
+    .login-grid input:focus {
+      border-color: var(--bcp-purple);
+      box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.7);
+    }
+
+    .login-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .login-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .app-shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 16px 16px 40px;
+    }
+
+    header.app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, #020617, #0f172a);
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      margin-bottom: 16px;
+    }
+
+    .app-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .app-logo-mark {
+      width: 32px;
+      height: 32px;
+      border-radius: 12px;
+      background: radial-gradient(circle at 20% 20%, #a855f7, #16a34a 55%, #020617 100%);
+      box-shadow: 0 0 18px rgba(168, 85, 247, 0.6);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-logo-mark::after {
+      content: "";
+      position: absolute;
+      inset: 30% 15%;
+      border-radius: 50%;
+      border: 2px solid rgba(15, 23, 42, 0.9);
+      box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.7);
+    }
+
+    .app-title-block h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-strong);
+    }
+
+    .app-title-block span {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    .app-header-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .pill {
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-muted);
+    }
+
+    .pill--accent {
+      border-color: rgba(22, 163, 74, 0.8);
+      color: #bbf7d0;
+      background: linear-gradient(90deg, rgba(22,163,74,0.25), transparent);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      margin-top: 14px;
+      margin-bottom: 16px;
+      border-radius: var(--radius-lg);
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-muted);
+      border-right: 1px solid rgba(31, 41, 55, 0.7);
+      position: relative;
+      transition: background var(--transition-fast), color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .tab:last-child {
+      border-right: none;
+    }
+
+    .tab::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--bcp-purple), var(--bcp-green));
+      transition: width var(--transition-fast);
+    }
+
+    .tab--active {
+      color: #f9fafb;
+      background: radial-gradient(circle at top, rgba(22, 163, 74, 0.18), rgba(15, 23, 42, 0.95));
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    }
+
+    .tab--active::after {
+      width: 40%;
+    }
+
+    main {
+      display: block;
+    }
+
+    .view {
+      display: none;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .view--active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dashboard */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .card {
+      background: radial-gradient(circle at 0 0, rgba(168, 85, 247, 0.08), rgba(15, 23, 42, 0.98));
+      border-radius: var(--radius-lg);
+      padding: 12px 14px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid rgba(15, 23, 42, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card--soft {
+      background: radial-gradient(circle at 0 0, rgba(22, 163, 74, 0.05), rgba(15, 23, 42, 0.96));
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 6px;
+    }
+
+    .card-header h2 {
+      font-size: 0.85rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+
+    .kpi-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-strong);
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .kpi-chip {
+      font-size: 0.7rem;
+      border-radius: var(--radius-pill);
+      padding: 2px 8px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      color: var(--text-muted);
+    }
+
+    .kpi-chip--green {
+      border-color: rgba(22, 163, 74, 0.8);
+      color: #bbf7d0;
+    }
+
+    .kpi-chip--warn {
+      border-color: rgba(250, 204, 21, 0.9);
+      color: #fef9c3;
+    }
+
+    .two-column {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+      gap: 12px;
+    }
+
+    @media (max-width: 900px) {
+      .two-column {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .priority-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .priority-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 8px;
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.9);
+      font-size: 0.8rem;
+    }
+
+    .priority-main {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+
+    .priority-main span {
+      font-size: 0.78rem;
+    }
+
+    .priority-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .priority-overdue {
+      color: var(--yellow);
+      font-size: 0.7rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    th, td {
+      padding: 6px 6px;
+      text-align: left;
+      border-bottom: 1px solid rgba(31, 41, 55, 0.85);
+      white-space: nowrap;
+    }
+
+    th {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 500;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.8);
+    }
+
+    tbody tr:hover {
+      background: rgba(22, 163, 74, 0.12);
+    }
+
+    .text-right { text-align: right; }
+    .truncate {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3px 9px;
+      border-radius: var(--radius-pill);
+      font-size: 0.7rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: 1px solid transparent;
+      white-space: nowrap;
+    }
+
+    .badge-prioridad-urgente {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+      color: #fef2f2;
+      border-color: rgba(248, 113, 113, 0.9);
+    }
+
+    .badge-prioridad-alta {
+      background: linear-gradient(90deg, #facc15, #fb923c);
+      color: #1f2933;
+      border-color: rgba(250, 204, 21, 0.8);
+    }
+
+    .badge-prioridad-media {
+      background: rgba(37, 99, 235, 0.18);
+      color: #bfdbfe;
+      border-color: rgba(59, 130, 246, 0.7);
+    }
+
+    .badge-prioridad-baja {
+      background: rgba(75, 85, 99, 0.6);
+      color: #e5e7eb;
+      border-color: rgba(107, 114, 128, 0.8);
+    }
+
+    .badge-estado-solicitado {
+      background: rgba(148, 163, 184, 0.2);
+      color: #e5e7eb;
+      border-color: rgba(148, 163, 184, 0.7);
+    }
+
+    .badge-estado-comprado {
+      background: rgba(37, 99, 235, 0.2);
+      color: #bfdbfe;
+      border-color: rgba(59, 130, 246, 0.8);
+    }
+
+    .badge-estado-recibido {
+      background: rgba(22, 163, 74, 0.25);
+      color: #bbf7d0;
+      border-color: rgba(22, 163, 74, 0.95);
+    }
+
+    .badge-estado-recepcion_obs {
+      background: rgba(250, 204, 21, 0.22);
+      color: #fef9c3;
+      border-color: rgba(250, 204, 21, 0.9);
+    }
+
+    .badge-estado-rechazado {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fee2e2;
+      border-color: rgba(239, 68, 68, 0.95);
+    }
+
+    .badge-attach {
+      background: rgba(168, 85, 247, 0.2);
+      color: #e9d5ff;
+      border-color: rgba(168, 85, 247, 0.8);
+      font-size: 0.7rem;
+    }
+
+    .badge-overdue {
+      background: rgba(250, 204, 21, 0.22);
+      color: #fef9c3;
+      border-color: rgba(250, 204, 21, 0.9);
+      font-size: 0.7rem;
+    }
+
+    /* Buttons */
+    .btn {
+      border-radius: var(--radius-pill);
+      border: 1px solid transparent;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast), box-shadow var(--transition-fast), border-color var(--transition-fast);
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--bcp-green-dark), var(--bcp-green));
+      border-color: rgba(22, 163, 74, 0.9);
+      color: #ecfdf5;
+      box-shadow: 0 10px 25px rgba(22, 163, 74, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 30px rgba(22, 163, 74, 0.5);
+    }
+
+    .btn-ghost {
+      border-color: rgba(148, 163, 184, 0.5);
+      background: rgba(15, 23, 42, 0.9);
+      color: var(--text-muted);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--bcp-purple);
+      color: #e9d5ff;
+      box-shadow: 0 6px 16px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn-danger {
+      border-color: rgba(239, 68, 68, 0.9);
+      color: #fecaca;
+      background: rgba(127, 29, 29, 0.6);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 6px 16px rgba(127, 29, 29, 0.9);
+      transform: translateY(-1px);
+    }
+
+    .btn-xs {
+      padding: 3px 10px;
+      font-size: 0.7rem;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    /* Form */
+    .form-card {
+      margin-bottom: 16px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px 12px;
+      margin-top: 8px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.8rem;
+    }
+
+    .form-group label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      background: rgba(15, 23, 42, 0.95);
+      color: var(--text-main);
+      font-size: 0.82rem;
+      padding: 7px 9px;
+      outline: none;
+      transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--bcp-purple);
+      box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.7);
+    }
+
+    .form-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .filters-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+      margin-top: 8px;
+      padding: 6px 8px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      font-size: 0.78rem;
+    }
+
+    .filters-bar .form-group {
+      min-width: 140px;
+    }
+
+    /* Solicitudes cards */
+    .solicitudes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sol-card {
+      background: radial-gradient(circle at 0 0, rgba(22, 163, 74, 0.08), rgba(15, 23, 42, 0.97));
+      border-radius: var(--radius-lg);
+      padding: 10px 12px;
+      border: 1px solid rgba(31, 41, 55, 0.95);
+      box-shadow: var(--shadow-soft);
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sol-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+    }
+
+    .sol-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sol-product {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-strong);
+    }
+
+    .sol-meta-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: 2px;
+    }
+
+    .sol-meta-line {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    .sol-body {
+      font-size: 0.8rem;
+      color: var(--text-main);
+      margin-top: 2px;
+    }
+
+    .sol-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 4px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .sol-footer-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .comment-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.75rem;
+      color: #e9d5ff;
+    }
+
+    .comment-indicator strong {
+      font-weight: 600;
+    }
+
+    details.comment-details {
+      margin-top: 4px;
+      font-size: 0.78rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 10px;
+      border: 1px solid rgba(31, 41, 55, 0.9);
+      padding: 4px 8px 6px;
+    }
+
+    details.comment-details summary {
+      cursor: pointer;
+      list-style: none;
+      color: #e9d5ff;
+    }
+
+    details.comment-details summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .comment-list {
+      margin-top: 4px;
+      padding-left: 12px;
+    }
+
+    .comment-list li {
+      margin-bottom: 2px;
+      color: var(--text-main);
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .modal-backdrop--visible {
+      display: flex;
+    }
+
+    .modal {
+      background: radial-gradient(circle at top, rgba(168, 85, 247, 0.15), #020617);
+      border-radius: 18px;
+      padding: 14px 16px;
+      width: 100%;
+      max-width: 520px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(55, 65, 81, 0.95);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .modal-header h3 {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-strong);
+    }
+
+    .modal-close {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .mt-1 { margin-top: 4px; }
+    .mt-2 { margin-top: 8px; }
+
+    @media (max-width: 640px) {
+      header.app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .app-header-meta {
+        align-items: flex-start;
+      }
+
+      th, td {
+        font-size: 0.7rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- LOGIN -->
+  <div class="login-screen" id="login-screen">
+    <div class="login-card">
+      <h1>BCP · Compras</h1>
+      <p>Inicia sesión para gestionar solicitudes y compras internas del laboratorio.</p>
+      <form id="login-form">
+        <div class="login-grid">
+          <div class="form-group">
+            <label for="login-username">Usuario</label>
+            <input id="login-username" type="text" autocomplete="username" placeholder="solicitante / comprador / master" />
+          </div>
+          <div class="form-group">
+            <label for="login-password">Clave</label>
+            <input id="login-password" type="password" autocomplete="current-password" placeholder="solicitante / comprador / master" />
+          </div>
+        </div>
+        <div class="login-footer">
+          <span class="login-hint">
+            Roles de prueba:<br />
+            <strong>solicitante / solicitante</strong><br />
+            <strong>comprador / comprador</strong><br />
+            <strong>master / master</strong>
+          </span>
+          <button type="submit" class="btn btn-primary btn-xs">Entrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP -->
+  <div class="app-shell" id="app-shell">
+    <header class="app-header">
+      <div class="app-logo">
+        <div class="app-logo-mark"></div>
+        <div class="app-title-block">
+          <h1>BCP · Gestión de Compras</h1>
+          <span>BioCannaPharma · Lab internal purchasing flow</span>
+        </div>
+      </div>
+      <div class="app-header-meta">
+        <div class="pill pill--accent">Tema oscuro BCP</div>
+        <div class="pill" id="current-user-pill">Usuario: -</div>
+        <button type="button" class="btn btn-ghost btn-xs" id="btn-logout">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <div class="tab tab--active" data-view="dashboard">Dashboard</div>
+      <div class="tab" data-view="solicitudes">Solicitudes</div>
+      <div class="tab" data-view="historial">Historial</div>
+      <div class="tab" data-view="ayuda">Ayuda / Info</div>
+    </nav>
+
+    <main>
+      <!-- DASHBOARD -->
+      <section id="view-dashboard" class="view view--active">
+        <div class="kpi-grid">
+          <div class="card card--soft">
+            <div class="card-header">
+              <h2>Total de solicitudes</h2>
+              <span class="kpi-chip kpi-chip--green">BCP Flow</span>
+            </div>
+            <div class="kpi-value" id="kpi-total-solicitudes">0</div>
+            <div class="kpi-sub">Incluye todas las prioridades y estados</div>
+          </div>
+          <div class="card card--soft">
+            <div class="card-header">
+              <h2>OCs recibidas / obs</h2>
+              <span class="kpi-chip">Recepción</span>
+            </div>
+            <div class="kpi-value" id="kpi-ocs-recibidas">0</div>
+            <div class="kpi-sub">Estados: <strong>recibido</strong> + <strong>recepcion_obs</strong></div>
+          </div>
+          <div class="card card--soft">
+            <div class="card-header">
+              <h2>Gasto acumulado</h2>
+              <span class="kpi-chip kpi-chip--green">$ CLP</span>
+            </div>
+            <div class="kpi-value" id="kpi-gasto-acumulado">$0</div>
+            <div class="kpi-sub">Usa valor real si existe, de lo contrario valor estimado</div>
+          </div>
+          <div class="card card--soft">
+            <div class="card-header">
+              <h2>OCs con observaciones</h2>
+              <span class="kpi-chip kpi-chip--warn">Pendientes</span>
+            </div>
+            <div class="kpi-value" id="kpi-obs-pendientes">0</div>
+            <div class="kpi-sub">Estado <strong>recepcion_obs</strong> aún abierto</div>
+          </div>
+        </div>
+
+        <div class="two-column">
+          <div class="card">
+            <div class="card-header">
+              <h2>Bandeja de prioridad</h2>
+              <span class="kpi-chip">Urgente · Alta · Obs</span>
+            </div>
+            <div class="priority-list" id="priority-list"></div>
+            <p class="hint mt-2">
+              Muestra solicitudes en prioridades <strong>urgente</strong>, <strong>alta</strong> o estado
+              <strong>recepcion_obs</strong>, ordenadas por criticidad y fecha. Se marcan con ⚠ las solicitudes
+              atrasadas (fecha requerida &lt; hoy).
+            </p>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Últimos 30 registros</h2>
+              <span class="kpi-chip">Histórico</span>
+            </div>
+            <div style="max-height:260px; overflow:auto; scrollbar-width:thin; margin-top:4px;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>N° Sol</th>
+                    <th>N° OC</th>
+                    <th>Producto</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th class="text-right">💬</th>
+                  </tr>
+                </thead>
+                <tbody id="table-ultimos"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SOLICITUDES -->
+      <section id="view-solicitudes" class="view">
+        <div class="card form-card">
+          <div class="card-header">
+            <h2>Nueva solicitud de compra</h2>
+            <span class="kpi-chip kpi-chip--green">Rol solicitante / master</span>
+          </div>
+          <form id="form-nueva-solicitud">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="solicitante">Solicitante *</label>
+                <input type="text" id="solicitante" required />
+              </div>
+              <div class="form-group">
+                <label for="area">Área *</label>
+                <select id="area" required>
+                  <option value="">Seleccionar...</option>
+                  <option value="I+D">I+D</option>
+                  <option value="CC">Control de Calidad</option>
+                  <option value="Producción">Producción</option>
+                  <option value="Administración">Administración</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="producto">Producto *</label>
+                <input type="text" id="producto" required />
+              </div>
+              <div class="form-group">
+                <label for="cantidad">Cantidad *</label>
+                <input type="number" step="0.01" min="0" id="cantidad" required />
+              </div>
+              <div class="form-group">
+                <label for="unidad">Unidad *</label>
+                <input type="text" id="unidad" required placeholder="ej: kg, L, unid" />
+              </div>
+              <div class="form-group">
+                <label for="prioridad">Prioridad *</label>
+                <select id="prioridad" required>
+                  <option value="">Seleccionar...</option>
+                  <option value="urgente">Urgente</option>
+                  <option value="alta">Alta</option>
+                  <option value="media">Media</option>
+                  <option value="baja">Baja</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="valor-estimado">Valor estimado (CLP) *</label>
+                <input type="number" step="1" min="0" id="valor-estimado" required />
+              </div>
+              <div class="form-group">
+                <label for="fecha-requerida">Fecha requerida *</label>
+                <input type="date" id="fecha-requerida" required />
+              </div>
+            </div>
+            <div class="form-group mt-2">
+              <label for="descripcion">Descripción *</label>
+              <textarea id="descripcion" required placeholder="Breve descripción del uso / justificación"></textarea>
+            </div>
+            <div class="form-footer">
+              <span class="hint">
+                Solo los roles <strong>solicitante</strong> y <strong>master</strong> pueden crear solicitudes. Se generarán automáticamente el ID interno,
+                N° de solicitud (<strong>SOL-YYYY-XXX</strong>) y N° de OC (<strong>OC-YYYY-XXX</strong>).
+              </span>
+              <button type="submit" class="btn btn-primary" id="btn-crear-solicitud">
+                <span>Crear solicitud</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Solicitudes registradas</h2>
+            <span class="kpi-chip">Filtros + búsqueda</span>
+          </div>
+
+          <div class="filters-bar">
+            <div class="form-group">
+              <label for="filter-estado">Estado</label>
+              <select id="filter-estado">
+                <option value="">Todos</option>
+                <option value="solicitado">Solicitado</option>
+                <option value="comprado">Comprado</option>
+                <option value="recibido">Recibido</option>
+                <option value="recepcion_obs">Recepción obs</option>
+                <option value="rechazado">Rechazado</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filter-prioridad">Prioridad</label>
+              <select id="filter-prioridad">
+                <option value="">Todas</option>
+                <option value="urgente">Urgente</option>
+                <option value="alta">Alta</option>
+                <option value="media">Media</option>
+                <option value="baja">Baja</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filter-area">Área</label>
+              <select id="filter-area">
+                <option value="">Todas</option>
+                <option value="I+D">I+D</option>
+                <option value="CC">Control de Calidad</option>
+                <option value="Producción">Producción</option>
+                <option value="Administración">Administración</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+            <div class="form-group" style="flex:1; min-width:180px;">
+              <label for="filter-search">Buscar</label>
+              <input id="filter-search" type="text" placeholder="Producto, Nº SOL, Nº OC, solicitante, proveedor" />
+            </div>
+            <div class="form-group" style="min-width:80px;">
+              <label>&nbsp;</label>
+              <button type="button" class="btn btn-ghost btn-xs" id="btn-clear-filters">Limpiar</button>
+            </div>
+          </div>
+
+          <div class="solicitudes-list" id="solicitudes-list"></div>
+          <p class="hint mt-2">
+            Ambos roles pueden ver el listado completo. Solo el rol <strong>comprador</strong> (y <strong>master</strong>) puede usar
+            <strong>🛒 Registrar compra</strong>, y solo el rol <strong>solicitante</strong> (y <strong>master</strong>) puede usar
+            <strong>📦 Recepción</strong>. El rol <strong>master</strong> además puede <strong>editar</strong> y
+            <strong>eliminar</strong> solicitudes. Icono 📎 indica que hay boleta/factura adjunta.
+          </p>
+        </div>
+      </section>
+
+      <!-- HISTORIAL -->
+      <section id="view-historial" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h2>Historial por área</h2>
+            <span class="kpi-chip">Resumen solicitudes + compras</span>
+          </div>
+          <div style="max-height:240px; overflow:auto; scrollbar-width:thin; margin-top:4px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Área</th>
+                  <th>Total solicitudes</th>
+                  <th>Recibidas</th>
+                  <th>Pendientes</th>
+                  <th>Gasto acumulado</th>
+                </tr>
+              </thead>
+              <tbody id="hist-area-tbody"></tbody>
+            </table>
+          </div>
+          <p class="hint mt-2">
+            Pendientes incluye estados <strong>solicitado</strong>, <strong>comprado</strong> y <strong>recepcion_obs</strong>.
+            El gasto acumulado usa valor real cuando existe, si no el estimado.
+          </p>
+        </div>
+
+        <div class="card mt-2">
+          <div class="card-header">
+            <h2>Historial por estado</h2>
+            <span class="kpi-chip">Sección estados</span>
+          </div>
+          <div style="max-height:220px; overflow:auto; scrollbar-width:thin; margin-top:4px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Estado</th>
+                  <th>Cantidad</th>
+                  <th>Gasto acumulado</th>
+                </tr>
+              </thead>
+              <tbody id="hist-estado-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mt-2">
+          <div class="card-header">
+            <h2>Historial completo de solicitudes</h2>
+            <span class="kpi-chip">Detalle por registro</span>
+          </div>
+          <div style="max-height:260px; overflow:auto; scrollbar-width:thin; margin-top:4px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>N° Sol</th>
+                  <th>Área</th>
+                  <th>Producto</th>
+                  <th>Estado</th>
+                  <th>Prioridad</th>
+                  <th>Valor base</th>
+                  <th>F. solicitud</th>
+                  <th>F. compra</th>
+                  <th>F. recepción</th>
+                </tr>
+              </thead>
+              <tbody id="hist-completo-tbody"></tbody>
+            </table>
+          </div>
+          <p class="hint mt-2">
+            Esta tabla consolida el flujo completo por área y sección (estado) de cada solicitud registrada en el sistema.
+          </p>
+        </div>
+      </section>
+
+      <!-- AYUDA / INFO -->
+      <section id="view-ayuda" class="view">
+        <div class="card">
+          <div class="card-header">
+            <h2>Guía rápida del sistema</h2>
+            <span class="kpi-chip">BCP interno</span>
+          </div>
+          <p class="hint mt-2">
+            Este archivo HTML es una SPA (Single Page Application) 100% local: no requiere servidor y guarda toda la data en
+            <strong>localStorage</strong>. Puedes duplicar el archivo, renombrarlo o versionarlo según tus iteraciones de BCP.
+          </p>
+          <ul class="mt-2" style="font-size:0.8rem; color:var(--text-main); padding-left:18px; line-height:1.4;">
+            <li><strong>Dashboard:</strong> KPIs, bandeja de prioridad y últimos 30 registros.</li>
+            <li><strong>Solicitudes:</strong> creación (rol solicitante/master), filtros, búsqueda, comentarios, registrar compras (rol comprador/master) y recepciones (rol solicitante/master).</li>
+            <li><strong>Historial:</strong> resumen de solicitudes y compras por área y por estado, más tabla completa del flujo.</li>
+            <li><strong>Adjuntos:</strong> en el registro de compra se sube boleta/factura (PDF o imagen) y queda almacenada en localStorage como dataURL, visible como 📎 y accesible desde cada tarjeta.</li>
+            <li><strong>Rol master:</strong> puede hacer todo lo anterior, además de editar y eliminar solicitudes si es necesario corregir datos.</li>
+            <li><strong>Observaciones de recepción:</strong> se muestran en la tarjeta y también se agregan al hilo de comentarios como nota de recepción.</li>
+          </ul>
+          <p class="hint mt-2">
+            Para migrar a otro lenguaje/backend futuro, basta con replicar el modelo de datos que ves en el código JS
+            (objeto por solicitud + correlativos por año + campos de auditoría, comprobantes y observaciones).
+          </p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- DATALIST PROVEEDORES -->
+  <datalist id="proveedores-list"></datalist>
+
+  <!-- MODAL COMPRAS / RECEPCIÓN -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Registrar compra</h3>
+        <button class="modal-close" id="modal-close" aria-label="Cerrar">×</button>
+      </div>
+      <form id="modal-form">
+        <input type="hidden" id="modal-solicitud-id" />
+        <input type="hidden" id="modal-mode" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label>N° Solicitud</label>
+            <input type="text" id="modal-num-sol" disabled />
+          </div>
+          <div class="form-group">
+            <label>N° OC</label>
+            <input type="text" id="modal-num-oc" disabled />
+          </div>
+        </div>
+
+        <!-- Sección compra -->
+        <div id="modal-section-compra">
+          <div class="form-grid mt-2">
+            <div class="form-group">
+              <label for="modal-proveedor">Proveedor *</label>
+              <input type="text" id="modal-proveedor" list="proveedores-list" />
+            </div>
+            <div class="form-group">
+              <label for="modal-fecha-compra">Fecha de compra *</label>
+              <input type="date" id="modal-fecha-compra" />
+            </div>
+            <div class="form-group">
+              <label for="modal-valor-real">Valor real (CLP) *</label>
+              <input type="number" min="0" step="1" id="modal-valor-real" />
+            </div>
+            <div class="form-group">
+              <label for="modal-comprado-por">Comprado por *</label>
+              <input type="text" id="modal-comprado-por" />
+            </div>
+          </div>
+          <div class="form-group mt-2">
+            <label for="modal-comprobante">Boleta / Factura (PDF o imagen) *</label>
+            <input type="file" id="modal-comprobante" accept=".pdf,image/*" />
+          </div>
+        </div>
+
+        <!-- Sección recepción -->
+        <div id="modal-section-recepcion" style="display:none;">
+          <div class="form-grid mt-2">
+            <div class="form-group">
+              <label for="modal-fecha-recepcion">Fecha de recepción *</label>
+              <input type="date" id="modal-fecha-recepcion" />
+            </div>
+            <div class="form-group">
+              <label for="modal-recibido-por">Recibido por *</label>
+              <input type="text" id="modal-recibido-por" />
+            </div>
+          </div>
+          <div class="form-group mt-2">
+            <label>Resultado *</label>
+            <select id="modal-resultado">
+              <option value="">Seleccionar...</option>
+              <option value="conforme">Conforme</option>
+              <option value="observaciones">Con observaciones</option>
+              <option value="rechazado">Rechazado</option>
+            </select>
+          </div>
+          <div class="form-group mt-2">
+            <label for="modal-observaciones">Observaciones</label>
+            <textarea id="modal-observaciones" placeholder="Obligatorio si hay observaciones o rechazo"></textarea>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <span class="hint">
+            <span id="modal-info"></span>
+          </span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-ghost btn-xs" id="modal-cancel">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-xs" id="modal-submit">Guardar</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL EDICIÓN MASTER -->
+  <div class="modal-backdrop" id="modal-edit-backdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Editar solicitud (master)</h3>
+        <button class="modal-close" id="modal-edit-close" aria-label="Cerrar">×</button>
+      </div>
+      <form id="edit-form">
+        <input type="hidden" id="edit-solicitud-id" />
+        <div class="form-grid">
+          <div class="form-group">
+            <label>N° Solicitud</label>
+            <input type="text" id="edit-num-sol" disabled />
+          </div>
+          <div class="form-group">
+            <label>N° OC</label>
+            <input type="text" id="edit-num-oc" disabled />
+          </div>
+          <div class="form-group">
+            <label for="edit-estado">Estado</label>
+            <select id="edit-estado">
+              <option value="solicitado">Solicitado</option>
+              <option value="comprado">Comprado</option>
+              <option value="recibido">Recibido</option>
+              <option value="recepcion_obs">Recepción obs</option>
+              <option value="rechazado">Rechazado</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-grid mt-2">
+          <div class="form-group">
+            <label for="edit-solicitante">Solicitante *</label>
+            <input type="text" id="edit-solicitante" />
+          </div>
+          <div class="form-group">
+            <label for="edit-area">Área *</label>
+            <select id="edit-area">
+              <option value="">Seleccionar...</option>
+              <option value="I+D">I+D</option>
+              <option value="CC">Control de Calidad</option>
+              <option value="Producción">Producción</option>
+              <option value="Administración">Administración</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-producto">Producto *</label>
+            <input type="text" id="edit-producto" />
+          </div>
+          <div class="form-group">
+            <label for="edit-cantidad">Cantidad *</label>
+            <input type="number" id="edit-cantidad" step="0.01" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="edit-unidad">Unidad *</label>
+            <input type="text" id="edit-unidad" />
+          </div>
+          <div class="form-group">
+            <label for="edit-prioridad">Prioridad *</label>
+            <select id="edit-prioridad">
+              <option value="">Seleccionar...</option>
+              <option value="urgente">Urgente</option>
+              <option value="alta">Alta</option>
+              <option value="media">Media</option>
+              <option value="baja">Baja</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit-valor-estimado">Valor estimado (CLP) *</label>
+            <input type="number" id="edit-valor-estimado" step="1" min="0" />
+          </div>
+          <div class="form-group">
+            <label for="edit-fecha-requerida">Fecha requerida *</label>
+            <input type="date" id="edit-fecha-requerida" />
+          </div>
+        </div>
+
+        <div class="form-group mt-2">
+          <label for="edit-descripcion">Descripción *</label>
+          <textarea id="edit-descripcion"></textarea>
+        </div>
+
+        <div class="modal-footer">
+          <span class="hint">
+            El rol <strong>master</strong> puede corregir datos base y el estado de la solicitud. Ten cuidado con la coherencia respecto a compras y recepciones ya registradas.
+          </span>
+          <div style="display:flex; gap:6px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-ghost btn-xs" id="edit-cancel">Cancelar</button>
+            <button type="submit" class="btn btn-primary btn-xs">Guardar cambios</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // -------------------------
+    //  CONSTANTES DE DOMINIO
+    // -------------------------
+    const STORAGE_KEY = "bcp_solicitudes_v1";
+    const COUNTER_KEY = "bcp_counters_v1";
+
+    const ROLES = {
+      SOLICITANTE: "solicitante",
+      COMPRADOR: "comprador",
+      MASTER: "master",
+    };
+
+    const ESTADOS = {
+      SOLICITADO: "solicitado",
+      COMPRADO: "comprado",
+      RECIBIDO: "recibido",
+      RECEPCION_OBS: "recepcion_obs",
+      RECHAZADO: "rechazado",
+    };
+
+    const PRIORIDADES = {
+      URGENTE: "urgente",
+      ALTA: "alta",
+      MEDIA: "media",
+      BAJA: "baja",
+    };
+
+    const USERS = {
+      solicitante: { password: "solicitante", role: ROLES.SOLICITANTE },
+      comprador: { password: "comprador", role: ROLES.COMPRADOR },
+      master: { password: "master", role: ROLES.MASTER },
+    };
+
+    let solicitudes = [];
+    let currentUser = null;
+
+    // -------------------------
+    //  UTILIDADES
+    // -------------------------
+    function hoyISO() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function formatearFechaDDMMYYYY(isoDate) {
+      if (!isoDate) return "";
+      const [y, m, d] = isoDate.split("-");
+      if (!y || !m || !d) return isoDate;
+      return `${d}-${m}-${y}`;
+    }
+
+    function formatearMonedaCLP(num) {
+      if (isNaN(num)) return "$0";
+      return new Intl.NumberFormat("es-CL", {
+        style: "currency",
+        currency: "CLP",
+        maximumFractionDigits: 0,
+      }).format(num);
+    }
+
+    function generarIdInterno() {
+      if (window.crypto && crypto.randomUUID) {
+        return "sol_" + crypto.randomUUID();
+      }
+      return "sol_" + Math.random().toString(36).slice(2, 10);
+    }
+
+    function cargarSolicitudes() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        solicitudes = raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.error("Error cargando solicitudes:", e);
+        solicitudes = [];
+      }
+    }
+
+    function guardarSolicitudes() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(solicitudes));
+    }
+
+    function cargarCounters() {
+      try {
+        const raw = localStorage.getItem(COUNTER_KEY);
+        return raw ? JSON.parse(raw) : {};
+      } catch (e) {
+        console.error("Error cargando counters:", e);
+        return {};
+      }
+    }
+
+    function guardarCounters(counters) {
+      localStorage.setItem(COUNTER_KEY, JSON.stringify(counters));
+    }
+
+    function generarCorrelativos() {
+      const year = new Date().getFullYear();
+      const counters = cargarCounters();
+      if (!counters[year]) {
+        counters[year] = { solicitud: 0, oc: 0 };
+      }
+      counters[year].solicitud += 1;
+      counters[year].oc += 1;
+      guardarCounters(counters);
+      const nSol = String(counters[year].solicitud).padStart(3, "0");
+      const nOc = String(counters[year].oc).padStart(3, "0");
+      return {
+        numeroSolicitud: `SOL-${year}-${nSol}`,
+        numeroOC: `OC-${year}-${nOc}`,
+      };
+    }
+
+    // -------------------------
+    //  TABS
+    // -------------------------
+    function initTabs() {
+      const tabs = document.querySelectorAll(".tab");
+      tabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          tabs.forEach((t) => t.classList.remove("tab--active"));
+          tab.classList.add("tab--active");
+          const viewId = tab.getAttribute("data-view");
+          document.querySelectorAll(".view").forEach((v) => v.classList.remove("view--active"));
+          document.getElementById("view-" + viewId).classList.add("view--active");
+        });
+      });
+    }
+
+    // -------------------------
+    //  KPIs / DASHBOARD
+    // -------------------------
+    function renderKpis() {
+      const total = solicitudes.length;
+      const ocsRecibidas = solicitudes.filter(
+        (s) => s.estado === ESTADOS.RECIBIDO || s.estado === ESTADOS.RECEPCION_OBS
+      ).length;
+
+      let gasto = 0;
+      solicitudes.forEach((s) => {
+        const valorReal =
+          s.compra && typeof s.compra.valorReal === "number" && !isNaN(s.compra.valorReal)
+            ? s.compra.valorReal
+            : null;
+        const base = valorReal != null ? valorReal : Number(s.valorEstimado || 0);
+        gasto += base || 0;
+      });
+
+      const obsPendientes = solicitudes.filter((s) => s.estado === ESTADOS.RECEPCION_OBS).length;
+
+      document.getElementById("kpi-total-solicitudes").textContent = total;
+      document.getElementById("kpi-ocs-recibidas").textContent = ocsRecibidas;
+      document.getElementById("kpi-gasto-acumulado").textContent = formatearMonedaCLP(gasto);
+      document.getElementById("kpi-obs-pendientes").textContent = obsPendientes;
+    }
+
+    function prioridadOrden(prio) {
+      switch (prio) {
+        case PRIORIDADES.URGENTE: return 1;
+        case PRIORIDADES.ALTA: return 2;
+        case PRIORIDADES.MEDIA: return 3;
+        case PRIORIDADES.BAJA: return 4;
+        default: return 5;
+      }
+    }
+
+    function renderPriorityList() {
+      const container = document.getElementById("priority-list");
+      container.innerHTML = "";
+
+      const filtered = solicitudes
+        .filter(
+          (s) =>
+            s.prioridad === PRIORIDADES.URGENTE ||
+            s.prioridad === PRIORIDADES.ALTA ||
+            s.estado === ESTADOS.RECEPCION_OBS
+        )
+        .slice();
+
+      filtered.sort((a, b) => {
+        const aObs = a.estado === ESTADOS.RECEPCION_OBS ? 0 : 1;
+        const bObs = b.estado === ESTADOS.RECEPCION_OBS ? 0 : 1;
+        if (aObs !== bObs) return aObs - bObs;
+        const pa = prioridadOrden(a.prioridad);
+        const pb = prioridadOrden(b.prioridad);
+        if (pa !== pb) return pa - pb;
+        const fa = a.fechaSolicitud || "";
+        const fb = b.fechaSolicitud || "";
+        return fb.localeCompare(fa);
+      });
+
+      if (filtered.length === 0) {
+        const p = document.createElement("p");
+        p.className = "hint";
+        p.textContent =
+          "No hay solicitudes con prioridad urgente/alta ni OCs en recepción con observaciones.";
+        container.appendChild(p);
+        return;
+      }
+
+      const hoy = hoyISO();
+
+      filtered.forEach((s) => {
+        const div = document.createElement("div");
+        div.className = "priority-item";
+
+        const main = document.createElement("div");
+        main.className = "priority-main";
+
+        const label = document.createElement("div");
+        label.innerHTML =
+          `<strong>${s.producto}</strong> · <span style="color:#9ca3af;">${s.numeroSolicitud}</span>`;
+        main.appendChild(label);
+
+        const line2 = document.createElement("span");
+        line2.textContent = `${s.solicitante} · ${s.area} · Req: ${formatearFechaDDMMYYYY(
+          s.fechaRequerida
+        )}`;
+        main.appendChild(line2);
+
+        if (s.fechaRequerida && s.fechaRequerida < hoy && s.estado !== ESTADOS.RECIBIDO) {
+          const overdue = document.createElement("span");
+          overdue.className = "priority-overdue";
+          overdue.textContent = "⚠ Atrasada";
+          main.appendChild(overdue);
+        }
+
+        const meta = document.createElement("div");
+        meta.className = "priority-meta";
+
+        const badgePrio = document.createElement("span");
+        badgePrio.className = "badge " + getPrioridadBadgeClass(s.prioridad);
+        badgePrio.textContent = s.prioridad;
+        meta.appendChild(badgePrio);
+
+        const badgeEstado = document.createElement("span");
+        badgeEstado.className = "badge " + getEstadoBadgeClass(s.estado);
+        badgeEstado.textContent = s.estado;
+        meta.appendChild(badgeEstado);
+
+        const comments = document.createElement("span");
+        comments.textContent = `💬 ${s.comentarios ? s.comentarios.length : 0}`;
+        meta.appendChild(comments);
+
+        div.appendChild(main);
+        div.appendChild(meta);
+        container.appendChild(div);
+      });
+    }
+
+    function renderUltimos() {
+      const tbody = document.getElementById("table-ultimos");
+      tbody.innerHTML = "";
+
+      const copia = solicitudes.slice();
+      copia.sort((a, b) => (b.fechaSolicitud || "").localeCompare(a.fechaSolicitud || ""));
+
+      copia.slice(0, 30).forEach((s) => {
+        const tr = document.createElement("tr");
+
+        const tdSol = document.createElement("td");
+        tdSol.textContent = s.numeroSolicitud;
+        tr.appendChild(tdSol);
+
+        const tdOc = document.createElement("td");
+        tdOc.textContent = s.numeroOC;
+        tr.appendChild(tdOc);
+
+        const tdProd = document.createElement("td");
+        tdProd.className = "truncate";
+        tdProd.title = s.producto;
+        tdProd.textContent = s.producto;
+        tr.appendChild(tdProd);
+
+        const tdEstado = document.createElement("td");
+        tdEstado.textContent = s.estado;
+        tr.appendChild(tdEstado);
+
+        const tdPrio = document.createElement("td");
+        tdPrio.textContent = s.prioridad;
+        tr.appendChild(tdPrio);
+
+        const tdCom = document.createElement("td");
+        tdCom.className = "text-right";
+        tdCom.textContent = s.comentarios ? s.comentarios.length : 0;
+        tr.appendChild(tdCom);
+
+        tbody.appendChild(tr);
+      });
+    }
+
+    // -------------------------
+    //  BADGE HELPERS
+    // -------------------------
+    function getPrioridadBadgeClass(prioridad) {
+      switch (prioridad) {
+        case PRIORIDADES.URGENTE: return "badge-prioridad-urgente";
+        case PRIORIDADES.ALTA: return "badge-prioridad-alta";
+        case PRIORIDADES.MEDIA: return "badge-prioridad-media";
+        case PRIORIDADES.BAJA: return "badge-prioridad-baja";
+        default: return "";
+      }
+    }
+
+    function getEstadoBadgeClass(estado) {
+      switch (estado) {
+        case ESTADOS.SOLICITADO: return "badge-estado-solicitado";
+        case ESTADOS.COMPRADO: return "badge-estado-comprado";
+        case ESTADOS.RECIBIDO: return "badge-estado-recibido";
+        case ESTADOS.RECEPCION_OBS: return "badge-estado-recepcion_obs";
+        case ESTADOS.RECHAZADO: return "badge-estado-rechazado";
+        default: return "";
+      }
+    }
+
+    // -------------------------
+    //  FILTROS
+    // -------------------------
+    function getFilteredSolicitudes() {
+      const estado = document.getElementById("filter-estado").value;
+      const prioridad = document.getElementById("filter-prioridad").value;
+      const area = document.getElementById("filter-area").value;
+      const search = document.getElementById("filter-search").value.trim().toLowerCase();
+
+      return solicitudes.filter((s) => {
+        if (estado && s.estado !== estado) return false;
+        if (prioridad && s.prioridad !== prioridad) return false;
+        if (area && s.area !== area) return false;
+
+        if (search) {
+          const proveedor = s.compra?.proveedor || "";
+          const hayMatch =
+            (s.producto || "").toLowerCase().includes(search) ||
+            (s.numeroSolicitud || "").toLowerCase().includes(search) ||
+            (s.numeroOC || "").toLowerCase().includes(search) ||
+            (s.solicitante || "").toLowerCase().includes(search) ||
+            proveedor.toLowerCase().includes(search);
+          if (!hayMatch) return false;
+        }
+
+        return true;
+      });
+    }
+
+    function initFilters() {
+      const ids = ["filter-estado", "filter-prioridad", "filter-area", "filter-search"];
+      ids.forEach((id) => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        const ev = id === "filter-search" ? "input" : "change";
+        el.addEventListener(ev, () => {
+          renderSolicitudesList();
+        });
+      });
+
+      document.getElementById("btn-clear-filters").addEventListener("click", () => {
+        document.getElementById("filter-estado").value = "";
+        document.getElementById("filter-prioridad").value = "";
+        document.getElementById("filter-area").value = "";
+        document.getElementById("filter-search").value = "";
+        renderSolicitudesList();
+      });
+    }
+
+    // -------------------------
+    //  PROVEEDORES (CATÁLOGO SIMPLE)
+    // -------------------------
+    function renderProveedoresCatalog() {
+      const datalist = document.getElementById("proveedores-list");
+      if (!datalist) return;
+      datalist.innerHTML = "";
+      const set = new Set();
+      solicitudes.forEach((s) => {
+        if (s.compra && s.compra.proveedor) {
+          set.add(s.compra.proveedor);
+        }
+      });
+      Array.from(set).sort().forEach((p) => {
+        const opt = document.createElement("option");
+        opt.value = p;
+        datalist.appendChild(opt);
+      });
+    }
+
+    // -------------------------
+    //  RENDER SOLICITUDES
+    // -------------------------
+    function renderSolicitudesList() {
+      const container = document.getElementById("solicitudes-list");
+      container.innerHTML = "";
+
+      const copia = getFilteredSolicitudes().slice();
+      copia.sort((a, b) => (b.fechaSolicitud || "").localeCompare(a.fechaSolicitud || ""));
+
+      if (copia.length === 0) {
+        const p = document.createElement("p");
+        p.className = "hint";
+        p.textContent = "No hay solicitudes que coincidan con los filtros actuales.";
+        container.appendChild(p);
+        return;
+      }
+
+      const hoy = hoyISO();
+
+      copia.forEach((s) => {
+        const card = document.createElement("article");
+        card.className = "sol-card";
+        card.dataset.id = s.id;
+
+        // Header
+        const header = document.createElement("div");
+        header.className = "sol-header";
+
+        const main = document.createElement("div");
+        main.className = "sol-main";
+        const prod = document.createElement("div");
+        prod.className = "sol-product";
+        prod.textContent = s.producto;
+        main.appendChild(prod);
+
+        const line = document.createElement("div");
+        line.className = "sol-meta-line";
+        line.textContent = `${s.numeroSolicitud} · ${s.numeroOC}`;
+        main.appendChild(line);
+
+        const metaTop = document.createElement("div");
+        metaTop.className = "sol-meta-top";
+
+        const badgePrio = document.createElement("span");
+        badgePrio.className = "badge " + getPrioridadBadgeClass(s.prioridad);
+        badgePrio.textContent = s.prioridad;
+        metaTop.appendChild(badgePrio);
+
+        const badgeEstado = document.createElement("span");
+        badgeEstado.className = "badge " + getEstadoBadgeClass(s.estado);
+        badgeEstado.textContent = s.estado;
+        metaTop.appendChild(badgeEstado);
+
+        if (s.fechaRequerida && s.fechaRequerida < hoy && s.estado !== ESTADOS.RECIBIDO) {
+          const overdueBadge = document.createElement("span");
+          overdueBadge.className = "badge badge-overdue";
+          overdueBadge.textContent = "⚠ Atrasada";
+          metaTop.appendChild(overdueBadge);
+        }
+
+        if (s.compra && s.compra.comprobante && s.compra.comprobante.dataURL) {
+          const attachBadge = document.createElement("span");
+          attachBadge.className = "badge badge-attach";
+          attachBadge.textContent = "📎 Comprobante";
+          metaTop.appendChild(attachBadge);
+        }
+
+        if (s.comentarios && s.comentarios.length > 0) {
+          const ci = document.createElement("span");
+          ci.className = "comment-indicator";
+          ci.innerHTML = `💬 <strong>${s.comentarios.length}</strong>`;
+          metaTop.appendChild(ci);
+        }
+
+        main.appendChild(metaTop);
+        header.appendChild(main);
+
+        const side = document.createElement("div");
+        side.style.textAlign = "right";
+        side.style.fontSize = "0.75rem";
+        side.style.color = "#9ca3af";
+        side.innerHTML = `
+          <div>${s.solicitante}</div>
+          <div>${s.area}</div>
+          <div>Req: ${formatearFechaDDMMYYYY(s.fechaRequerida)}</div>
+        `;
+        header.appendChild(side);
+
+        card.appendChild(header);
+
+        // Body
+        const body = document.createElement("div");
+        body.className = "sol-body";
+        body.textContent = s.descripcion;
+        card.appendChild(body);
+
+        // Footer
+        const footer = document.createElement("div");
+        footer.className = "sol-footer";
+
+        const footerLeft = document.createElement("div");
+        footerLeft.className = "sol-footer-left";
+        const vStr = formatearMonedaCLP(
+          s.compra && s.compra.valorReal ? s.compra.valorReal : s.valorEstimado
+        );
+        footerLeft.innerHTML = `
+          <span>Valor: <strong>${vStr}</strong></span>
+          <span>Cant: ${s.cantidad} ${s.unidad}</span>
+          <span>Solicitado: ${formatearFechaDDMMYYYY(s.fechaSolicitud || "")}</span>
+        `;
+
+        if (s.compra && s.compra.comprobante && s.compra.comprobante.dataURL) {
+          const link = document.createElement("a");
+          link.href = s.compra.comprobante.dataURL;
+          link.target = "_blank";
+          link.textContent = "Ver boleta / factura";
+          link.style.fontSize = "0.72rem";
+          link.style.textDecoration = "underline";
+          footerLeft.appendChild(link);
+        }
+
+        const audit = document.createElement("span");
+        audit.style.fontSize = "0.7rem";
+        audit.style.color = "#9ca3af";
+        const creado = s.creadoEn ? formatearFechaDDMMYYYY(s.creadoEn.slice(0, 10)) : "-";
+        const last = s.ultimaAccionEn ? formatearFechaDDMMYYYY(s.ultimaAccionEn.slice(0, 10)) : "-";
+        audit.textContent = `Creado por ${s.creadoPor || "N/A"} (${creado}) · Última acción: ${s.ultimaAccionPor || "N/A"} (${last})`;
+        footerLeft.appendChild(audit);
+
+        if (s.recepcion && s.recepcion.observaciones) {
+          const obsLine = document.createElement("span");
+          obsLine.style.fontSize = "0.73rem";
+          obsLine.style.color = "#e5e7eb";
+          obsLine.textContent = "Obs recepción: " + s.recepcion.observaciones;
+          footerLeft.appendChild(obsLine);
+        }
+
+        footer.appendChild(footerLeft);
+
+        const footerRight = document.createElement("div");
+        footerRight.className = "btn-row";
+
+        const btnComment = document.createElement("button");
+        btnComment.type = "button";
+        btnComment.className = "btn btn-ghost btn-xs";
+        btnComment.dataset.action = "comentario";
+        btnComment.textContent = "💬 Comentario";
+        footerRight.appendChild(btnComment);
+
+        if (s.estado === ESTADOS.SOLICITADO) {
+          const btnCompra = document.createElement("button");
+          btnCompra.type = "button";
+          btnCompra.className = "btn btn-primary btn-xs";
+          btnCompra.dataset.action = "compra";
+          btnCompra.textContent = "🛒 Registrar compra";
+          footerRight.appendChild(btnCompra);
+        }
+
+        if (s.estado === ESTADOS.COMPRADO || s.estado === ESTADOS.RECEPCION_OBS) {
+          const btnRecep = document.createElement("button");
+          btnRecep.type = "button";
+          btnRecep.className = "btn btn-primary btn-xs";
+          btnRecep.dataset.action = "recepcion";
+          btnRecep.textContent = "📦 Recepción";
+          footerRight.appendChild(btnRecep);
+        }
+
+        if (currentUser && currentUser.role === ROLES.MASTER) {
+          const btnEdit = document.createElement("button");
+          btnEdit.type = "button";
+          btnEdit.className = "btn btn-ghost btn-xs";
+          btnEdit.dataset.action = "editar";
+          btnEdit.textContent = "✏️ Editar";
+          footerRight.appendChild(btnEdit);
+
+          const btnDelete = document.createElement("button");
+          btnDelete.type = "button";
+          btnDelete.className = "btn btn-danger btn-xs";
+          btnDelete.dataset.action = "eliminar";
+          btnDelete.textContent = "🗑 Eliminar";
+          footerRight.appendChild(btnDelete);
+        }
+
+        footer.appendChild(footerRight);
+        card.appendChild(footer);
+
+        // Comentarios en <details>
+        if (s.comentarios && s.comentarios.length > 0) {
+          const det = document.createElement("details");
+          det.className = "comment-details";
+          const summary = document.createElement("summary");
+          summary.textContent = `💬 Comentarios (${s.comentarios.length})`;
+          det.appendChild(summary);
+
+          const ul = document.createElement("ul");
+          ul.className = "comment-list";
+          s.comentarios
+            .slice()
+            .sort((a, b) => (a.fechaISO || "").localeCompare(b.fechaISO || ""))
+            .forEach((c) => {
+              const li = document.createElement("li");
+              const date = c.fechaISO ? c.fechaISO.slice(0, 10) : "";
+              const [y, m, d] = date.split("-");
+              const pretty = y ? `${d}-${m}-${y}` : "";
+              li.textContent = `[${pretty}] ${c.usuario}: ${c.texto}`;
+              ul.appendChild(li);
+            });
+
+          det.appendChild(ul);
+          card.appendChild(det);
+        }
+
+        container.appendChild(card);
+      });
+    }
+
+    // -------------------------
+    //  COMENTARIOS
+    // -------------------------
+    function agregarComentario(solicitudId) {
+      const sol = solicitudes.find((s) => s.id === solicitudId);
+      if (!sol) return;
+
+      const usuario = prompt("Nombre de quien comenta:");
+      if (!usuario) return;
+
+      const texto = prompt("Texto del comentario:");
+      if (!texto) return;
+
+      if (!sol.comentarios) sol.comentarios = [];
+
+      sol.comentarios.push({
+        id: "c_" + Math.random().toString(36).slice(2, 10),
+        usuario: usuario.trim(),
+        fechaISO: new Date().toISOString(),
+        texto: texto.trim(),
+      });
+
+      sol.ultimaAccionPor = (currentUser && currentUser.username) || usuario.trim();
+      sol.ultimaAccionEn = new Date().toISOString();
+
+      guardarSolicitudes();
+      renderAll();
+    }
+
+    // -------------------------
+    //  MODAL COMPRA / RECEPCIÓN
+    // -------------------------
+    const modalBackdrop = document.getElementById("modal-backdrop");
+    const modalTitle = document.getElementById("modal-title");
+    const modalForm = document.getElementById("modal-form");
+    const modalModeInput = document.getElementById("modal-mode");
+    const modalInfo = document.getElementById("modal-info");
+
+    function abrirModalCompra(sol) {
+      if (!currentUser || (currentUser.role !== ROLES.COMPRADOR && currentUser.role !== ROLES.MASTER)) {
+        alert("Solo los roles COMPRADOR o MASTER pueden registrar compras.");
+        return;
+      }
+
+      modalTitle.textContent = "Registrar compra";
+      modalModeInput.value = "compra";
+      document.getElementById("modal-section-compra").style.display = "block";
+      document.getElementById("modal-section-recepcion").style.display = "none";
+
+      document.getElementById("modal-solicitud-id").value = sol.id;
+      document.getElementById("modal-num-sol").value = sol.numeroSolicitud;
+      document.getElementById("modal-num-oc").value = sol.numeroOC;
+      document.getElementById("modal-proveedor").value = sol.compra?.proveedor || "";
+      document.getElementById("modal-fecha-compra").value = sol.compra?.fechaCompra || hoyISO();
+      document.getElementById("modal-valor-real").value =
+        typeof sol.compra?.valorReal === "number" ? sol.compra.valorReal : "";
+      document.getElementById("modal-comprado-por").value =
+        sol.compra?.compradoPor || (currentUser && currentUser.username) || "";
+      document.getElementById("modal-comprobante").value = "";
+
+      modalInfo.innerHTML =
+        "Solo disponible si la solicitud está en estado <strong>solicitado</strong>. Es obligatorio subir copia de boleta/factura.";
+
+      modalBackdrop.classList.add("modal-backdrop--visible");
+    }
+
+    function abrirModalRecepcion(sol) {
+      if (!currentUser || (currentUser.role !== ROLES.SOLICITANTE && currentUser.role !== ROLES.MASTER)) {
+        alert("Solo los roles SOLICITANTE o MASTER pueden registrar recepciones en el laboratorio.");
+        return;
+      }
+
+      modalTitle.textContent = "Registrar recepción";
+      modalModeInput.value = "recepcion";
+      document.getElementById("modal-section-compra").style.display = "none";
+      document.getElementById("modal-section-recepcion").style.display = "block";
+
+      document.getElementById("modal-solicitud-id").value = sol.id;
+      document.getElementById("modal-num-sol").value = sol.numeroSolicitud;
+      document.getElementById("modal-num-oc").value = sol.numeroOC;
+
+      document.getElementById("modal-fecha-recepcion").value =
+        sol.recepcion?.fechaRecepcion || hoyISO();
+      document.getElementById("modal-recibido-por").value =
+        sol.recepcion?.recibidoPor || (currentUser && currentUser.username) || "";
+      document.getElementById("modal-resultado").value = sol.recepcion?.resultado || "";
+      document.getElementById("modal-observaciones").value =
+        sol.recepcion?.observaciones || "";
+
+      modalInfo.innerHTML =
+        "Solo disponible si la solicitud está en estado <strong>comprado</strong> o <strong>recepcion_obs</strong>. Las observaciones se verán en la tarjeta y en el hilo de comentarios.";
+      modalBackdrop.classList.add("modal-backdrop--visible");
+    }
+
+    function cerrarModal() {
+      modalBackdrop.classList.remove("modal-backdrop--visible");
+    }
+
+    document.getElementById("modal-close").addEventListener("click", cerrarModal);
+    document.getElementById("modal-cancel").addEventListener("click", cerrarModal);
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) cerrarModal();
+    });
+
+    modalForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const mode = modalModeInput.value;
+      const id = document.getElementById("modal-solicitud-id").value;
+      const sol = solicitudes.find((s) => s.id === id);
+      if (!sol) return;
+
+      if (mode === "compra") {
+        if (!currentUser || (currentUser.role !== ROLES.COMPRADOR && currentUser.role !== ROLES.MASTER)) {
+          alert("Solo los roles COMPRADOR o MASTER pueden registrar compras.");
+          return;
+        }
+
+        if (sol.estado !== ESTADOS.SOLICITADO) {
+          alert("Solo se puede registrar compra cuando el estado es 'solicitado'.");
+          return;
+        }
+        const proveedor = document.getElementById("modal-proveedor").value.trim();
+        const fechaCompra = document.getElementById("modal-fecha-compra").value;
+        const valorReal = parseFloat(document.getElementById("modal-valor-real").value);
+        const compradoPor = document.getElementById("modal-comprado-por").value.trim();
+        const fileInput = document.getElementById("modal-comprobante");
+        const file = fileInput.files[0];
+
+        if (!proveedor || !fechaCompra || isNaN(valorReal) || valorReal <= 0 || !compradoPor) {
+          alert("Completa todos los campos y asegúrate de que el valor real sea mayor a 0.");
+          return;
+        }
+
+        if (!file) {
+          alert("Debes adjuntar una copia de la boleta o factura (PDF o imagen).");
+          return;
+        }
+
+        if (sol.fechaSolicitud && fechaCompra < sol.fechaSolicitud) {
+          const ok = confirm(
+            "La fecha de compra es anterior a la fecha de solicitud. ¿Confirmas guardar de todas formas?"
+          );
+          if (!ok) return;
+        }
+
+        const baseCompra = {
+          proveedor,
+          fechaCompra,
+          valorReal,
+          compradoPor,
+        };
+
+        const reader = new FileReader();
+        reader.onload = function (ev) {
+          const dataURL = ev.target.result;
+          baseCompra.comprobante = {
+            nombre: file.name,
+            tipo: file.type,
+            tamano: file.size,
+            dataURL: dataURL,
+          };
+          sol.compra = baseCompra;
+          sol.estado = ESTADOS.COMPRADO;
+          sol.ultimaAccionPor = currentUser.username;
+          sol.ultimaAccionEn = new Date().toISOString();
+          guardarSolicitudes();
+          cerrarModal();
+          renderAll();
+        };
+        reader.readAsDataURL(file);
+      } else if (mode === "recepcion") {
+        if (!currentUser || (currentUser.role !== ROLES.SOLICITANTE && currentUser.role !== ROLES.MASTER)) {
+          alert("Solo los roles SOLICITANTE o MASTER pueden registrar recepciones.");
+          return;
+        }
+
+        if (!(sol.estado === ESTADOS.COMPRADO || sol.estado === ESTADOS.RECEPCION_OBS)) {
+          alert("Solo se puede registrar recepción cuando el estado es 'comprado' o 'recepcion_obs'.");
+          return;
+        }
+
+        const fechaRecepcion = document.getElementById("modal-fecha-recepcion").value;
+        const recibidoPor = document.getElementById("modal-recibido-por").value.trim();
+        const resultado = document.getElementById("modal-resultado").value;
+        const observaciones = document.getElementById("modal-observaciones").value.trim();
+
+        if (!fechaRecepcion || !recibidoPor || !resultado) {
+          alert("Completa todos los campos obligatorios.");
+          return;
+        }
+
+        if ((resultado === "observaciones" || resultado === "rechazado") && !observaciones) {
+          alert("Las observaciones son obligatorias cuando hay observaciones o rechazo.");
+          return;
+        }
+
+        if (sol.compra && sol.compra.fechaCompra && fechaRecepcion < sol.compra.fechaCompra) {
+          const ok = confirm(
+            "La fecha de recepción es anterior a la fecha de compra. ¿Confirmas guardar de todas formas?"
+          );
+          if (!ok) return;
+        }
+
+        let nuevoEstado = ESTADOS.RECIBIDO;
+        if (resultado === "observaciones") nuevoEstado = ESTADOS.RECEPCION_OBS;
+        if (resultado === "rechazado") nuevoEstado = ESTADOS.RECHAZADO;
+
+        sol.recepcion = {
+          fechaRecepcion,
+          resultado,
+          recibidoPor,
+          observaciones,
+        };
+        sol.estado = nuevoEstado;
+
+        if (observaciones) {
+          if (!sol.comentarios) sol.comentarios = [];
+          sol.comentarios.push({
+            id: "c_" + Math.random().toString(36).slice(2, 10),
+            usuario: recibidoPor,
+            fechaISO: new Date().toISOString(),
+            texto: "[Recepción] " + observaciones,
+          });
+        }
+
+        sol.ultimaAccionPor = currentUser.username;
+        sol.ultimaAccionEn = new Date().toISOString();
+
+        guardarSolicitudes();
+        cerrarModal();
+        renderAll();
+      }
+    });
+
+    // -------------------------
+    //  MODAL EDICIÓN MASTER
+    // -------------------------
+    const editBackdrop = document.getElementById("modal-edit-backdrop");
+    const editForm = document.getElementById("edit-form");
+
+    function abrirModalEditar(sol) {
+      if (!currentUser || currentUser.role !== ROLES.MASTER) {
+        alert("Solo el rol MASTER puede editar solicitudes.");
+        return;
+      }
+
+      document.getElementById("edit-solicitud-id").value = sol.id;
+      document.getElementById("edit-num-sol").value = sol.numeroSolicitud;
+      document.getElementById("edit-num-oc").value = sol.numeroOC;
+      document.getElementById("edit-estado").value = sol.estado || ESTADOS.SOLICITADO;
+
+      document.getElementById("edit-solicitante").value = sol.solicitante || "";
+      document.getElementById("edit-area").value = sol.area || "";
+      document.getElementById("edit-producto").value = sol.producto || "";
+      document.getElementById("edit-cantidad").value = sol.cantidad || "";
+      document.getElementById("edit-unidad").value = sol.unidad || "";
+      document.getElementById("edit-prioridad").value = sol.prioridad || "";
+      document.getElementById("edit-valor-estimado").value = sol.valorEstimado || "";
+      document.getElementById("edit-fecha-requerida").value = sol.fechaRequerida || "";
+      document.getElementById("edit-descripcion").value = sol.descripcion || "";
+
+      editBackdrop.classList.add("modal-backdrop--visible");
+    }
+
+    function cerrarEditModal() {
+      editBackdrop.classList.remove("modal-backdrop--visible");
+    }
+
+    document.getElementById("modal-edit-close").addEventListener("click", cerrarEditModal);
+    document.getElementById("edit-cancel").addEventListener("click", cerrarEditModal);
+    editBackdrop.addEventListener("click", (e) => {
+      if (e.target === editBackdrop) cerrarEditModal();
+    });
+
+    editForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!currentUser || currentUser.role !== ROLES.MASTER) {
+        alert("Solo el rol MASTER puede editar solicitudes.");
+        return;
+      }
+
+      const id = document.getElementById("edit-solicitud-id").value;
+      const sol = solicitudes.find((s) => s.id === id);
+      if (!sol) return;
+
+      const solicitante = document.getElementById("edit-solicitante").value.trim();
+      const area = document.getElementById("edit-area").value;
+      const producto = document.getElementById("edit-producto").value.trim();
+      const cantidad = parseFloat(document.getElementById("edit-cantidad").value);
+      const unidad = document.getElementById("edit-unidad").value.trim();
+      const prioridad = document.getElementById("edit-prioridad").value;
+      const valorEstimado = parseFloat(document.getElementById("edit-valor-estimado").value);
+      const fechaRequerida = document.getElementById("edit-fecha-requerida").value;
+      const descripcion = document.getElementById("edit-descripcion").value.trim();
+      const estadoSel = document.getElementById("edit-estado").value || sol.estado;
+
+      if (
+        !solicitante ||
+        !area ||
+        !producto ||
+        isNaN(cantidad) ||
+        cantidad <= 0 ||
+        !unidad ||
+        !prioridad ||
+        isNaN(valorEstimado) ||
+        valorEstimado <= 0 ||
+        !fechaRequerida ||
+        !descripcion
+      ) {
+        alert(
+          "Completa todos los campos y asegúrate de que cantidad y valor estimado sean mayores a 0."
+        );
+        return;
+      }
+
+      const hoy = hoyISO();
+      if (fechaRequerida < hoy) {
+        const ok = confirm(
+          "La nueva fecha requerida es anterior a hoy. ¿Confirmas guardar esta modificación?"
+        );
+        if (!ok) return;
+      }
+
+      sol.solicitante = solicitante;
+      sol.area = area;
+      sol.producto = producto;
+      sol.cantidad = cantidad;
+      sol.unidad = unidad;
+      sol.prioridad = prioridad;
+      sol.valorEstimado = valorEstimado;
+      sol.fechaRequerida = fechaRequerida;
+      sol.descripcion = descripcion;
+      sol.estado = estadoSel;
+
+      sol.ultimaAccionPor = currentUser.username;
+      sol.ultimaAccionEn = new Date().toISOString();
+
+      guardarSolicitudes();
+      cerrarEditModal();
+      renderAll();
+    });
+
+    // -------------------------
+    //  ELIMINAR SOLICITUD (MASTER)
+    // -------------------------
+    function eliminarSolicitud(id) {
+      const sol = solicitudes.find((s) => s.id === id);
+      if (!sol) return;
+      const confirmMsg = `¿Seguro que deseas eliminar la solicitud ${sol.numeroSolicitud} (${sol.producto})?\nSe eliminarán también compras, recepciones y comentarios asociados.`;
+      if (!confirm(confirmMsg)) return;
+      solicitudes = solicitudes.filter((s) => s.id !== id);
+      guardarSolicitudes();
+      renderAll();
+    }
+
+    // -------------------------
+    //  FORM NUEVA SOLICITUD
+    // -------------------------
+    function initFormNuevaSolicitud() {
+      const form = document.getElementById("form-nueva-solicitud");
+      const inputFechaReq = document.getElementById("fecha-requerida");
+      inputFechaReq.value = hoyISO();
+      inputFechaReq.min = hoyISO();
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+
+        if (
+          !currentUser ||
+          !(
+            currentUser.role === ROLES.SOLICITANTE ||
+            currentUser.role === ROLES.MASTER
+          )
+        ) {
+          alert("Solo los roles SOLICITANTE o MASTER pueden crear nuevas solicitudes.");
+          return;
+        }
+
+        const solicitante = document.getElementById("solicitante").value.trim();
+        const area = document.getElementById("area").value;
+        const producto = document.getElementById("producto").value.trim();
+        const cantidad = parseFloat(document.getElementById("cantidad").value);
+        const unidad = document.getElementById("unidad").value.trim();
+        const prioridad = document.getElementById("prioridad").value;
+        const valorEstimado = parseFloat(document.getElementById("valor-estimado").value);
+        const fechaRequerida = document.getElementById("fecha-requerida").value;
+        const descripcion = document.getElementById("descripcion").value.trim();
+
+        if (
+          !solicitante ||
+          !area ||
+          !producto ||
+          isNaN(cantidad) ||
+          cantidad <= 0 ||
+          !unidad ||
+          !prioridad ||
+          isNaN(valorEstimado) ||
+          valorEstimado <= 0 ||
+          !fechaRequerida ||
+          !descripcion
+        ) {
+          alert(
+            "Completa todos los campos y asegúrate de que cantidad y valor estimado sean mayores a 0."
+          );
+          return;
+        }
+
+        const hoy = hoyISO();
+        if (fechaRequerida < hoy) {
+          const ok = confirm(
+            "La fecha requerida es anterior a hoy. ¿Confirmas que esta solicitud es retroactiva o urgente?"
+          );
+          if (!ok) return;
+        }
+
+        const { numeroSolicitud, numeroOC } = generarCorrelativos();
+        const ahoraISO = new Date().toISOString();
+
+        const nuevaSolicitud = {
+          id: generarIdInterno(),
+          numeroSolicitud,
+          numeroOC,
+          solicitante,
+          area,
+          producto,
+          descripcion,
+          cantidad,
+          unidad,
+          prioridad,
+          valorEstimado,
+          fechaRequerida,
+          fechaSolicitud: hoy,
+          estado: ESTADOS.SOLICITADO,
+          comentarios: [],
+          compra: null,
+          recepcion: null,
+          creadoPor: currentUser.username,
+          creadoEn: ahoraISO,
+          ultimaAccionPor: currentUser.username,
+          ultimaAccionEn: ahoraISO,
+        };
+
+        solicitudes.push(nuevaSolicitud);
+        guardarSolicitudes();
+        form.reset();
+        inputFechaReq.value = hoyISO();
+        inputFechaReq.min = hoyISO();
+        renderAll();
+      });
+    }
+
+    // -------------------------
+    //  ACCIONES EN TARJETAS
+    // -------------------------
+    function initSolicitudesActions() {
+      const container = document.getElementById("solicitudes-list");
+      container.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-action]");
+        if (!btn) return;
+        const card = btn.closest(".sol-card");
+        if (!card) return;
+        const id = card.dataset.id;
+        const action = btn.dataset.action;
+        const sol = solicitudes.find((s) => s.id === id);
+        if (!sol) return;
+
+        if (action === "comentario") {
+          agregarComentario(id);
+        } else if (action === "compra") {
+          abrirModalCompra(sol);
+        } else if (action === "recepcion") {
+          abrirModalRecepcion(sol);
+        } else if (action === "editar") {
+          abrirModalEditar(sol);
+        } else if (action === "eliminar") {
+          if (!currentUser || currentUser.role !== ROLES.MASTER) {
+            alert("Solo el rol MASTER puede eliminar solicitudes.");
+            return;
+          }
+          eliminarSolicitud(id);
+        }
+      });
+    }
+
+    // -------------------------
+    //  HISTORIAL
+    // -------------------------
+    function renderHistorial() {
+      const tbodyArea = document.getElementById("hist-area-tbody");
+      const tbodyEstado = document.getElementById("hist-estado-tbody");
+      const tbodyCompleto = document.getElementById("hist-completo-tbody");
+      if (!tbodyArea || !tbodyEstado || !tbodyCompleto) return;
+
+      tbodyArea.innerHTML = "";
+      tbodyEstado.innerHTML = "";
+      tbodyCompleto.innerHTML = "";
+
+      // Por área
+      const porArea = {};
+      solicitudes.forEach((s) => {
+        const area = s.area || "Sin área";
+        if (!porArea[area]) {
+          porArea[area] = {
+            total: 0,
+            recibidas: 0,
+            pendientes: 0,
+            gasto: 0,
+          };
+        }
+        const valor = s.compra?.valorReal ?? s.valorEstimado ?? 0;
+        porArea[area].total += 1;
+        porArea[area].gasto += valor || 0;
+        if (s.estado === ESTADOS.RECIBIDO) {
+          porArea[area].recibidas += 1;
+        }
+        if (
+          s.estado === ESTADOS.SOLICITADO ||
+          s.estado === ESTADOS.COMPRADO ||
+          s.estado === ESTADOS.RECEPCION_OBS
+        ) {
+          porArea[area].pendientes += 1;
+        }
+      });
+
+      Object.keys(porArea)
+        .sort()
+        .forEach((area) => {
+          const r = porArea[area];
+          const tr = document.createElement("tr");
+          const tdArea = document.createElement("td");
+          tdArea.textContent = area;
+          const tdTotal = document.createElement("td");
+          tdTotal.textContent = r.total;
+          const tdRecv = document.createElement("td");
+          tdRecv.textContent = r.recibidas;
+          const tdPend = document.createElement("td");
+          tdPend.textContent = r.pendientes;
+          const tdGasto = document.createElement("td");
+          tdGasto.textContent = formatearMonedaCLP(r.gasto);
+          tr.appendChild(tdArea);
+          tr.appendChild(tdTotal);
+          tr.appendChild(tdRecv);
+          tr.appendChild(tdPend);
+          tr.appendChild(tdGasto);
+          tbodyArea.appendChild(tr);
+        });
+
+      if (!Object.keys(porArea).length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.textContent = "No hay datos registrados.";
+        tbodyArea.appendChild(tr);
+        tr.appendChild(td);
+      }
+
+      // Por estado
+      const porEstado = {};
+      solicitudes.forEach((s) => {
+        const est = s.estado || "sin_estado";
+        if (!porEstado[est]) {
+          porEstado[est] = { count: 0, gasto: 0 };
+        }
+        porEstado[est].count += 1;
+        const valor = s.compra?.valorReal ?? s.valorEstimado ?? 0;
+        porEstado[est].gasto += valor || 0;
+      });
+
+      Object.keys(porEstado)
+        .sort()
+        .forEach((est) => {
+          const r = porEstado[est];
+          const tr = document.createElement("tr");
+          const tdEst = document.createElement("td");
+          tdEst.textContent = est;
+          const tdCount = document.createElement("td");
+          tdCount.textContent = r.count;
+          const tdGasto = document.createElement("td");
+          tdGasto.textContent = formatearMonedaCLP(r.gasto);
+          tr.appendChild(tdEst);
+          tr.appendChild(tdCount);
+          tr.appendChild(tdGasto);
+          tbodyEstado.appendChild(tr);
+        });
+
+      if (!Object.keys(porEstado).length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 3;
+        td.textContent = "No hay datos registrados.";
+        tr.appendChild(td);
+        tbodyEstado.appendChild(tr);
+      }
+
+      // Historial completo
+      const copia = solicitudes.slice();
+      copia.sort((a, b) => (b.fechaSolicitud || "").localeCompare(a.fechaSolicitud || ""));
+
+      copia.forEach((s) => {
+        const tr = document.createElement("tr");
+        const valorBase = s.compra?.valorReal ?? s.valorEstimado ?? 0;
+
+        const tdSol = document.createElement("td");
+        tdSol.textContent = s.numeroSolicitud;
+        const tdArea = document.createElement("td");
+        tdArea.textContent = s.area || "";
+        const tdProd = document.createElement("td");
+        tdProd.textContent = s.producto || "";
+        const tdEst = document.createElement("td");
+        tdEst.textContent = s.estado || "";
+        const tdPrio = document.createElement("td");
+        tdPrio.textContent = s.prioridad || "";
+        const tdVal = document.createElement("td");
+        tdVal.textContent = formatearMonedaCLP(valorBase);
+        const tdFSol = document.createElement("td");
+        tdFSol.textContent = formatearFechaDDMMYYYY(s.fechaSolicitud || "");
+        const tdFComp = document.createElement("td");
+        tdFComp.textContent = formatearFechaDDMMYYYY(s.compra?.fechaCompra || "");
+        const tdFRec = document.createElement("td");
+        tdFRec.textContent = formatearFechaDDMMYYYY(s.recepcion?.fechaRecepcion || "");
+
+        tr.appendChild(tdSol);
+        tr.appendChild(tdArea);
+        tr.appendChild(tdProd);
+        tr.appendChild(tdEst);
+        tr.appendChild(tdPrio);
+        tr.appendChild(tdVal);
+        tr.appendChild(tdFSol);
+        tr.appendChild(tdFComp);
+        tr.appendChild(tdFRec);
+        tbodyCompleto.appendChild(tr);
+      });
+
+      if (!copia.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 9;
+        td.textContent = "No hay solicitudes registradas.";
+        tr.appendChild(td);
+        tbodyCompleto.appendChild(tr);
+      }
+    }
+
+    // -------------------------
+    //  RENDER GLOBAL
+    // -------------------------
+    function renderAll() {
+      renderKpis();
+      renderPriorityList();
+      renderUltimos();
+      renderProveedoresCatalog();
+      renderSolicitudesList();
+      renderHistorial();
+    }
+
+    // -------------------------
+    //  UI POR USUARIO
+    // -------------------------
+    function updateUIForUser() {
+      const pill = document.getElementById("current-user-pill");
+      if (!currentUser) {
+        pill.textContent = "Usuario: -";
+      } else {
+        pill.textContent = `Usuario: ${currentUser.username} · Rol: ${currentUser.role}`;
+      }
+
+      const formCard = document.querySelector(".form-card");
+      if (!formCard) return;
+      const inputs = formCard.querySelectorAll("input, select, textarea, button");
+
+      if (
+        currentUser &&
+        (currentUser.role === ROLES.SOLICITANTE || currentUser.role === ROLES.MASTER)
+      ) {
+        formCard.style.opacity = "1";
+        inputs.forEach((el) => (el.disabled = false));
+      } else {
+        formCard.style.opacity = "0.6";
+        inputs.forEach((el) => {
+          el.disabled = true;
+        });
+      }
+    }
+
+    // -------------------------
+    //  AUTH
+    // -------------------------
+    function initAuth() {
+      const loginScreen = document.getElementById("login-screen");
+      const appShell = document.getElementById("app-shell");
+      const loginForm = document.getElementById("login-form");
+      const logoutBtn = document.getElementById("btn-logout");
+
+      appShell.style.display = "none";
+      loginScreen.style.display = "flex";
+
+      loginForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        const username = document.getElementById("login-username").value.trim();
+        const password = document.getElementById("login-password").value;
+        const def = USERS[username];
+
+        if (!def || def.password !== password) {
+          alert("Credenciales inválidas. Usa solicitante/solicitante, comprador/comprador o master/master.");
+          return;
+        }
+
+        currentUser = { username, role: def.role };
+        loginScreen.style.display = "none";
+        appShell.style.display = "block";
+        updateUIForUser();
+        renderAll();
+      });
+
+      logoutBtn.addEventListener("click", () => {
+        currentUser = null;
+        appShell.style.display = "none";
+        loginScreen.style.display = "flex";
+        document.getElementById("login-username").value = "";
+        document.getElementById("login-password").value = "";
+      });
+    }
+
+    // -------------------------
+    //  INIT
+    // -------------------------
+    document.addEventListener("DOMContentLoaded", () => {
+      initTabs();
+      cargarSolicitudes();
+      initFilters();
+      initFormNuevaSolicitud();
+      initSolicitudesActions();
+      initAuth();
+      renderAll();
+    });
+  </script>
+</body>
+</html>

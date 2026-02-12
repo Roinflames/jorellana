@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioCannaPhrama - Sistema V8.2 Trazabilidad Completa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bcp-green-dark: #2D5F3F;
+            --bcp-green-medium: #4A8B5C;
+            --bcp-green-light: #E8F5E9;
+            --bcp-blue-dark: #1E3A5F;
+            --bcp-gold: #D4AF37;
+        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        .slide-in-right { animation: slideInRight 0.3s ease-out; }
+        .bg-bcp-gradient { background: linear-gradient(135deg, var(--bcp-green-dark) 0%, var(--bcp-green-medium) 100%); }
+        .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+        .modal.active { display: flex; align-items: center; justify-content: center; }
+        .modal-content { background-color: #fefefe; margin: auto; padding: 0; border-radius: 16px; max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto; animation: fadeIn 0.3s; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bcp-green-light); }
+        ::-webkit-scrollbar-thumb { background: var(--bcp-green-medium); border-radius: 4px; }
+        .stock-card { cursor: pointer; transition: all 0.3s; }
+        .stock-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .bolsa-seleccionada { background-color: #D1FAE5 !important; border-color: #10B981 !important; border-width: 3px !important; }
+        .bolsa-parcial { border-left: 4px solid #F59E0B !important; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-green-50 to-emerald-50 min-h-screen">
+    <div id="toastContainer" class="toast-container"></div>
+    
+    <!-- MODAL DETALLE STOCK -->
+    <div id="modalDetalleStock" class="modal">
+        <div class="modal-content">
+            <div class="bg-bcp-gradient p-6 text-white rounded-t-2xl">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-2xl font-bold" id="modalTitulo"></h2>
+                    <button onclick="cerrarModal()" class="text-white hover:text-gray-200 text-3xl font-bold">&times;</button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div id="modalContenido"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CANTIDAD (TOTAL O PARCIAL) -->
+    <div id="modalCantidad" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="bg-gradient-to-r from-orange-500 to-red-600 p-6 text-white rounded-t-2xl">
+                <h2 class="text-2xl font-bold">¿Cuánto usar de esta bolsa?</h2>
+            </div>
+            <div class="p-6">
+                <div class="mb-6">
+                    <div class="text-lg font-bold text-gray-800" id="modalBolsaNombre"></div>
+                    <div class="text-sm text-gray-600" id="modalBolsaDetalle"></div>
+                    <div class="mt-3 p-4 bg-green-50 rounded-lg border-2 border-green-200">
+                        <div class="text-sm text-gray-600">Disponible:</div>
+                        <div class="flex items-baseline gap-2">
+                            <span class="text-4xl font-bold text-green-600" id="modalBolsaCantidad"></span>
+                            <span class="text-gray-600">gramos</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="space-y-3">
+                    <button onclick="usarTodaBolsa()" 
+                        class="w-full bg-green-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-green-700 transition-all transform hover:scale-105 shadow-lg">
+                        ✅ Usar TODA la bolsa (<span id="modalBolsaCantidadBtn"></span>g)
+                    </button>
+                    
+                    <div class="relative">
+                        <div class="text-center text-sm text-gray-500 mb-3">o especificar cantidad</div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            Cantidad Específica (gramos):
+                        </label>
+                        <input type="number" step="0.01" id="cantidadParcialInput" 
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-orange-500 focus:outline-none text-lg"
+                            placeholder="Ej: 250.50">
+                    </div>
+                    
+                    <button onclick="usarCantidadParcial()" 
+                        class="w-full bg-orange-600 text-white py-4 rounded-lg font-bold text-lg hover:bg-orange-700 transition-all transform hover:scale-105 shadow-lg">
+                        📊 Usar Cantidad Específica
+                    </button>
+                    
+                    <button onclick="cerrarModalCantidad()" 
+                        class="w-full bg-gray-300 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-400 transition-all">
+                        ❌ Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto p-4">
+        <div class="bg-white rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-bcp-gradient p-6 text-white relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mr-32 -mt-32"></div>
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between flex-wrap gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-16 h-16 bg-white rounded-xl flex items-center justify-center shadow-lg">
+                                <svg class="w-10 h-10 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h1 class="text-3xl font-bold">BioCannaPhrama</h1>
+                                <p class="text-green-100 mt-1 text-sm">Sistema V8.2 - Trazabilidad Completa BPM</p>
+                            </div>
+                        </div>
+                        <div class="text-right text-sm">
+                            <div class="text-green-100">✅ Códigos Estandarizados | ✅ Uso Parcial | ✅ BHO/RSO</div>
+                            <div class="text-green-200 mt-1" id="fechaHora"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex flex-wrap border-b bg-gray-50">
+                <button onclick="showTab('dashboard')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="dashboard">📊 Dashboard</button>
+                <button onclick="showTab('ingreso')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="ingreso">📥 Ingreso</button>
+                <button onclick="showTab('stock')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="stock">📦 Stock</button>
+                <button onclick="showTab('lotes')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="lotes">📋 Lotes</button>
+                <button onclick="showTab('entradas')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="entradas">⬇️ Entradas</button>
+                <button onclick="showTab('salidas')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="salidas">⬆️ Salidas</button>
+                <button onclick="showTab('historial')" class="tab-btn flex-1 min-w-[100px] px-3 py-4 font-semibold transition-all hover:bg-green-50" data-tab="historial">📜 Historial</button>
+            </div>
+
+            <div class="p-6">
+                <div id="tab-dashboard" class="tab-content">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <h2 class="text-2xl font-bold text-gray-800">Dashboard en Tiempo Real</h2>
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="exportarDatos()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all font-semibold shadow-md text-sm">💾 Exportar</button>
+                            <label class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all font-semibold cursor-pointer shadow-md text-sm">📂 Importar<input type="file" accept=".json" onchange="importarDatos(event)" class="hidden"></label>
+                            <button onclick="confirmarLimpiarDatos()" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-all font-semibold shadow-md text-sm">🗑️ Limpiar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-gradient-to-br from-green-600 to-green-700 rounded-xl p-5 text-white shadow-lg transform hover:scale-105 transition-all">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-green-100 text-xs font-semibold uppercase">Stock Total</p>
+                                    <p class="text-3xl font-bold mt-2" id="kpi-stock-total">0</p>
+                                    <p class="text-green-100 text-xs mt-1">gramos</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-3">📦</div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-5 text-white shadow-lg transform hover:scale-105 transition-all">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-blue-100 text-xs font-semibold uppercase">Bolsas Disponibles</p>
+                                    <p class="text-3xl font-bold mt-2" id="kpi-bolsas">0</p>
+                                    <p class="text-blue-100 text-xs mt-1">unidades</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-3">🛍️</div>
+                            </div>
+                        </div>
+                        <div class="bg-bcp-gradient rounded-xl p-5 text-white shadow-lg transform hover:scale-105 transition-all">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-green-100 text-xs font-semibold uppercase">Lotes BHO</p>
+                                    <p class="text-3xl font-bold mt-2" id="kpi-lotes-bho">0</p>
+                                    <p class="text-green-100 text-xs mt-1">extracción</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-3">🔬</div>
+                            </div>
+                        </div>
+                        <div class="bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl p-5 text-white shadow-lg transform hover:scale-105 transition-all">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-purple-100 text-xs font-semibold uppercase">Lotes RSO</p>
+                                    <p class="text-3xl font-bold mt-2" id="kpi-lotes-rso">0</p>
+                                    <p class="text-purple-100 text-xs mt-1">extracción</p>
+                                </div>
+                                <div class="bg-white bg-opacity-20 rounded-full p-3">⚗️</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Distribución por Tipo</h3><canvas id="chartTipo"></canvas></div>
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Extracción BHO vs RSO</h3><canvas id="chartExtraccion"></canvas></div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Actividad Reciente</h3><div id="actividadReciente" class="space-y-3 max-h-96 overflow-y-auto"></div></div>
+                        <div class="bg-white border-2 border-gray-200 rounded-xl p-6 shadow-lg"><h3 class="text-lg font-bold text-gray-800 mb-4">Top 5 Variedades</h3><div id="topVariedades" class="space-y-3 max-h-96 overflow-y-auto"></div></div>
+                    </div>
+                </div>
+
+                <div id="tab-ingreso" class="tab-content hidden">
+                    <div class="max-w-3xl mx-auto">
+                        <div class="bg-gradient-to-r from-green-600 to-green-700 rounded-xl p-6 mb-6 text-white shadow-lg">
+                            <h2 class="text-2xl font-bold mb-2">📥 Registrar Nueva Bolsa</h2>
+                            <p class="text-green-100 text-sm">Cada registro representa una bolsa física independiente con código único</p>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de Variedad *</label><input type="text" id="nombre" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all" placeholder="Ej: Northern Lights"></div>
+                                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Proveedor *</label><input type="text" id="proveedor" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all" placeholder="Ej: Cannabis Corp"></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Cantidad de esta Bolsa (gramos) *</label><input type="number" step="0.01" id="cantidad" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all" placeholder="Ej: 500.50"></div>
+                                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Fecha de Recepción *</label><input type="date" id="fechaRecepcion" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all"></div>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Formato *</label><select id="formato" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all"><option value="dry">🌿 Dry</option><option value="frozen">❄️ Frozen</option></select></div>
+                                <div><label class="block text-sm font-semibold text-gray-700 mb-2">Tipo *</label><select id="tipo" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all"><option value="bud">🌸 Bud</option><option value="leaf">🍃 Leaf</option><option value="trim">✂️ Trim</option><option value="mix">🔄 Mix</option></select></div>
+                            </div>
+                            <div><label class="block text-sm font-semibold text-gray-700 mb-2">Responsable *</label><input type="text" id="responsable" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all" placeholder="Nombre del responsable"></div>
+                            <div><label class="block text-sm font-semibold text-gray-700 mb-2">Observaciones (Identificación de bolsa, lote proveedor, etc.)</label><textarea id="observacion" rows="3" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-all" placeholder="Detalles adicionales..."></textarea></div>
+                            
+                            <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                                <div class="flex items-start gap-3">
+                                    <div class="text-blue-600 text-2xl">ℹ️</div>
+                                    <div class="text-sm text-gray-700">
+                                        <div class="font-bold mb-1">Código de lote automático:</div>
+                                        <div>Se generará en formato: <span class="font-mono bg-blue-100 px-2 py-1 rounded">BCP-[AAMMDD]-[IV]-[IP]-[000]</span></div>
+                                        <div class="text-xs mt-2 text-gray-600">Ejemplo: BCP-251117-NO-CA-001 (Northern Lights, Cannabis Corp, secuencia 001)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button onclick="registrarIngreso()" class="w-full bg-bcp-gradient text-white py-4 rounded-lg font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105">✅ Registrar Bolsa</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-stock" class="tab-content hidden">
+                    <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800">📦 Stock Consolidado</h2>
+                            <p class="text-sm text-gray-600 mt-1">Click en cada tarjeta para ver el detalle de bolsas individuales</p>
+                        </div>
+                        <input type="text" id="searchStock" placeholder="🔍 Buscar..." onkeyup="renderStock()" class="px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none text-sm">
+                    </div>
+                    <div id="stockList" class="grid gap-4"></div>
+                </div>
+
+                <div id="tab-lotes" class="tab-content hidden">
+                    <div class="bg-gradient-to-r from-orange-500 to-red-600 rounded-xl p-6 mb-6 text-white shadow-lg">
+                        <h2 class="text-2xl font-bold mb-2">📋 Crear Lote de Extracción</h2>
+                        <p class="text-orange-100 text-sm">Seleccione bolsas específicas. Puede usar bolsas completas o cantidades parciales</p>
+                    </div>
+                    
+                    <div class="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-4 mb-6">
+                        <div class="flex items-start gap-3">
+                            <div class="text-yellow-600 text-2xl">💡</div>
+                            <div class="text-sm text-gray-700">
+                                <div class="font-bold mb-1">Instrucciones:</div>
+                                <ol class="list-decimal ml-4 space-y-1">
+                                    <li>Click en una bolsa para agregarla</li>
+                                    <li>El sistema preguntará si usar toda la bolsa o cantidad específica</li>
+                                    <li>Puede seleccionar múltiples bolsas (completas o parciales)</li>
+                                    <li>El código del lote se generará automáticamente según tipo de extracción</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-700 mb-3">Bolsas Disponibles (Click para seleccionar)</h3>
+                        <div id="bolsasDisponibles" class="grid gap-3"></div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <h3 class="text-lg font-bold text-gray-700 mb-3 flex items-center gap-2">
+                            <span class="w-3 h-3 bg-orange-600 rounded-full"></span>
+                            Bolsas Seleccionadas para el Lote
+                        </h3>
+                        <div id="loteItems"></div>
+                    </div>
+                    
+                    <button onclick="enviarLote()" class="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 rounded-lg font-bold text-lg hover:shadow-2xl transition-all transform hover:scale-105">🚀 Enviar Lote a Extracción</button>
+                </div>
+
+                <div id="tab-entradas" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">⬇️ Registro de Entradas (Bolsas)</h2><input type="text" id="searchEntradas" placeholder="🔍 Buscar..." onkeyup="renderEntradas()" class="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm"></div>
+                    <div id="entradasList" class="space-y-4"></div>
+                </div>
+
+                <div id="tab-salidas" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">⬆️ Registro de Salidas (Lotes de Extracción)</h2><input type="text" id="searchSalidas" placeholder="🔍 Buscar..." onkeyup="renderSalidas()" class="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm"></div>
+                    <div id="salidasList" class="space-y-4"></div>
+                </div>
+
+                <div id="tab-historial" class="tab-content hidden">
+                    <div class="flex justify-between items-center mb-6"><h2 class="text-2xl font-bold text-gray-800">📜 Historial Completo</h2><input type="text" id="searchHistorial" placeholder="🔍 Buscar..." onkeyup="renderHistorial()" class="px-4 py-2 border-2 border-gray-300 rounded-lg text-sm"></div>
+                    <div id="historialList" class="space-y-4"></div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 text-center text-sm text-gray-600">
+            <p>BioCannaPhrama © 2025 - Sistema v8.2</p>
+            <p class="mt-1 text-xs">🛍️ Trazabilidad Individual | 📋 Códigos Estandarizados | 🔬 BHO/RSO | Cumplimiento BPM</p>
+        </div>
+    </div>
+
+    <script>
+const STORAGE_KEYS = {
+    INGRESOS: 'bcp_ingresos_v82',
+    SALIDAS: 'bcp_salidas_v82',
+    VERSION: 'bcp_version_v82',
+    BACKUP: 'bcp_backup_v82_'
+};
+
+let historialIngresos = [];
+let historialSalidas = [];
+let bolsasSeleccionadas = [];
+let bolsaTemporal = null; // Para el modal de cantidad
+let chartTipo = null;
+let chartExtraccion = null;
+
+// ========== INICIALIZACIÓN ==========
+document.addEventListener('DOMContentLoaded', function() {
+    cargarDatos();
+    actualizarFechaHora();
+    setInterval(actualizarFechaHora, 1000);
+    document.getElementById('fechaRecepcion').valueAsDate = new Date();
+    showTab('dashboard');
+});
+
+function actualizarFechaHora() {
+    const now = new Date();
+    const elem = document.getElementById('fechaHora');
+    if (elem) {
+        elem.textContent = now.toLocaleString('es-CL', {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+}
+
+// ========== PERSISTENCIA ==========
+function cargarDatos() {
+    try {
+        const ingresosStr = localStorage.getItem(STORAGE_KEYS.INGRESOS);
+        const salidasStr = localStorage.getItem(STORAGE_KEYS.SALIDAS);
+        historialIngresos = ingresosStr ? JSON.parse(ingresosStr) : [];
+        historialSalidas = salidasStr ? JSON.parse(salidasStr) : [];
+        console.log(`✅ ${historialIngresos.length} bolsas cargadas`);
+        mostrarNotificacion(`Sistema iniciado - ${historialIngresos.length} bolsas`, 'success');
+    } catch (error) {
+        console.error('❌ Error:', error);
+        mostrarNotificacion('Error al cargar', 'error');
+    }
+}
+
+function guardarDatos() {
+    try {
+        localStorage.setItem(STORAGE_KEYS.INGRESOS, JSON.stringify(historialIngresos));
+        localStorage.setItem(STORAGE_KEYS.SALIDAS, JSON.stringify(historialSalidas));
+        localStorage.setItem(STORAGE_KEYS.VERSION, new Date().toISOString());
+        return true;
+    } catch (error) {
+        console.error('❌ Error:', error);
+        mostrarNotificacion('Error al guardar', 'error');
+        return false;
+    }
+}
+
+function crearBackup() {
+    try {
+        const backup = {
+            fecha: new Date().toISOString(),
+            ingresos: historialIngresos,
+            salidas: historialSalidas,
+            version: '8.2'
+        };
+        localStorage.setItem(STORAGE_KEYS.BACKUP + Date.now(), JSON.stringify(backup));
+        limpiarBackupsAntiguos();
+    } catch (error) {
+        console.error('Error backup:', error);
+    }
+}
+
+function limpiarBackupsAntiguos() {
+    try {
+        const allKeys = Object.keys(localStorage);
+        const backupKeys = allKeys.filter(key => key.startsWith(STORAGE_KEYS.BACKUP)).sort().reverse();
+        backupKeys.slice(5).forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+        console.error('Error limpiando:', error);
+    }
+}
+
+// ========== GENERACIÓN DE IDs ==========
+function generarIngresoID() {
+    const now = new Date();
+    const fecha = now.toISOString().split('T')[0].replace(/-/g, '');
+    const hora = now.toTimeString().split(' ')[0].replace(/:/g, '');
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `ING-${fecha}-${hora}-${random}`;
+}
+
+function generarSalidaID() {
+    const now = new Date();
+    const fecha = now.toISOString().split('T')[0].replace(/-/g, '');
+    const hora = now.toTimeString().split(' ')[0].replace(/:/g, '');
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `SAL-${fecha}-${hora}-${random}`;
+}
+
+// ========== NUEVO: CÓDIGO DE LOTE DE BOLSA ==========
+function generarCodigoLoteBolsa(nombreVariedad, nombreProveedor) {
+    const now = new Date();
+    const aa = now.getFullYear().toString().slice(-2);
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const fecha = `${aa}${mm}${dd}`;
+    
+    // Iniciales de variedad (2 primeras letras)
+    const inicialesVariedad = nombreVariedad
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .substring(0, 2)
+        .padEnd(2, 'X');
+    
+    // Iniciales de proveedor (2 primeras letras)
+    const inicialesProveedor = nombreProveedor
+        .trim()
+        .toUpperCase()
+        .replace(/[^A-Z]/g, '')
+        .substring(0, 2)
+        .padEnd(2, 'X');
+    
+    // Número secuencial
+    const bolsasMismoDia = historialIngresos.filter(ing => {
+        if (!ing.codigo_lote) return false;
+        const ingFecha = new Date(ing.fecha_creacion);
+        const ingAA = ingFecha.getFullYear().toString().slice(-2);
+        const ingMM = (ingFecha.getMonth() + 1).toString().padStart(2, '0');
+        const ingDD = ingFecha.getDate().toString().padStart(2, '0');
+        const ingFechaStr = `${ingAA}${ingMM}${ingDD}`;
+        
+        return ingFechaStr === fecha &&
+               ing.codigo_lote.includes(`${inicialesVariedad}-${inicialesProveedor}`);
+    });
+    
+    const numeroSecuencial = (bolsasMismoDia.length + 1).toString().padStart(3, '0');
+    
+    return `BCP-${fecha}-${inicialesVariedad}-${inicialesProveedor}-${numeroSecuencial}`;
+}
+
+// ========== NUEVO: NOMBRE DE LOTE DE EXTRACCIÓN ==========
+function generarNombreLoteExtraccion(tipoExtraccion) {
+    const now = new Date();
+    const aa = now.getFullYear().toString().slice(-2);
+    const mm = (now.getMonth() + 1).toString().padStart(2, '0');
+    const dd = now.getDate().toString().padStart(2, '0');
+    const fecha = `${aa}${mm}${dd}`;
+    
+    // Buscar lotes del mismo día y mismo tipo
+    const lotesMismoDiaTipo = historialSalidas.filter(salida => {
+        if (!salida.tipoExtraccion) return false;
+        const salidaFecha = new Date(salida.fecha);
+        const salidaAA = salidaFecha.getFullYear().toString().slice(-2);
+        const salidaMM = (salidaFecha.getMonth() + 1).toString().padStart(2, '0');
+        const salidaDD = salidaFecha.getDate().toString().padStart(2, '0');
+        const salidaFechaStr = `${salidaAA}${salidaMM}${salidaDD}`;
+        
+        return salidaFechaStr === fecha && salida.tipoExtraccion === tipoExtraccion;
+    });
+    
+    const numeroSecuencial = (lotesMismoDiaTipo.length + 1).toString().padStart(3, '0');
+    
+    return `BCP-${tipoExtraccion}-${fecha}-${numeroSecuencial}`;
+}
+
+function crearMetadataAuditoria(usuario = 'Sistema') {
+    return {
+        creado_por: usuario,
+        fecha_creacion: new Date().toISOString(),
+        modificado_por: usuario,
+        fecha_modificacion: new Date().toISOString(),
+        version: 1,
+        activo: true
+    };
+}
+
+// ========== NOTIFICACIONES ==========
+function mostrarNotificacion(mensaje, tipo = 'info') {
+    const colores = {
+        success: 'bg-green-600',
+        error: 'bg-red-600',
+        warning: 'bg-yellow-600',
+        info: 'bg-blue-600'
+    };
+    const iconos = {
+        success: '✅',
+        error: '❌',
+        warning: '⚠️',
+        info: 'ℹ️'
+    };
+    const toast = document.createElement('div');
+    toast.className = `${colores[tipo]} text-white px-6 py-4 rounded-lg shadow-2xl mb-3 slide-in-right`;
+    toast.innerHTML = `
+        <div class="flex items-center gap-3">
+            <span class="text-2xl">${iconos[tipo]}</span>
+            <span class="font-semibold">${mensaje}</span>
+        </div>
+    `;
+    document.getElementById('toastContainer').appendChild(toast);
+    setTimeout(() => {
+        toast.style.transform = 'translateX(400px)';
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// ========== REGISTRO DE INGRESO ==========
+function registrarIngreso() {
+    const datos = {
+        nombre: document.getElementById('nombre').value.trim(),
+        proveedor: document.getElementById('proveedor').value.trim(),
+        cantidad: document.getElementById('cantidad').value,
+        fechaRecepcion: document.getElementById('fechaRecepcion').value,
+        formato: document.getElementById('formato').value,
+        tipo: document.getElementById('tipo').value,
+        responsable: document.getElementById('responsable').value.trim(),
+        observacion: document.getElementById('observacion').value.trim()
+    };
+
+    if (!datos.nombre || !datos.proveedor || !datos.cantidad || !datos.fechaRecepcion || !datos.responsable) {
+        mostrarNotificacion('Complete todos los campos requeridos', 'error');
+        return;
+    }
+
+    const nuevoIngreso = {
+        id: generarIngresoID(),
+        codigo_lote: generarCodigoLoteBolsa(datos.nombre, datos.proveedor), // NUEVO FORMATO
+        ...datos,
+        cantidad: parseFloat(datos.cantidad),
+        ...crearMetadataAuditoria(datos.responsable),
+        estado: 'disponible',
+        cantidad_original: parseFloat(datos.cantidad),
+        usado_en_lote: null,
+        usos_parciales: []
+    };
+
+    historialIngresos.push(nuevoIngreso);
+    
+    if (!guardarDatos()) {
+        historialIngresos.pop();
+        return;
+    }
+    
+    crearBackup();
+
+    document.getElementById('nombre').value = '';
+    document.getElementById('proveedor').value = '';
+    document.getElementById('cantidad').value = '';
+    document.getElementById('fechaRecepcion').valueAsDate = new Date();
+    document.getElementById('responsable').value = '';
+    document.getElementById('observacion').value = '';
+
+    mostrarNotificacion(`Bolsa registrada: ${nuevoIngreso.codigo_lote}`, 'success');
+    
+    if (!document.getElementById('tab-dashboard').classList.contains('hidden')) {
+        renderDashboard();
+    }
+}
+
+// ========== STOCK ==========
+function calcularStockDisponible() {
+    return historialIngresos.filter(ing => 
+        (ing.estado === 'disponible' || ing.estado === 'disponible_parcial') && 
+        ing.cantidad > 0
+    );
+}
+
+function calcularStockConsolidado() {
+    const stock = {};
+    calcularStockDisponible().forEach(ingreso => {
+        const key = `${ingreso.nombre}|${ingreso.formato}|${ingreso.tipo}|${ingreso.proveedor}`;
+        if (!stock[key]) {
+            stock[key] = {
+                ...ingreso,
+                cantidad: 0,
+                bolsas: []
+            };
+        }
+        stock[key].cantidad += ingreso.cantidad;
+        stock[key].bolsas.push(ingreso);
+    });
+    return Object.values(stock).filter(item => item.cantidad > 0);
+}
+
+function abrirDetalleStock(nombre, formato, tipo, proveedor) {
+    const bolsas = historialIngresos.filter(ing => 
+        ing.nombre === nombre && 
+        ing.formato === formato && 
+        ing.tipo === tipo && 
+        ing.proveedor === proveedor && 
+        (ing.estado === 'disponible' || ing.estado === 'disponible_parcial') &&
+        ing.cantidad > 0
+    );
+    
+    document.getElementById('modalTitulo').textContent = `${nombre} - ${formato} / ${tipo}`;
+    
+    const contenido = `
+        <div class="space-y-3">
+            ${bolsas.map(bolsa => {
+                const estadoBadge = bolsa.estado === 'disponible_parcial' 
+                    ? '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Parcialmente usada</span>'
+                    : '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Disponible</span>';
+                
+                return `
+                    <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-4 hover:shadow-lg transition-all">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex-1">
+                                <div class="font-bold text-lg text-gray-800">🛍️ ${bolsa.id}</div>
+                                <div class="text-sm font-mono text-gray-600 mt-1">📋 ${bolsa.codigo_lote}</div>
+                                <div class="mt-2">${estadoBadge}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-3xl font-bold text-green-600">${bolsa.cantidad.toFixed(2)}</div>
+                                <div class="text-sm text-gray-500">gramos</div>
+                                ${bolsa.cantidad_original > bolsa.cantidad ? 
+                                    `<div class="text-xs text-gray-500 mt-1">Original: ${bolsa.cantidad_original.toFixed(2)}g</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm">
+                            <div><span class="text-gray-600">Proveedor:</span> <span class="font-semibold">${bolsa.proveedor}</span></div>
+                            <div><span class="text-gray-600">Fecha:</span> <span class="font-semibold">${new Date(bolsa.fechaRecepcion).toLocaleDateString('es-CL')}</span></div>
+                            <div><span class="text-gray-600">Responsable:</span> <span class="font-semibold">${bolsa.responsable}</span></div>
+                            <div><span class="text-gray-600">Registrada:</span> <span class="font-semibold">${new Date(bolsa.fecha_creacion).toLocaleDateString('es-CL')}</span></div>
+                        </div>
+                        ${bolsa.observacion ? 
+                            `<div class="mt-3 pt-3 border-t border-green-300 text-sm">
+                                <span class="font-semibold">Observaciones:</span> ${bolsa.observacion}
+                            </div>` : ''}
+                        ${bolsa.usos_parciales && bolsa.usos_parciales.length > 0 ? 
+                            `<div class="mt-3 pt-3 border-t border-yellow-300 text-sm">
+                                <span class="font-semibold">Usos parciales:</span>
+                                <ul class="list-disc ml-4 text-xs mt-1">
+                                    ${bolsa.usos_parciales.map(uso => 
+                                        `<li>${uso.cantidad.toFixed(2)}g usado en ${uso.lote} (${new Date(uso.fecha).toLocaleDateString('es-CL')})</li>`
+                                    ).join('')}
+                                </ul>
+                            </div>` : ''}
+                    </div>
+                `;
+            }).join('')}
+            <div class="mt-4 p-4 bg-green-100 border-2 border-green-400 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold text-lg">Total Consolidado:</span>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-green-700">${bolsas.reduce((sum, b) => sum + b.cantidad, 0).toFixed(2)}</div>
+                        <div class="text-sm text-gray-600">${bolsas.length} bolsa(s)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('modalContenido').innerHTML = contenido;
+    document.getElementById('modalDetalleStock').classList.add('active');
+}
+
+function cerrarModal() {
+    document.getElementById('modalDetalleStock').classList.remove('active');
+}
+
+// ========== NUEVO: MODAL CANTIDAD (TOTAL O PARCIAL) ==========
+function toggleBolsa(bolsaId) {
+    const bolsa = historialIngresos.find(b => b.id === bolsaId);
+    if (!bolsa) return;
+    
+    // Verificar si ya está seleccionada (para deseleccionar)
+    const index = bolsasSeleccionadas.findIndex(b => b.id === bolsaId);
+    if (index >= 0) {
+        bolsasSeleccionadas.splice(index, 1);
+        mostrarNotificacion(`Bolsa deseleccionada`, 'info');
+        renderBolsasDisponibles();
+        renderLoteItems();
+        return;
+    }
+    
+    // No está seleccionada → mostrar modal para preguntar cantidad
+    mostrarModalCantidad(bolsa);
+}
+
+function mostrarModalCantidad(bolsa) {
+    bolsaTemporal = bolsa;
+    
+    document.getElementById('modalBolsaNombre').textContent = bolsa.nombre;
+    document.getElementById('modalBolsaDetalle').textContent = `${bolsa.formato} - ${bolsa.tipo} | ID: ${bolsa.id}`;
+    document.getElementById('modalBolsaCantidad').textContent = bolsa.cantidad.toFixed(2);
+    document.getElementById('modalBolsaCantidadBtn').textContent = bolsa.cantidad.toFixed(2);
+    document.getElementById('cantidadParcialInput').value = '';
+    document.getElementById('cantidadParcialInput').max = bolsa.cantidad;
+    document.getElementById('cantidadParcialInput').placeholder = `Ej: ${(bolsa.cantidad / 2).toFixed(2)}`;
+    
+    document.getElementById('modalCantidad').classList.add('active');
+}
+
+function cerrarModalCantidad() {
+    document.getElementById('modalCantidad').classList.remove('active');
+    bolsaTemporal = null;
+}
+
+function usarTodaBolsa() {
+    if (!bolsaTemporal) return;
+    
+    bolsasSeleccionadas.push({
+        ...bolsaTemporal,
+        cantidadUsada: bolsaTemporal.cantidad,
+        esTotal: true
+    });
+    
+    mostrarNotificacion(`Bolsa completa agregada: ${bolsaTemporal.cantidad.toFixed(2)}g`, 'success');
+    cerrarModalCantidad();
+    renderBolsasDisponibles();
+    renderLoteItems();
+}
+
+function usarCantidadParcial() {
+    if (!bolsaTemporal) return;
+    
+    const cantidadInput = document.getElementById('cantidadParcialInput').value;
+    if (!cantidadInput) {
+        mostrarNotificacion('Ingrese una cantidad', 'warning');
+        return;
+    }
+    
+    const cantidad = parseFloat(cantidadInput);
+    
+    if (isNaN(cantidad) || cantidad <= 0) {
+        mostrarNotificacion('Cantidad inválida', 'error');
+        return;
+    }
+    
+    if (cantidad > bolsaTemporal.cantidad) {
+        mostrarNotificacion(`Solo hay ${bolsaTemporal.cantidad.toFixed(2)}g disponibles`, 'error');
+        return;
+    }
+    
+    bolsasSeleccionadas.push({
+        ...bolsaTemporal,
+        cantidadUsada: cantidad,
+        esTotal: false,
+        cantidadRemanente: bolsaTemporal.cantidad - cantidad
+    });
+    
+    mostrarNotificacion(`${cantidad.toFixed(2)}g agregados (uso parcial)`, 'success');
+    cerrarModalCantidad();
+    renderBolsasDisponibles();
+    renderLoteItems();
+}
+
+// ========== ENVIAR LOTE CON TIPO DE EXTRACCIÓN ==========
+function enviarLote() {
+    if (bolsasSeleccionadas.length === 0) {
+        mostrarNotificacion('Seleccione al menos una bolsa', 'warning');
+        return;
+    }
+    
+    // NUEVA FUNCIONALIDAD: Preguntar tipo de extracción
+    const tipoExtraccion = prompt(
+        '¿Tipo de extracción?\n\n' +
+        'Escriba:\n' +
+        '1 o BHO = Butane Hash Oil\n' +
+        '2 o RSO = Rick Simpson Oil'
+    );
+    
+    if (tipoExtraccion === null) return; // Canceló
+    
+    let tipoExtraStr;
+    if (tipoExtraccion === '1' || tipoExtraccion.toUpperCase() === 'BHO') {
+        tipoExtraStr = 'BHO';
+    } else if (tipoExtraccion === '2' || tipoExtraccion.toUpperCase() === 'RSO') {
+        tipoExtraStr = 'RSO';
+    } else {
+        mostrarNotificacion('Tipo inválido. Use 1 (BHO) o 2 (RSO)', 'error');
+        return;
+    }
+    
+    // Generar nombre automático del lote
+    const nombreLoteAuto = generarNombreLoteExtraccion(tipoExtraStr);
+    
+    const salidaLote = {
+        id: generarSalidaID(),
+        nombreLote: nombreLoteAuto,
+        tipoExtraccion: tipoExtraStr, // NUEVO CAMPO
+        bolsas: bolsasSeleccionadas.map(b => ({...b})),
+        fecha: new Date().toISOString(),
+        ...crearMetadataAuditoria('Sistema'),
+        estado: 'procesado',
+        tipo_salida: 'extraccion'
+    };
+    
+    // Procesar bolsas (total o parcial)
+    bolsasSeleccionadas.forEach(bolsaSel => {
+        const ingreso = historialIngresos.find(ing => ing.id === bolsaSel.id);
+        if (!ingreso) return;
+        
+        if (bolsaSel.esTotal) {
+            // Usar toda la bolsa
+            ingreso.estado = 'usado';
+            ingreso.usado_en_lote = salidaLote.id;
+            ingreso.cantidad = 0;
+        } else {
+            // Uso parcial
+            ingreso.cantidad -= bolsaSel.cantidadUsada;
+            
+            if (ingreso.cantidad <= 0) {
+                ingreso.estado = 'usado';
+                ingreso.usado_en_lote = salidaLote.id;
+            } else {
+                ingreso.estado = 'disponible_parcial';
+            }
+            
+            // Registrar uso parcial
+            if (!ingreso.usos_parciales) ingreso.usos_parciales = [];
+            ingreso.usos_parciales.push({
+                lote: salidaLote.id,
+                cantidad: bolsaSel.cantidadUsada,
+                fecha: new Date().toISOString()
+            });
+        }
+    });
+    
+    historialSalidas.push(salidaLote);
+    
+    if (!guardarDatos()) {
+        historialSalidas.pop();
+        return;
+    }
+    
+    crearBackup();
+    
+    const totalLote = bolsasSeleccionadas.reduce((sum, bolsa) => sum + bolsa.cantidadUsada, 0);
+    const cantidadBolsas = bolsasSeleccionadas.length;
+    
+    bolsasSeleccionadas = [];
+    renderBolsasDisponibles();
+    renderLoteItems();
+    
+    mostrarNotificacion(
+        `Lote ${tipoExtraStr} creado: ${nombreLoteAuto}\n${cantidadBolsas} bolsas - ${totalLote.toFixed(2)}g`,
+        'success'
+    );
+    
+    if (!document.getElementById('tab-dashboard').classList.contains('hidden')) {
+        renderDashboard();
+    }
+}
+
+// ========== RENDER FUNCIONES ==========
+function showTab(tabName) {
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-green-700', 'border-b-4', 'border-green-600');
+        btn.classList.add('text-gray-600');
+    });
+    
+    document.getElementById('tab-' + tabName).classList.remove('hidden');
+    const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+    activeBtn.classList.add('bg-white', 'text-green-700', 'border-b-4', 'border-green-600');
+    activeBtn.classList.remove('text-gray-600');
+    
+    if (tabName === 'dashboard') renderDashboard();
+    if (tabName === 'stock') renderStock();
+    if (tabName === 'lotes') renderLoteOptions();
+    if (tabName === 'entradas') renderEntradas();
+    if (tabName === 'salidas') renderSalidas();
+    if (tabName === 'historial') renderHistorial();
+}
+
+function renderStock() {
+    const search = document.getElementById('searchStock').value.toLowerCase();
+    let stock = calcularStockConsolidado().filter(s => 
+        s.nombre.toLowerCase().includes(search) || 
+        s.proveedor.toLowerCase().includes(search)
+    );
+    
+    const container = document.getElementById('stockList');
+    
+    if (stock.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p class="text-lg">No hay stock disponible</p></div>';
+        return;
+    }
+    
+    stock.sort((a, b) => b.cantidad - a.cantidad);
+    
+    container.innerHTML = stock.map(item => {
+        const formatoEmoji = item.formato === 'dry' ? '🌿' : '❄️';
+        const tipoEmoji = {'bud':'🌸','leaf':'🍃','trim':'✂️','mix':'🔄'}[item.tipo] || '📦';
+        
+        return `
+            <div class="stock-card bg-gradient-to-r from-white to-green-50 border-2 border-green-200 rounded-xl p-5 hover:shadow-xl transition-all fade-in" 
+                 onclick="abrirDetalleStock('${item.nombre}','${item.formato}','${item.tipo}','${item.proveedor}')">
+                <div class="flex justify-between">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl">${tipoEmoji}</span>
+                            <h3 class="text-xl font-bold text-gray-800">${item.nombre}</h3>
+                        </div>
+                        <p class="text-gray-600 mb-2">Proveedor: ${item.proveedor}</p>
+                        <div class="flex gap-2 flex-wrap">
+                            <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                                ${formatoEmoji} ${item.formato}
+                            </span>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+                                ${tipoEmoji} ${item.tipo}
+                            </span>
+                            <span class="px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-sm font-semibold">
+                                🛍️ ${item.bolsas.length} bolsa(s)
+                            </span>
+                        </div>
+                    </div>
+                    <div class="text-right ml-4">
+                        <div class="text-4xl font-bold text-green-600">${item.cantidad.toFixed(2)}</div>
+                        <div class="text-gray-500 text-sm">gramos</div>
+                        <div class="text-xs text-blue-500 mt-2 font-semibold">Click para detalle</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderLoteOptions() {
+    bolsasSeleccionadas = [];
+    renderBolsasDisponibles();
+    renderLoteItems();
+}
+
+function renderBolsasDisponibles() {
+    const bolsasDisponibles = calcularStockDisponible();
+    const container = document.getElementById('bolsasDisponibles');
+    
+    if (bolsasDisponibles.length === 0) {
+        container.innerHTML = '<div class="text-center py-8 border-2 border-dashed border-gray-300 rounded-lg text-gray-500"><p class="font-semibold">No hay bolsas disponibles</p></div>';
+        return;
+    }
+    
+    container.innerHTML = bolsasDisponibles.map(bolsa => {
+        const seleccionada = bolsasSeleccionadas.find(b => b.id === bolsa.id);
+        const tipoEmoji = {'bud':'🌸','leaf':'🍃','trim':'✂️','mix':'🔄'}[bolsa.tipo] || '📦';
+        const usoParcial = bolsa.estado === 'disponible_parcial';
+        
+        return `
+            <div class="border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${seleccionada ? 'bolsa-seleccionada' : 'border-gray-300 bg-white'} ${usoParcial ? 'bolsa-parcial' : ''}" 
+                 onclick="toggleBolsa('${bolsa.id}')">
+                <div class="flex justify-between items-center">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="text-xl">${tipoEmoji}</span>
+                            <span class="font-bold">${bolsa.nombre}</span>
+                            <span class="text-sm text-gray-600">- ${bolsa.formato} / ${bolsa.tipo}</span>
+                        </div>
+                        <div class="text-xs font-mono text-gray-500 mt-1">${bolsa.codigo_lote}</div>
+                        <div class="text-xs text-gray-500">Proveedor: ${bolsa.proveedor}</div>
+                        ${usoParcial ? '<div class="text-xs text-yellow-600 font-semibold mt-1">⚠️ Parcialmente usada</div>' : ''}
+                    </div>
+                    <div class="text-right ml-4">
+                        <div class="text-2xl font-bold ${seleccionada ? 'text-green-700' : 'text-gray-700'}">
+                            ${bolsa.cantidad.toFixed(2)}
+                        </div>
+                        <div class="text-xs text-gray-500">gramos</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderLoteItems() {
+    const container = document.getElementById('loteItems');
+    
+    if (bolsasSeleccionadas.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 border-2 border-dashed border-orange-300 rounded-lg text-gray-500 bg-orange-50">
+                <p class="font-semibold">Seleccione bolsas para el lote</p>
+                <p class="text-sm mt-2">Click en las bolsas disponibles arriba</p>
+            </div>
+        `;
+        return;
+    }
+    
+    const total = bolsasSeleccionadas.reduce((sum, bolsa) => sum + bolsa.cantidadUsada, 0);
+    const tipoEmoji = {'bud':'🌸','leaf':'🍃','trim':'✂️','mix':'🔄'};
+    
+    container.innerHTML = `
+        <div class="space-y-3">
+            ${bolsasSeleccionadas.map(bolsa => `
+                <div class="bg-white border-2 border-orange-200 rounded-lg p-4 hover:shadow-md transition-all">
+                    <div class="flex justify-between items-center">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span>${tipoEmoji[bolsa.tipo] || '📦'}</span>
+                                <span class="font-semibold text-gray-800">${bolsa.nombre}</span>
+                                ${!bolsa.esTotal ? '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold">PARCIAL</span>' : ''}
+                            </div>
+                            <div class="text-sm text-gray-600">${bolsa.formato} - ${bolsa.tipo}</div>
+                            <div class="text-xs font-mono text-gray-500 mt-1">${bolsa.codigo_lote}</div>
+                            ${!bolsa.esTotal ? 
+                                `<div class="text-xs text-gray-500 mt-1">
+                                    Usando ${bolsa.cantidadUsada.toFixed(2)}g de ${bolsa.cantidad.toFixed(2)}g disponibles
+                                </div>` : ''}
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <div class="text-xl font-bold text-orange-600">${bolsa.cantidadUsada.toFixed(2)}</div>
+                                <div class="text-xs text-gray-500">gramos</div>
+                            </div>
+                            <button onclick="toggleBolsa('${bolsa.id}')" 
+                                    class="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-all">
+                                ❌
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('')}
+            
+            <div class="bg-gradient-to-r from-orange-100 to-red-100 border-2 border-orange-400 rounded-lg p-4 mt-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <span class="text-lg font-bold text-gray-800">Total del Lote:</span>
+                        <div class="text-sm text-gray-600 mt-1">${bolsasSeleccionadas.length} bolsa(s) seleccionada(s)</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl font-bold text-orange-600">${total.toFixed(2)}</div>
+                        <div class="text-sm text-gray-600">gramos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderEntradas() {
+    const search = document.getElementById('searchEntradas').value.toLowerCase();
+    const entradas = historialIngresos.filter(h => 
+        h.nombre.toLowerCase().includes(search) || 
+        h.proveedor.toLowerCase().includes(search) || 
+        (h.id && h.id.toLowerCase().includes(search)) ||
+        (h.codigo_lote && h.codigo_lote.toLowerCase().includes(search))
+    );
+    
+    const container = document.getElementById('entradasList');
+    
+    if (entradas.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>No hay entradas</p></div>';
+        return;
+    }
+    
+    container.innerHTML = entradas.slice().reverse().map(r => {
+        let estadoBadge;
+        if (r.estado === 'disponible') {
+            estadoBadge = '<span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Disponible</span>';
+        } else if (r.estado === 'disponible_parcial') {
+            estadoBadge = '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Parcialmente usada</span>';
+        } else {
+            estadoBadge = '<span class="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-semibold">Usada</span>';
+        }
+        
+        return `
+            <div class="bg-green-50 border-2 border-green-300 rounded-xl p-4">
+                <div class="flex justify-between mb-3">
+                    <div class="flex gap-2 flex-wrap">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-green-600 text-white">🛍️ BOLSA</span>
+                        ${estadoBadge}
+                    </div>
+                    <div class="text-xs text-gray-600">${new Date(r.fecha_creacion).toLocaleString('es-CL')}</div>
+                </div>
+                <div class="mb-2">
+                    <div class="font-bold text-lg">${r.nombre}</div>
+                    <div class="text-sm text-gray-600">${r.formato} - ${r.tipo}</div>
+                </div>
+                <div class="grid md:grid-cols-3 gap-3 text-sm mb-2">
+                    <div>
+                        <div class="font-semibold text-green-600 text-xl">${r.cantidad.toFixed(2)} g</div>
+                        ${r.cantidad_original > r.cantidad ? 
+                            `<div class="text-xs text-gray-500">Original: ${r.cantidad_original.toFixed(2)}g</div>` : ''}
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-600">ID</div>
+                        <div class="text-xs font-mono">${r.id}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-600">Código Lote</div>
+                        <div class="text-xs font-mono font-bold">${r.codigo_lote}</div>
+                    </div>
+                </div>
+                <div class="text-xs text-gray-600">
+                    <span class="font-semibold">Proveedor:</span> ${r.proveedor} | 
+                    <span class="font-semibold">Responsable:</span> ${r.responsable}
+                </div>
+                ${r.usado_en_lote ? 
+                    `<div class="mt-3 pt-3 border-t border-green-300 text-xs">
+                        <span class="font-semibold">Usado en:</span> ${r.usado_en_lote}
+                    </div>` : ''}
+                ${r.usos_parciales && r.usos_parciales.length > 0 ?
+                    `<div class="mt-2 pt-2 border-t border-yellow-300 text-xs">
+                        <div class="font-semibold mb-1">Usos parciales:</div>
+                        <ul class="list-disc ml-4">
+                            ${r.usos_parciales.map(uso => 
+                                `<li>${uso.cantidad.toFixed(2)}g en ${uso.lote}</li>`
+                            ).join('')}
+                        </ul>
+                    </div>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+function renderSalidas() {
+    const search = document.getElementById('searchSalidas').value.toLowerCase();
+    const salidas = historialSalidas.filter(h => 
+        h.nombreLote.toLowerCase().includes(search) || 
+        (h.id && h.id.toLowerCase().includes(search))
+    );
+    
+    const container = document.getElementById('salidasList');
+    
+    if (salidas.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>No hay salidas</p></div>';
+        return;
+    }
+    
+    container.innerHTML = salidas.slice().reverse().map(r => {
+        const total = r.bolsas.reduce((s, b) => s + b.cantidadUsada, 0);
+        const tipoColor = r.tipoExtraccion === 'BHO' ? 'bg-blue-600' : 'bg-purple-600';
+        
+        return `
+            <div class="bg-orange-50 border-2 border-orange-300 rounded-xl p-4">
+                <div class="flex justify-between mb-3 flex-wrap gap-2">
+                    <div class="flex gap-2">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-600 text-white">
+                            ↑ LOTE EXTRACCIÓN
+                        </span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${tipoColor} text-white">
+                            ${r.tipoExtraccion === 'BHO' ? '🔬 BHO' : '⚗️ RSO'}
+                        </span>
+                    </div>
+                    <div class="text-xs text-gray-600">${new Date(r.fecha).toLocaleString('es-CL')}</div>
+                </div>
+                
+                <div class="mb-3">
+                    <div class="font-bold text-xl">${r.nombreLote}</div>
+                    <div class="text-sm text-gray-600 mt-1">ID: ${r.id}</div>
+                </div>
+                
+                <div class="mb-2 text-sm font-semibold">Bolsas incluidas (${r.bolsas.length}):</div>
+                
+                <div class="space-y-2 max-h-64 overflow-y-auto">
+                    ${r.bolsas.map(bolsa => `
+                        <div class="text-sm bg-white p-3 rounded-lg border border-orange-200">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="font-semibold">${bolsa.nombre} (${bolsa.formato} - ${bolsa.tipo})</div>
+                                    <div class="text-xs font-mono text-gray-600 mt-1">📋 ${bolsa.codigo_lote}</div>
+                                    <div class="text-xs text-gray-500">Proveedor: ${bolsa.proveedor}</div>
+                                    ${!bolsa.esTotal ? 
+                                        `<div class="text-xs text-yellow-600 font-semibold mt-1">
+                                            ⚠️ Uso parcial (${bolsa.cantidadUsada.toFixed(2)}g de ${bolsa.cantidad.toFixed(2)}g)
+                                        </div>` : ''}
+                                </div>
+                                <div class="text-right ml-3">
+                                    <div class="font-bold text-orange-600">${bolsa.cantidadUsada.toFixed(2)} g</div>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+                
+                <div class="mt-4 pt-4 border-t-2 border-orange-400 flex justify-between items-center">
+                    <div>
+                        <span class="font-bold text-lg">Total Lote:</span>
+                        <div class="text-sm text-gray-600">${r.bolsas.length} bolsa(s)</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-3xl font-bold text-orange-600">${total.toFixed(2)}</div>
+                        <div class="text-sm text-gray-600">gramos</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function renderHistorial() {
+    const search = document.getElementById('searchHistorial').value.toLowerCase();
+    let historialCompleto = [
+        ...historialIngresos.map(h => ({tipo: 'ingreso', fecha: h.fecha_creacion, detalle: h})),
+        ...historialSalidas.map(h => ({tipo: 'salida', fecha: h.fecha, detalle: h}))
+    ];
+    
+    historialCompleto = historialCompleto.filter(h => {
+        if (h.tipo === 'ingreso') {
+            return h.detalle.nombre.toLowerCase().includes(search) || 
+                   h.detalle.proveedor.toLowerCase().includes(search) || 
+                   (h.detalle.id && h.detalle.id.toLowerCase().includes(search)) ||
+                   (h.detalle.codigo_lote && h.detalle.codigo_lote.toLowerCase().includes(search));
+        } else {
+            return h.detalle.nombreLote.toLowerCase().includes(search) || 
+                   (h.detalle.id && h.detalle.id.toLowerCase().includes(search));
+        }
+    });
+    
+    historialCompleto.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    
+    const container = document.getElementById('historialList');
+    
+    if (historialCompleto.length === 0) {
+        container.innerHTML = '<div class="text-center py-12 text-gray-500"><p>No hay operaciones</p></div>';
+        return;
+    }
+    
+    container.innerHTML = historialCompleto.map(r => {
+        if (r.tipo === 'ingreso') {
+            return `
+                <div class="bg-green-50 border-2 border-green-300 rounded-xl p-4">
+                    <div class="flex justify-between mb-2">
+                        <span class="px-3 py-1 text-xs font-bold bg-green-600 text-white rounded-full">🛍️ BOLSA</span>
+                        <span class="text-xs text-gray-600">${new Date(r.fecha).toLocaleString('es-CL')}</span>
+                    </div>
+                    <div class="text-sm">
+                        <div class="font-bold">${r.detalle.nombre}</div>
+                        <div class="text-xs text-gray-600 mt-1">
+                            ${r.detalle.cantidad.toFixed(2)} g | 
+                            ${r.detalle.codigo_lote} | 
+                            Estado: ${r.detalle.estado}
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else {
+            const total = r.detalle.bolsas.reduce((s, b) => s + b.cantidadUsada, 0);
+            const tipoColor = r.detalle.tipoExtraccion === 'BHO' ? 'bg-blue-600' : 'bg-purple-600';
+            
+            return `
+                <div class="bg-orange-50 border-2 border-orange-300 rounded-xl p-4">
+                    <div class="flex justify-between mb-2 flex-wrap gap-2">
+                        <div class="flex gap-2">
+                            <span class="px-3 py-1 text-xs font-bold bg-orange-600 text-white rounded-full">↑ LOTE</span>
+                            <span class="px-3 py-1 text-xs font-bold ${tipoColor} text-white rounded-full">
+                                ${r.detalle.tipoExtraccion}
+                            </span>
+                        </div>
+                        <span class="text-xs text-gray-600">${new Date(r.fecha).toLocaleString('es-CL')}</span>
+                    </div>
+                    <div class="text-sm">
+                        <div class="font-bold">${r.detalle.nombreLote}</div>
+                        <div class="text-xs text-gray-600 mt-1">
+                            ${r.detalle.bolsas.length} bolsa(s) - ${total.toFixed(2)} g
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }).join('');
+}
+
+function renderDashboard() {
+    const bolsasDisponibles = calcularStockDisponible();
+    const totalStock = bolsasDisponibles.reduce((sum, bolsa) => sum + bolsa.cantidad, 0);
+    const totalBolsas = bolsasDisponibles.length;
+    
+    // Contar lotes por tipo
+    const lotesBHO = historialSalidas.filter(s => s.tipoExtraccion === 'BHO').length;
+    const lotesRSO = historialSalidas.filter(s => s.tipoExtraccion === 'RSO').length;
+    
+    document.getElementById('kpi-stock-total').textContent = totalStock.toFixed(2);
+    document.getElementById('kpi-bolsas').textContent = totalBolsas;
+    document.getElementById('kpi-lotes-bho').textContent = lotesBHO;
+    document.getElementById('kpi-lotes-rso').textContent = lotesRSO;
+    
+    // Chart Tipo
+    const tipoData = {};
+    bolsasDisponibles.forEach(bolsa => {
+        tipoData[bolsa.tipo] = (tipoData[bolsa.tipo] || 0) + bolsa.cantidad;
+    });
+    
+    if (chartTipo) chartTipo.destroy();
+    const ctxTipo = document.getElementById('chartTipo').getContext('2d');
+    chartTipo = new Chart(ctxTipo, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(tipoData).map(t => t.toUpperCase()),
+            datasets: [{
+                data: Object.values(tipoData),
+                backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    
+    // Chart Extracción BHO vs RSO
+    if (chartExtraccion) chartExtraccion.destroy();
+    const ctxExtraccion = document.getElementById('chartExtraccion').getContext('2d');
+    chartExtraccion = new Chart(ctxExtraccion, {
+        type: 'pie',
+        data: {
+            labels: ['BHO', 'RSO'],
+            datasets: [{
+                data: [lotesBHO, lotesRSO],
+                backgroundColor: ['#3b82f6', '#8b5cf6']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    
+    // Actividad Reciente
+    const historialCompleto = [
+        ...historialIngresos.map(h => ({tipo: 'ingreso', fecha: h.fecha_creacion, detalle: h})),
+        ...historialSalidas.map(h => ({tipo: 'salida', fecha: h.fecha, detalle: h}))
+    ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha)).slice(0, 5);
+    
+    document.getElementById('actividadReciente').innerHTML = historialCompleto.length === 0 ? 
+        '<div class="text-center text-gray-500 py-8">Sin actividad</div>' :
+        historialCompleto.map(item => {
+            if (item.tipo === 'ingreso') {
+                return `
+                    <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div class="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center text-white font-bold">🛍️</div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-sm">${item.detalle.nombre}</div>
+                            <div class="text-xs text-gray-600">${item.detalle.cantidad.toFixed(2)} g - ${item.detalle.codigo_lote}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                const total = item.detalle.bolsas.reduce((sum, b) => sum + b.cantidadUsada, 0);
+                const tipoIcon = item.detalle.tipoExtraccion === 'BHO' ? '🔬' : '⚗️';
+                return `
+                    <div class="flex items-center gap-3 p-3 bg-orange-50 rounded-lg border border-orange-200">
+                        <div class="w-10 h-10 bg-orange-600 rounded-full flex items-center justify-center text-white font-bold">${tipoIcon}</div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-sm">${item.detalle.nombreLote}</div>
+                            <div class="text-xs text-gray-600">${item.detalle.bolsas.length} bolsas - ${total.toFixed(2)} g</div>
+                        </div>
+                    </div>
+                `;
+            }
+        }).join('');
+    
+    // Top 5 Variedades
+    const stockConsolidado = calcularStockConsolidado();
+    const topVariedades = stockConsolidado.sort((a, b) => b.cantidad - a.cantidad).slice(0, 5);
+    
+    document.getElementById('topVariedades').innerHTML = topVariedades.length === 0 ?
+        '<div class="text-center text-gray-500 py-8">Sin stock</div>' :
+        topVariedades.map((item, index) => {
+            const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+            return `
+                <div class="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                    <div class="text-2xl">${medals[index]}</div>
+                    <div class="flex-1">
+                        <div class="font-bold text-sm">${item.nombre}</div>
+                        <div class="text-xs text-gray-600">${item.formato} - ${item.tipo} (${item.bolsas.length} bolsas)</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-xl font-bold text-green-600">${item.cantidad.toFixed(2)}</div>
+                        <div class="text-xs text-gray-500">g</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+}
+
+// ========== EXPORTAR/IMPORTAR ==========
+function exportarDatos() {
+    const datos = {
+        version: '8.2',
+        fecha_exportacion: new Date().toISOString(),
+        sistema: 'BioCannaPhrama - Trazabilidad Completa',
+        ingresos: historialIngresos,
+        salidas: historialSalidas,
+        estadisticas: {
+            total_ingresos: historialIngresos.length,
+            total_salidas: historialSalidas.length,
+            bolsas_disponibles: calcularStockDisponible().length,
+            lotes_bho: historialSalidas.filter(s => s.tipoExtraccion === 'BHO').length,
+            lotes_rso: historialSalidas.filter(s => s.tipoExtraccion === 'RSO').length,
+            stock_actual: calcularStockConsolidado()
+        }
+    };
+    
+    const blob = new Blob([JSON.stringify(datos, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `BCP_Inventario_V82_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarNotificacion('Datos exportados exitosamente', 'success');
+}
+
+function importarDatos(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const datos = JSON.parse(e.target.result);
+            if (!datos.version || !datos.ingresos || !datos.salidas) {
+                throw new Error('Formato inválido');
+            }
+            
+            if (!confirm(`¿Importar ${datos.ingresos.length} bolsas y ${datos.salidas.length} lotes?\n\n⚠️ Reemplazará datos actuales.`)) {
+                return;
+            }
+            
+            crearBackup();
+            historialIngresos = datos.ingresos;
+            historialSalidas = datos.salidas;
+            guardarDatos();
+            mostrarNotificacion('Datos importados exitosamente', 'success');
+            renderDashboard();
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarNotificacion('Error al importar datos', 'error');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+function confirmarLimpiarDatos() {
+    if (!confirm('⚠️ ¿Eliminar TODOS los datos?\n\nEsta acción NO se puede deshacer.')) return;
+    if (!confirm('Segunda confirmación.\n\n¿Realmente desea eliminar TODO?')) return;
+    
+    crearBackup();
+    historialIngresos = [];
+    historialSalidas = [];
+    bolsasSeleccionadas = [];
+    guardarDatos();
+    mostrarNotificacion('Datos eliminados', 'warning');
+    renderDashboard();
+}
+
+// Click fuera del modal para cerrar
+window.onclick = function(event) {
+    const modalDetalle = document.getElementById('modalDetalleStock');
+    const modalCantidad = document.getElementById('modalCantidad');
+    
+    if (event.target === modalDetalle) {
+        cerrarModal();
+    }
+    if (event.target === modalCantidad) {
+        cerrarModalCantidad();
+    }
+}
+    </script>
+</body>
+</html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa Arquitectonico BCP</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #d1d5db;
+      --green: #1f7a4c;
+      --blue: #1f4f8a;
+      --orange: #ad5f0a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, sans-serif;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef4f8 100%);
+      color: var(--text);
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .head {
+      background: linear-gradient(135deg, #1f7a4c, #1f4f8a);
+      color: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 10px 24px rgba(0,0,0,.12);
+    }
+    .head h1 { margin: 0 0 8px; font-size: 28px; }
+    .head p { margin: 0; opacity: .92; }
+    .grid { display: grid; gap: 14px; margin-top: 16px; }
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .card {
+      background: var(--card);
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 3px 10px rgba(15, 23, 42, .05);
+    }
+    .card h3 { margin: 0 0 8px; font-size: 16px; }
+    .pill {
+      display: inline-block;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #ecfdf3;
+      color: var(--green);
+      margin-left: 8px;
+      border: 1px solid #bbf7d0;
+    }
+    .layer {
+      margin-top: 18px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 14px;
+    }
+    .layer h2 { margin: 0 0 10px; font-size: 18px; }
+    .nodes { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; }
+    .node {
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 10px;
+      background: #fff;
+      min-height: 76px;
+    }
+    .node strong { display: block; font-size: 14px; margin-bottom: 4px; }
+    .node small { color: var(--muted); }
+    .flow {
+      margin: 10px 0 4px;
+      padding: 10px;
+      border-radius: 10px;
+      background: #f8fafc;
+      border: 1px dashed #cbd5e1;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #e5e7eb;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+      font-size: 14px;
+    }
+    th { background: #f9fafb; font-weight: 600; }
+    tr:last-child td { border-bottom: 0; }
+    code { background: #f3f4f6; padding: 1px 5px; border-radius: 5px; }
+    .links a {
+      display: inline-block;
+      margin: 4px 8px 0 0;
+      color: #0f4a80;
+      text-decoration: none;
+      border-bottom: 1px dotted #0f4a80;
+    }
+    .links a:hover { color: #0b3a64; }
+    @media (max-width: 980px) {
+      .grid.cols-3 { grid-template-columns: 1fr; }
+      .nodes { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 640px) {
+      .wrap { padding: 14px; }
+      .nodes { grid-template-columns: 1fr; }
+      .head h1 { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="head">
+      <h1>Mapa Arquitectonico - BCP</h1>
+      <p>Mapa generado en base a las vistas HTML actuales, el proxy Nginx, API FastAPI y DB Neon.</p>
+      <p><strong>Ruta de acceso:</strong> <code>/Mapa%20Arquitectonico.html</code></p>
+    </header>
+
+    <section class="grid cols-3">
+      <article class="card">
+        <h3>Frontend <span class="pill">Nginx + HTML</span></h3>
+        <p>Vistas estaticas en <code>modulos/</code>. El dashboard abre modulos por nombre de archivo.</p>
+      </article>
+      <article class="card">
+        <h3>Backend <span class="pill">FastAPI</span></h3>
+        <p>API montada en <code>/api/*</code> via reverse proxy. Incluye auth JWT, health y endpoints de negocio.</p>
+      </article>
+      <article class="card">
+        <h3>Datos <span class="pill">LocalStorage + Neon</span></h3>
+        <p>Las vistas legacy usan <code>localStorage</code>; la API usa PostgreSQL Neon por <code>DATABASE_URL</code>.</p>
+      </article>
+    </section>
+
+    <section class="layer">
+      <h2>Capas y Flujo Principal</h2>
+      <div class="nodes">
+        <div class="node"><strong>Usuario Web</strong><small>Navegador desktop/movil</small></div>
+        <div class="node"><strong>Cloudflare Tunnel</strong><small>Publica URL externa a web interna</small></div>
+        <div class="node"><strong>Nginx Web</strong><small>Sirve HTML y enruta <code>/api/</code></small></div>
+        <div class="node"><strong>Dashboard Principal</strong><small>Orquesta navegacion entre vistas</small></div>
+      </div>
+      <div class="flow">
+        Usuario -> Cloudflare -> Nginx (<code>:80</code>) -> Vistas HTML.<br>
+        Cuando una vista usa API: Nginx <code>/api/*</code> -> FastAPI (<code>api:8000</code>) -> Neon PostgreSQL.<br>
+        Cuando una vista es legacy: guarda/lee datos desde <code>localStorage</code> del navegador.
+      </div>
+    </section>
+
+    <section class="layer">
+      <h2>Vistas Funcionales y Datos</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Vista</th>
+            <th>Rol</th>
+            <th>Persistencia principal</th>
+            <th>Ruta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dashboard Principal</td>
+            <td>Entrada y KPIs de modulos</td>
+            <td><code>localStorage</code> (agregado cross-modulo)</td>
+            <td><a href="/Dashboard%20Principal.html">/Dashboard Principal.html</a></td>
+          </tr>
+          <tr>
+            <td>Recepcion Flores</td>
+            <td>Ingreso/salida y trazabilidad de bolsas/lotes</td>
+            <td><code>bcp_ingresos_v82</code>, <code>bcp_salidas_v82</code></td>
+            <td><a href="/Recepcion%20Flores.html">/Recepcion Flores.html</a></td>
+          </tr>
+          <tr>
+            <td>ControlExtractos</td>
+            <td>Gestion de procesos de extraccion</td>
+            <td><code>localStorage</code> (modulo)</td>
+            <td><a href="/ControlExtractos.html">/ControlExtractos.html</a></td>
+          </tr>
+          <tr>
+            <td>Solicitudes</td>
+            <td>Ordenes de produccion por flujo de estados</td>
+            <td><code>bcpOrdenesProduccionV3_4</code></td>
+            <td><a href="/Solicitudes.html">/Solicitudes.html</a></td>
+          </tr>
+          <tr>
+            <td>Insumos / Reactivos / Compras / Proveedores / Equipos / Aseo / Bitacora / Gestion Residuos</td>
+            <td>Soporte operacional</td>
+            <td><code>localStorage</code> por modulo</td>
+            <td>Rutas directas por archivo en <code>modulos/</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="layer">
+      <h2>API y Seguridad</h2>
+      <div class="nodes">
+        <div class="node"><strong>Auth</strong><small><code>POST /api/auth/login</code>, JWT Bearer</small></div>
+        <div class="node"><strong>Salud</strong><small><code>GET /api/health</code>, <code>GET /api/db-check</code></small></div>
+        <div class="node"><strong>Recepcion</strong><small><code>/api/flower-receptions</code></small></div>
+        <div class="node"><strong>Extractos</strong><small><code>/api/extract-batches</code></small></div>
+      </div>
+      <div class="flow">
+        Roles API: <code>admin</code>, <code>supervisor</code>, <code>operador</code>.<br>
+        DB remota en Neon via <code>DATABASE_URL</code>. No se expone puerto de DB en Docker.
+      </div>
+    </section>
+
+    <section class="layer">
+      <h2>Enlaces Rapidos</h2>
+      <div class="links">
+        <a href="/Dashboard%20Principal.html">Dashboard Principal</a>
+        <a href="/Solicitudes.html">Solicitudes</a>
+        <a href="/Recepcion%20Flores.html">Recepcion Flores</a>
+        <a href="/mvp-recepcion.html">MVP Recepcion API</a>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

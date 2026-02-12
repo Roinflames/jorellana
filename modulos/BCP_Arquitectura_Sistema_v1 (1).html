@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BioCannaPhrama - Arquitectura del Sistema ERP Integrado</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        :root {
+            --bcp-purple: #5A2CA0;
+            --bcp-purple-light: #7B4BC4;
+            --bcp-green: #2D5F3F;
+            --bcp-green-light: #3DB54A;
+            --bcp-gold: #D4AF37;
+            --bcp-amber: #F59E0B;
+            --bcp-bg: #0F1419;
+            --bcp-card: #1A1F26;
+            --bcp-card-hover: #242B35;
+            --bcp-text: #E7E9EA;
+            --bcp-text-muted: #71767B;
+            --bcp-border: #2F3336;
+            --flow-blue: #1D9BF0;
+            --flow-green: #00BA7C;
+            --flow-amber: #FFAD1F;
+            --flow-red: #F4212E;
+            --flow-purple: #7856FF;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bcp-bg);
+            color: var(--bcp-text);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--bcp-purple) 0%, var(--bcp-green) 100%);
+            padding: 40px 60px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .header-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .logo-text h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        .logo-text p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        
+        .header-meta {
+            text-align: right;
+            font-size: 0.9rem;
+            opacity: 0.85;
+        }
+        
+        .header-meta .version {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 30px;
+        }
+        
+        .stat-box {
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            display: block;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Main Content */
+        .main-content {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 40px 60px;
+        }
+        
+        /* Section Titles */
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, var(--bcp-purple), var(--bcp-green));
+            border-radius: 2px;
+        }
+        
+        /* Architecture Grid */
+        .architecture-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+        
+        .area-section {
+            background: var(--bcp-card);
+            border-radius: 16px;
+            border: 1px solid var(--bcp-border);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .area-section:hover {
+            border-color: var(--bcp-purple-light);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(90, 44, 160, 0.2);
+        }
+        
+        .area-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--bcp-border);
+        }
+        
+        .area-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .area-header .emoji {
+            font-size: 1.4rem;
+        }
+        
+        .area-badge {
+            font-size: 0.7rem;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            margin-left: auto;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        
+        .badge-logistica { background: rgba(29, 155, 240, 0.15); color: var(--flow-blue); }
+        .badge-produccion { background: rgba(0, 186, 124, 0.15); color: var(--flow-green); }
+        .badge-calidad { background: rgba(120, 86, 255, 0.15); color: var(--flow-purple); }
+        .badge-admin { background: rgba(255, 173, 31, 0.15); color: var(--flow-amber); }
+        
+        .area-modules {
+            padding: 16px;
+        }
+        
+        .module-card {
+            background: var(--bcp-card-hover);
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+        
+        .module-card:last-child {
+            margin-bottom: 0;
+        }
+        
+        .module-card:hover {
+            background: #2D3640;
+            border-color: var(--bcp-border);
+        }
+        
+        .module-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .module-file {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--bcp-text-muted);
+        }
+        
+        .module-keys {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--flow-green);
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(0, 186, 124, 0.08);
+            border-radius: 8px;
+            display: none;
+        }
+        
+        .module-card.expanded .module-keys {
+            display: block;
+        }
+        
+        /* Flow Diagram */
+        .flow-section {
+            margin-bottom: 50px;
+        }
+        
+        .flow-diagram {
+            background: var(--bcp-card);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid var(--bcp-border);
+            position: relative;
+            overflow-x: auto;
+        }
+        
+        .flow-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .flow-row:last-child {
+            margin-bottom: 0;
+        }
+        
+        .flow-node {
+            background: linear-gradient(135deg, var(--bcp-card-hover) 0%, var(--bcp-card) 100%);
+            border: 2px solid var(--bcp-border);
+            border-radius: 16px;
+            padding: 20px 24px;
+            min-width: 200px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-node:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        
+        .flow-node.entrada { border-color: var(--flow-blue); }
+        .flow-node.proceso { border-color: var(--flow-green); }
+        .flow-node.calidad { border-color: var(--flow-purple); }
+        .flow-node.salida { border-color: var(--flow-amber); }
+        .flow-node.residuos { border-color: var(--flow-red); }
+        
+        .flow-node .icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+        
+        .flow-node .title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+        
+        .flow-node .subtitle {
+            font-size: 0.75rem;
+            color: var(--bcp-text-muted);
+        }
+        
+        .flow-arrow {
+            font-size: 1.5rem;
+            color: var(--bcp-text-muted);
+            flex-shrink: 0;
+        }
+        
+        .flow-arrow.vertical {
+            transform: rotate(90deg);
+            align-self: center;
+        }
+        
+        /* Integration Lines */
+        .integration-line {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--flow-green), transparent);
+            margin: 0 60px;
+            position: relative;
+        }
+        
+        .integration-label {
+            position: absolute;
+            left: 50%;
+            top: -12px;
+            transform: translateX(-50%);
+            background: var(--bcp-card);
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            color: var(--flow-green);
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        
+        /* User Hierarchy */
+        .users-section {
+            margin-bottom: 50px;
+        }
+        
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+        
+        .user-category {
+            background: var(--bcp-card);
+            border-radius: 16px;
+            border: 1px solid var(--bcp-border);
+            overflow: hidden;
+        }
+        
+        .user-category-header {
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(90, 44, 160, 0.2), rgba(61, 181, 74, 0.2));
+            border-bottom: 1px solid var(--bcp-border);
+        }
+        
+        .user-category-header h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-list {
+            padding: 16px;
+        }
+        
+        .user-role {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            background: var(--bcp-card-hover);
+            transition: all 0.2s ease;
+        }
+        
+        .user-role:last-child {
+            margin-bottom: 0;
+        }
+        
+        .user-role:hover {
+            background: #2D3640;
+        }
+        
+        .role-level {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        
+        .level-1 { background: linear-gradient(135deg, var(--flow-red), #FF6B6B); }
+        .level-2 { background: linear-gradient(135deg, var(--flow-purple), #9B7FFF); }
+        .level-3 { background: linear-gradient(135deg, var(--flow-blue), #4DBAFF); }
+        .level-4 { background: linear-gradient(135deg, var(--flow-green), #3DD68C); }
+        .level-5 { background: linear-gradient(135deg, var(--flow-amber), #FFD93D); color: #1A1F26; }
+        
+        .role-info {
+            flex: 1;
+        }
+        
+        .role-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .role-desc {
+            font-size: 0.75rem;
+            color: var(--bcp-text-muted);
+        }
+        
+        /* localStorage Keys Table */
+        .storage-section {
+            margin-bottom: 50px;
+        }
+        
+        .storage-table {
+            background: var(--bcp-card);
+            border-radius: 16px;
+            border: 1px solid var(--bcp-border);
+            overflow: hidden;
+        }
+        
+        .storage-header {
+            display: grid;
+            grid-template-columns: 250px 1fr 200px;
+            padding: 16px 24px;
+            background: var(--bcp-card-hover);
+            border-bottom: 1px solid var(--bcp-border);
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--bcp-text-muted);
+        }
+        
+        .storage-row {
+            display: grid;
+            grid-template-columns: 250px 1fr 200px;
+            padding: 14px 24px;
+            border-bottom: 1px solid var(--bcp-border);
+            transition: background 0.2s ease;
+        }
+        
+        .storage-row:last-child {
+            border-bottom: none;
+        }
+        
+        .storage-row:hover {
+            background: var(--bcp-card-hover);
+        }
+        
+        .storage-module {
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .storage-keys {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+        
+        .storage-key {
+            display: inline-block;
+            background: rgba(0, 186, 124, 0.1);
+            color: var(--flow-green);
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin: 2px 4px 2px 0;
+        }
+        
+        .storage-integrations {
+            font-size: 0.8rem;
+            color: var(--flow-blue);
+        }
+        
+        /* Legend */
+        .legend {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--bcp-card);
+            border-radius: 12px;
+            border: 1px solid var(--bcp-border);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 4px;
+        }
+        
+        .legend-entrada { background: var(--flow-blue); }
+        .legend-proceso { background: var(--flow-green); }
+        .legend-calidad { background: var(--flow-purple); }
+        .legend-salida { background: var(--flow-amber); }
+        .legend-residuos { background: var(--flow-red); }
+        
+        /* Footer */
+        .footer {
+            padding: 30px 60px;
+            background: var(--bcp-card);
+            border-top: 1px solid var(--bcp-border);
+            text-align: center;
+        }
+        
+        .footer p {
+            color: var(--bcp-text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .footer .compliance {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .compliance-badge {
+            background: var(--bcp-card-hover);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--bcp-text);
+        }
+        
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .architecture-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .users-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 24px;
+            }
+            .main-content {
+                padding: 24px;
+            }
+            .architecture-container {
+                grid-template-columns: 1fr;
+            }
+            .header-top {
+                flex-direction: column;
+                gap: 16px;
+            }
+            .header-meta {
+                text-align: left;
+            }
+            .storage-header,
+            .storage-row {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            .flow-row {
+                flex-direction: column;
+            }
+            .flow-arrow {
+                transform: rotate(90deg);
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in {
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
+        .delay-4 { animation-delay: 0.4s; }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-top">
+                <div class="logo-section">
+                    <div class="logo-icon">🧬</div>
+                    <div class="logo-text">
+                        <h1>BioCannaPhrama</h1>
+                        <p>Sistema ERP Integrado - Arquitectura Técnica</p>
+                    </div>
+                </div>
+                <div class="header-meta">
+                    <div class="version">v8.2 - 2025</div>
+                    <div>Laboratorio Farmacéutico Cannabis</div>
+                    <div>Trazabilidad BPM / ISO 9001</div>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-box">
+                    <span class="stat-number">11</span>
+                    <span class="stat-label">Módulos</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">27</span>
+                    <span class="stat-label">Tablas localStorage</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">9</span>
+                    <span class="stat-label">Roles de Usuario</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-number">4</span>
+                    <span class="stat-label">Áreas Temáticas</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Architecture by Areas -->
+        <section class="fade-in delay-1">
+            <h2 class="section-title">Arquitectura por Áreas Temáticas</h2>
+            
+            <div class="architecture-container">
+                <!-- Área Logística -->
+                <div class="area-section">
+                    <div class="area-header" style="background: linear-gradient(135deg, rgba(29, 155, 240, 0.1), rgba(29, 155, 240, 0.05));">
+                        <h3>
+                            <span class="emoji">📦</span>
+                            Logística & Abastecimiento
+                            <span class="area-badge badge-logistica">Entrada</span>
+                        </h3>
+                    </div>
+                    <div class="area-modules">
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🌿 Recepción Materia Prima</div>
+                            <div class="module-file">BCP_recepcionMP.html</div>
+                            <div class="module-keys">
+                                bcp_ingresos_v82<br>
+                                bcp_salidas_v82<br>
+                                bcp_version_v82<br>
+                                bcp_backup_v82_*
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🏪 Gestión Proveedores</div>
+                            <div class="module-file">proveedorgpt.html</div>
+                            <div class="module-keys">
+                                BCP_proveedores_v2<br>
+                                BCP_audit_proveedores_v2<br>
+                                BCP_prov_sequence_v2
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🛒 Sistema de Compras</div>
+                            <div class="module-file">GPTcomprasV4.html</div>
+                            <div class="module-keys">
+                                bcp_solicitudes_v1<br>
+                                bcp_counters_v1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Área Producción -->
+                <div class="area-section">
+                    <div class="area-header" style="background: linear-gradient(135deg, rgba(0, 186, 124, 0.1), rgba(0, 186, 124, 0.05));">
+                        <h3>
+                            <span class="emoji">⚗️</span>
+                            Producción & Manufactura
+                            <span class="area-badge badge-produccion">Core</span>
+                        </h3>
+                    </div>
+                    <div class="area-modules">
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">📋 Órdenes de Producción</div>
+                            <div class="module-file">solicitudesV4.html</div>
+                            <div class="module-keys">
+                                bcpOrdenesProduccionV3_4
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🧪 Control de Extractos</div>
+                            <div class="module-file">BCP_ControlExtractos.html</div>
+                            <div class="module-keys">
+                                bcp_extractos_fichas_v1<br>
+                                bcp_extractos_fracciones_v1<br>
+                                bcp_extractos_destilados_v1<br>
+                                bcp_extractos_movimientos_v1<br>
+                                <strong>Lee de:</strong> bcp_salidas_v82
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">📦 Insumos & Recetas</div>
+                            <div class="module-file">InsumosV3.html</div>
+                            <div class="module-keys">
+                                bcp_fungibles_v1<br>
+                                bcp_mov_fungibles_v1<br>
+                                bcp_producciones_v1<br>
+                                bcp_productos_v1<br>
+                                bcp_recetas_v1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Área Calidad -->
+                <div class="area-section">
+                    <div class="area-header" style="background: linear-gradient(135deg, rgba(120, 86, 255, 0.1), rgba(120, 86, 255, 0.05));">
+                        <h3>
+                            <span class="emoji">🔬</span>
+                            Calidad & Laboratorio
+                            <span class="area-badge badge-calidad">QC/QA</span>
+                        </h3>
+                    </div>
+                    <div class="area-modules">
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">⚙️ Gestión de Equipos</div>
+                            <div class="module-file">equiposGPTV5.html</div>
+                            <div class="module-keys">
+                                bcp_equipment_module_v3<br>
+                                bcp_equipos_bitacoras
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🧫 Reactivos Químicos</div>
+                            <div class="module-file">reactivos.html</div>
+                            <div class="module-keys">
+                                bcp_reactivos_v1<br>
+                                bcp_movimientos_v1
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">📓 Bitácora de Laboratorio</div>
+                            <div class="module-file">bitacorav3.html</div>
+                            <div class="module-keys">
+                                BCP_BITACORA_V1
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Área Administración -->
+                <div class="area-section">
+                    <div class="area-header" style="background: linear-gradient(135deg, rgba(255, 173, 31, 0.1), rgba(255, 173, 31, 0.05));">
+                        <h3>
+                            <span class="emoji">🏢</span>
+                            Administración & Soporte
+                            <span class="area-badge badge-admin">Support</span>
+                        </h3>
+                    </div>
+                    <div class="area-modules">
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🗑️ Gestión de Residuos</div>
+                            <div class="module-file">BCP_GestionResiduos_v4.html</div>
+                            <div class="module-keys">
+                                bcp_residuos_v4<br>
+                                bcp_residuos_usuario_v4<br>
+                                bcp_extracciones
+                            </div>
+                        </div>
+                        <div class="module-card" onclick="toggleModule(this)">
+                            <div class="module-name">🧹 Control de Aseo</div>
+                            <div class="module-file">aseov2.html</div>
+                            <div class="module-keys">
+                                bcp_aseo_areas<br>
+                                bcp_aseo_productos<br>
+                                bcp_aseo_registros
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Flow Diagram -->
+        <section class="flow-section fade-in delay-2">
+            <h2 class="section-title">Flujo Operacional del ERP</h2>
+            
+            <div class="legend">
+                <div class="legend-item"><div class="legend-color legend-entrada"></div> Entrada / Logística</div>
+                <div class="legend-item"><div class="legend-color legend-proceso"></div> Proceso / Producción</div>
+                <div class="legend-item"><div class="legend-color legend-calidad"></div> Calidad / Control</div>
+                <div class="legend-item"><div class="legend-color legend-salida"></div> Salida / Despacho</div>
+                <div class="legend-item"><div class="legend-color legend-residuos"></div> Residuos / RESPEL</div>
+            </div>
+            
+            <div class="flow-diagram">
+                <!-- Row 1: Entrada -->
+                <div class="flow-row">
+                    <div class="flow-node entrada">
+                        <div class="icon">🏪</div>
+                        <div class="title">Proveedores</div>
+                        <div class="subtitle">Registro y evaluación</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node entrada">
+                        <div class="icon">🛒</div>
+                        <div class="title">Compras</div>
+                        <div class="subtitle">Solicitudes y OC</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node entrada">
+                        <div class="icon">🌿</div>
+                        <div class="title">Recepción MP</div>
+                        <div class="subtitle">Ingreso y registro bolsas</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node calidad">
+                        <div class="icon">🔬</div>
+                        <div class="title">Control Calidad</div>
+                        <div class="subtitle">Análisis entrada</div>
+                    </div>
+                </div>
+                
+                <div class="integration-line">
+                    <span class="integration-label">📦 bcp_salidas_v82 → Control Extractos</span>
+                </div>
+                
+                <!-- Row 2: Producción -->
+                <div class="flow-row">
+                    <div class="flow-node proceso">
+                        <div class="icon">📋</div>
+                        <div class="title">Órdenes Producción</div>
+                        <div class="subtitle">Planificación y asignación</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node proceso">
+                        <div class="icon">⚗️</div>
+                        <div class="title">Extracción</div>
+                        <div class="subtitle">BHO / RSO</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node proceso">
+                        <div class="icon">🧪</div>
+                        <div class="title">Fraccionamiento</div>
+                        <div class="subtitle">Destilados y fracciones</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node calidad">
+                        <div class="icon">📊</div>
+                        <div class="title">QC Producto</div>
+                        <div class="subtitle">HPLC / ICP-MS</div>
+                    </div>
+                </div>
+                
+                <div class="integration-line">
+                    <span class="integration-label">📄 bcpOrdenesProduccionV3_4 → Trazabilidad</span>
+                </div>
+                
+                <!-- Row 3: Soporte -->
+                <div class="flow-row">
+                    <div class="flow-node calidad">
+                        <div class="icon">⚙️</div>
+                        <div class="title">Equipos</div>
+                        <div class="subtitle">Mantenimiento y calibración</div>
+                    </div>
+                    <div class="flow-arrow">↔</div>
+                    <div class="flow-node calidad">
+                        <div class="icon">🧫</div>
+                        <div class="title">Reactivos</div>
+                        <div class="subtitle">Stock y trazabilidad</div>
+                    </div>
+                    <div class="flow-arrow">↔</div>
+                    <div class="flow-node calidad">
+                        <div class="icon">📓</div>
+                        <div class="title">Bitácora</div>
+                        <div class="subtitle">Registro operaciones</div>
+                    </div>
+                    <div class="flow-arrow">↔</div>
+                    <div class="flow-node">
+                        <div class="icon">🧹</div>
+                        <div class="title">Aseo</div>
+                        <div class="subtitle">Limpieza y sanitización</div>
+                    </div>
+                </div>
+                
+                <div class="integration-line">
+                    <span class="integration-label">♻️ Todos los procesos → Gestión Residuos</span>
+                </div>
+                
+                <!-- Row 4: Salida -->
+                <div class="flow-row">
+                    <div class="flow-node salida">
+                        <div class="icon">📦</div>
+                        <div class="title">Envasado</div>
+                        <div class="subtitle">Acondicionamiento</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node salida">
+                        <div class="icon">🏷️</div>
+                        <div class="title">Etiquetado</div>
+                        <div class="subtitle">Códigos y lotes</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node salida">
+                        <div class="icon">📤</div>
+                        <div class="title">Despacho</div>
+                        <div class="subtitle">Distribución</div>
+                    </div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-node residuos">
+                        <div class="icon">🗑️</div>
+                        <div class="title">Residuos</div>
+                        <div class="subtitle">RESPEL / Normal</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- User Hierarchy -->
+        <section class="users-section fade-in delay-3">
+            <h2 class="section-title">Jerarquía de Usuarios y Roles</h2>
+            
+            <div class="users-grid">
+                <!-- Sistema de Órdenes de Producción -->
+                <div class="user-category">
+                    <div class="user-category-header">
+                        <h4>📋 Sistema de Órdenes de Producción</h4>
+                    </div>
+                    <div class="user-list">
+                        <div class="user-role">
+                            <div class="role-level level-1">1</div>
+                            <div class="role-info">
+                                <div class="role-name">Master</div>
+                                <div class="role-desc">Acceso total: crear, editar, aprobar, eliminar</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-2">2</div>
+                            <div class="role-info">
+                                <div class="role-name">Laboratorio</div>
+                                <div class="role-desc">Procesar órdenes, actualizar estados, registrar producción</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-3">3</div>
+                            <div class="role-info">
+                                <div class="role-name">Solicitante</div>
+                                <div class="role-desc">Crear nuevas órdenes, ver estado de solicitudes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sistema de Gestión de Residuos -->
+                <div class="user-category">
+                    <div class="user-category-header">
+                        <h4>🗑️ Sistema de Gestión de Residuos</h4>
+                    </div>
+                    <div class="user-list">
+                        <div class="user-role">
+                            <div class="role-level level-1">1</div>
+                            <div class="role-info">
+                                <div class="role-name">Administrador</div>
+                                <div class="role-desc">Control total: todos los permisos de generador y recolector</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-2">2</div>
+                            <div class="role-info">
+                                <div class="role-name">Recolector</div>
+                                <div class="role-desc">Retiro de residuos, gestión de transporte, disposición final</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-3">3</div>
+                            <div class="role-info">
+                                <div class="role-name">Generador</div>
+                                <div class="role-desc">Registrar nuevos residuos, clasificación inicial</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Jerarquía Propuesta Global -->
+                <div class="user-category">
+                    <div class="user-category-header">
+                        <h4>🏢 Jerarquía Global Propuesta (9 Niveles)</h4>
+                    </div>
+                    <div class="user-list">
+                        <div class="user-role">
+                            <div class="role-level level-1">1</div>
+                            <div class="role-info">
+                                <div class="role-name">Administrador del Sistema</div>
+                                <div class="role-desc">Configuración, usuarios, backups, todos los módulos</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-1">2</div>
+                            <div class="role-info">
+                                <div class="role-name">Director de Calidad</div>
+                                <div class="role-desc">Aprobaciones finales, auditorías, liberación de lotes</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-2">3</div>
+                            <div class="role-info">
+                                <div class="role-name">Jefe de Producción</div>
+                                <div class="role-desc">Gestión completa de producción y extracción</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-2">4</div>
+                            <div class="role-info">
+                                <div class="role-name">Jefe de Laboratorio</div>
+                                <div class="role-desc">Control de calidad, equipos, reactivos</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-3">5</div>
+                            <div class="role-info">
+                                <div class="role-name">Analista de Control de Calidad</div>
+                                <div class="role-desc">Análisis, registro de resultados, bitácora</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-3">6</div>
+                            <div class="role-info">
+                                <div class="role-name">Operador de Producción</div>
+                                <div class="role-desc">Extracción, fraccionamiento, registro de procesos</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-4">7</div>
+                            <div class="role-info">
+                                <div class="role-name">Encargado de Bodega</div>
+                                <div class="role-desc">Recepción, despacho, inventarios</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-4">8</div>
+                            <div class="role-info">
+                                <div class="role-name">Asistente Administrativo</div>
+                                <div class="role-desc">Compras, proveedores, documentación</div>
+                            </div>
+                        </div>
+                        <div class="user-role">
+                            <div class="role-level level-5">9</div>
+                            <div class="role-info">
+                                <div class="role-name">Consultor (Solo Lectura)</div>
+                                <div class="role-desc">Visualización de reportes y dashboards</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Storage Keys Table -->
+        <section class="storage-section fade-in delay-4">
+            <h2 class="section-title">Mapa de Claves localStorage</h2>
+            
+            <div class="storage-table">
+                <div class="storage-header">
+                    <div>Módulo</div>
+                    <div>Claves localStorage</div>
+                    <div>Integraciones</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🌿 Recepción MP</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_ingresos_v82</span>
+                        <span class="storage-key">bcp_salidas_v82</span>
+                        <span class="storage-key">bcp_version_v82</span>
+                    </div>
+                    <div class="storage-integrations">→ Control Extractos</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🧪 Control Extractos</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_extractos_fichas_v1</span>
+                        <span class="storage-key">bcp_extractos_fracciones_v1</span>
+                        <span class="storage-key">bcp_extractos_destilados_v1</span>
+                        <span class="storage-key">bcp_extractos_movimientos_v1</span>
+                    </div>
+                    <div class="storage-integrations">← Lee de bcp_salidas_v82</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">📋 Órdenes Producción</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcpOrdenesProduccionV3_4</span>
+                    </div>
+                    <div class="storage-integrations">Central de trazabilidad</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">📦 Insumos</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_fungibles_v1</span>
+                        <span class="storage-key">bcp_mov_fungibles_v1</span>
+                        <span class="storage-key">bcp_producciones_v1</span>
+                        <span class="storage-key">bcp_productos_v1</span>
+                        <span class="storage-key">bcp_recetas_v1</span>
+                    </div>
+                    <div class="storage-integrations">Sistema independiente</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🗑️ Residuos</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_residuos_v4</span>
+                        <span class="storage-key">bcp_residuos_usuario_v4</span>
+                        <span class="storage-key">bcp_extracciones</span>
+                    </div>
+                    <div class="storage-integrations">← Todos los procesos</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">⚙️ Equipos</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_equipment_module_v3</span>
+                        <span class="storage-key">bcp_equipos_bitacoras</span>
+                    </div>
+                    <div class="storage-integrations">Sistema independiente</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🧫 Reactivos</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_reactivos_v1</span>
+                        <span class="storage-key">bcp_movimientos_v1</span>
+                    </div>
+                    <div class="storage-integrations">Sistema independiente</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🏪 Proveedores</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">BCP_proveedores_v2</span>
+                        <span class="storage-key">BCP_audit_proveedores_v2</span>
+                        <span class="storage-key">BCP_prov_sequence_v2</span>
+                    </div>
+                    <div class="storage-integrations">→ Compras, Recepción</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🛒 Compras</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_solicitudes_v1</span>
+                        <span class="storage-key">bcp_counters_v1</span>
+                    </div>
+                    <div class="storage-integrations">← Proveedores</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">📓 Bitácora</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">BCP_BITACORA_V1</span>
+                    </div>
+                    <div class="storage-integrations">Registro transversal</div>
+                </div>
+                
+                <div class="storage-row">
+                    <div class="storage-module">🧹 Aseo</div>
+                    <div class="storage-keys">
+                        <span class="storage-key">bcp_aseo_areas</span>
+                        <span class="storage-key">bcp_aseo_productos</span>
+                        <span class="storage-key">bcp_aseo_registros</span>
+                    </div>
+                    <div class="storage-integrations">Sistema independiente</div>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+        <p>BioCannaPhrama © 2025 - Sistema ERP Integrado para Laboratorio Farmacéutico Cannabis</p>
+        <div class="compliance">
+            <span class="compliance-badge">✅ BPM (Buenas Prácticas de Manufactura)</span>
+            <span class="compliance-badge">✅ ISO 9001:2015</span>
+            <span class="compliance-badge">✅ Decreto 594/2000</span>
+            <span class="compliance-badge">✅ Decreto 148/2004</span>
+            <span class="compliance-badge">✅ Decreto 43/2016</span>
+            <span class="compliance-badge">✅ Decreto 108/2014</span>
+        </div>
+    </footer>
+    
+    <script>
+        // Toggle module details
+        function toggleModule(element) {
+            element.classList.toggle('expanded');
+        }
+        
+        // Smooth scroll animations
+        document.addEventListener('DOMContentLoaded', () => {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            document.querySelectorAll('.fade-in').forEach(el => {
+                el.style.opacity = '0';
+                el.style.transform = 'translateY(20px)';
+                el.style.transition = 'all 0.6s ease';
+                observer.observe(el);
+            });
+        });
+    </script>
+</body>
+</html>

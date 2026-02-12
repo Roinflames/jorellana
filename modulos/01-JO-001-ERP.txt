@@ -1,0 +1,361 @@
+COTIZACIÓN DE SERVICIO
+COMUNIDAD VIRTUAL
+DOCUMENTO CONFIDENCIAL
+
+
+Fecha de emisión: 23/01/2026
+Código de cotización: 01-JO-001-ERP
+Cliente: BioCannaPhrama (BCP) Chile
+Proyecto: Sistema de Gestión Integrado ERP - Versión Productiva
+
+
+________________
+
+
+Sistema ERP BioCannaPharma - Desarrollo Productivo
+Sistema de trazabilidad y control de línea productiva de extractos para laboratorio farmacéutico.
+
+Objetivo General: Desarrollar un sistema ERP productivo para el seguimiento y trazabilidad de la
+línea productiva de extractos, con escaneo de códigos QR/Barcode mediante PDA industrial,
+cumpliendo normativas BPM, ISO 9001, D.S. 594, 148, 43 y 108.
+
+Contexto Operacional:
+   * Ambiente: Laboratorio con restricción de uso de teléfonos celulares
+   * Dispositivo principal: PDA industrial con lector de códigos integrado
+   * Flujo de trabajo: Escaneo de QR/Barcode previo a cada proceso productivo
+   * Elementos trazables: Flores, insumos, reactivos, equipos, lotes de producción
+
+Equipo de Desarrollo:
+   * 1 Desarrollador Semi-Senior (arquitectura, integraciones, revisión de código)
+   * 1 Desarrollador Trainee (frontend, tareas mecánicas, testing)
+   * Asistencia de IA para generación de código y aceleración de desarrollo
+
+
+================================================================================
+REQUERIMIENTOS TÉCNICOS - SISTEMA PDA + ESCANEO
+================================================================================
+
+Dispositivo de Operación:
+   * PDA Industrial (ej: Zebra TC21/TC26, Honeywell CT40, Datalogic Memor)
+   * Sistema operativo: Android 10+ o Windows Mobile (según modelo)
+   * Lector integrado: Códigos 1D (Barcode) y 2D (QR)
+   * Conectividad: WiFi para sincronización con servidor central
+
+Arquitectura del Sistema:
+   ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+   │   PDA Industrial │────▶│   API REST      │────▶│   Base de Datos │
+   │   (App Android)  │◀────│   (Backend)     │◀────│   PostgreSQL    │
+   └─────────────────┘     └─────────────────┘     └─────────────────┘
+           │                        │
+           │                        ▼
+           │               ┌─────────────────┐
+           │               │   Panel Web     │
+           │               │   (Supervisión) │
+           └──────────────▶└─────────────────┘
+
+Componentes del Sistema:
+   1. Aplicación PDA (Android): Interfaz optimizada para escaneo y registro rápido
+   2. API REST: Backend centralizado para procesamiento y persistencia
+   3. Panel Web: Supervisión, reportes y configuración (para PC de oficina)
+   4. Generador de Códigos: Impresión de etiquetas QR/Barcode
+
+Flujo de Trabajo con Escaneo:
+   [Escanear elemento] → [Validar código] → [Mostrar info] → [Registrar acción] → [Siguiente paso]
+
+Códigos a Implementar:
+   * QR-MP-XXXX: Materia Prima / Flores (recepción, almacenamiento, uso)
+   * QR-INS-XXXX: Insumos (recepción, stock, consumo)
+   * QR-REA-XXXX: Reactivos químicos (trazabilidad, uso, vencimiento)
+   * QR-EQU-XXXX: Equipos (identificación, mantenimiento, calibración)
+   * QR-LOT-XXXX: Lotes de producción (seguimiento de proceso)
+   * QR-RES-XXXX: Residuos (generación, almacenamiento, retiro)
+
+
+================================================================================
+FASE 1 - INFRAESTRUCTURA BASE + MÓDULOS CORE
+================================================================================
+
+Sprint 1.1 — Infraestructura y Arquitectura Base
+Objetivo: Configurar entorno, base de datos, autenticación y aplicación base para PDA.
+
+Actividades:
+   1. Configuración del entorno y arquitectura
+      * Setup de repositorio, estructura de proyecto, CI/CD básico — 4 HH
+      * Diseño e implementación de base de datos PostgreSQL — 6 HH
+      * Sistema de autenticación y gestión de usuarios/roles — 8 HH
+      * API REST base con documentación (Swagger/OpenAPI) — 5 HH
+
+   2. Aplicación PDA Base + Dashboard
+      * App Android base con integración de lector de códigos — 8 HH
+      * Módulo de login y sincronización con servidor — 4 HH
+      * Dashboard web: métricas y estadísticas consolidadas — 6 HH
+      * Sistema de generación e impresión de etiquetas QR/Barcode — 5 HH
+
+Total Sprint 1.1: 46 HH x 1 UF
+
+
+Sprint 1.2 — Módulos de Inventario con Escaneo (Core del negocio)
+Objetivo: Implementar módulos críticos con flujo de escaneo QR/Barcode integrado.
+
+Actividades:
+   3. Recepción de Flores / Materia Prima (Módulo 3)
+      * Backend: CRUD, trazabilidad, códigos de lote — 7 HH
+      * PDA: Pantalla de escaneo para recepción y registro — 6 HH
+      * Web: Panel de consulta, tablas, búsqueda avanzada — 4 HH
+      * Generación de etiquetas QR para materia prima — 3 HH
+
+   4. Control de Extractos / Línea Productiva (Módulo 2)
+      * Backend: procesos RSO/BHO, fracciones, rendimientos — 8 HH
+      * PDA: Escaneo de inicio/fin de proceso, registro de lotes — 7 HH
+      * Web: Flujo de proceso, estados, trazabilidad visual — 5 HH
+      * Reportes de producción y rendimiento — 4 HH
+
+   5. Gestión de Insumos (Módulo 4)
+      * Backend: stock, movimientos, alertas de reposición — 6 HH
+      * PDA: Escaneo para consumo y ajustes de inventario — 5 HH
+      * Web: Inventario, kardex, proyecciones — 4 HH
+
+Total Sprint 1.2: 59 HH x 1 UF
+
+
+================================================================================
+FASE 2 - MÓDULOS DE ADQUISICIONES Y LABORATORIO
+================================================================================
+
+Sprint 2.1 — Ciclo de Compras Completo
+Objetivo: Implementar flujo completo de adquisiciones desde solicitud hasta recepción.
+
+Actividades:
+   6. Sistema de Solicitudes (Módulo 8)
+      * Backend: workflow de aprobaciones, estados, notificaciones — 7 HH
+      * Frontend: formularios, seguimiento, historial — 5 HH
+
+   7. Sistema de Compras (Módulo 6)
+      * Backend: órdenes de compra, seguimiento, recepciones — 7 HH
+      * Frontend: gestión de OC, comparativas, reportes — 5 HH
+
+   8. Gestión de Proveedores (Módulo 7)
+      * Backend: registro, evaluación, documentación — 5 HH
+      * Frontend: ficha de proveedor, calificaciones — 4 HH
+
+Total Sprint 2.1: 33 HH x 1 UF
+
+
+Sprint 2.2 — Módulos de Laboratorio con Escaneo
+Objetivo: Control de reactivos y equipamiento con trazabilidad por escaneo.
+
+Actividades:
+   9. Reactivos Químicos (Módulo 5)
+      * Backend: inventario, hojas de seguridad, vencimientos — 6 HH
+      * PDA: Escaneo para uso de reactivos, registro de consumo — 5 HH
+      * Web: Alertas, fichas técnicas, trazabilidad — 4 HH
+      * Integración con normativas de sustancias peligrosas — 3 HH
+
+   10. Equipos y Mantenciones (Módulo 9)
+       * Backend: inventario equipos, calibraciones, mantenciones — 7 HH
+       * PDA: Escaneo de equipo para registro de uso/mantención — 5 HH
+       * Web: Calendario, alertas, historial — 5 HH
+       * Gestión documental (manuales, certificados) — 4 HH
+
+Total Sprint 2.2: 39 HH x 1 UF
+
+
+================================================================================
+FASE 3 - MÓDULOS OPERACIONALES Y COMPLIANCE
+================================================================================
+
+Sprint 3.1 — Control Operacional
+Objetivo: Módulos de operación diaria y registros de laboratorio.
+
+Actividades:
+   11. Control de Aseo e Higiene (Módulo 10)
+       * Backend: áreas, registros, inventario productos limpieza — 6 HH
+       * Frontend: check-lists, dashboard sanitización — 5 HH
+       * Reportes para auditorías — 3 HH
+
+   12. Bitácora de Laboratorio (Módulo 11)
+       * Backend: registros cronológicos, firma digital — 5 HH
+       * Frontend: timeline, búsqueda, exportación — 4 HH
+
+Total Sprint 3.1: 23 HH x 1 UF
+
+
+Sprint 3.2 — Gestión Ambiental con Escaneo y Cierre
+Objetivo: Cumplimiento ambiental con trazabilidad y ajustes finales.
+
+Actividades:
+   13. Gestión de Residuos (Módulo 12)
+       * Backend: clasificación RESPEL/no RESPEL, manifiestos — 7 HH
+       * PDA: Escaneo para registro de generación y retiro — 5 HH
+       * Web: Seguimiento, reportes D.S. 148 — 5 HH
+       * Integración con empresas recolectoras — 3 HH
+
+   14. Integraciones y Ajustes Finales
+       * Notificaciones por correo/sistema — 4 HH
+       * Exportación de reportes (PDF, Excel) — 5 HH
+       * Pruebas de integración PDA + Web + API — 8 HH
+       * Documentación técnica y manual de usuario PDA — 5 HH
+
+Total Sprint 3.2: 42 HH x 1 UF
+
+
+================================================================================
+TABLA DE TECNOLOGÍAS Y HERRAMIENTAS
+================================================================================
+
+Tecnología / Herramienta          | Tipo              | Comentario sobre costos
+----------------------------------|-------------------|------------------------------------------
+App PDA (Android nativo o PWA)    | Código abierto    | React Native, Flutter o PWA. Optimizada
+                                  |                   | para lectores de códigos industriales.
+----------------------------------|-------------------|------------------------------------------
+PDA Industrial                    | Hardware cliente  | Zebra, Honeywell, Datalogic u otro.
+                                  |                   | COSTO NO INCLUIDO - adquiere el cliente.
+----------------------------------|-------------------|------------------------------------------
+Backend (Python/Django o Node.js) | Código abierto    | Gratuito. Costos asociados solo al
+                                  |                   | desarrollo e infraestructura.
+----------------------------------|-------------------|------------------------------------------
+Panel Web (React o Vue.js)        | Código abierto    | Gratuito. Solo costos de desarrollo
+                                  |                   | e integración con backend.
+----------------------------------|-------------------|------------------------------------------
+Base de datos (PostgreSQL)        | Código abierto    | Sin costo de licencia. Solo costos
+                                  |                   | de hosting/infraestructura.
+----------------------------------|-------------------|------------------------------------------
+Servidor / Infraestructura        | Propietario       | Pago según uso de CPU/RAM/almacenamiento.
+(AWS, GCP, Azure o VPS)           |                   | Escalable según volumen de usuarios.
+----------------------------------|-------------------|------------------------------------------
+Autenticación (JWT, OAuth2)       | Código abierto    | Sin costo de licencia. Implementación
+                                  |                   | segura con tokens y sesiones.
+----------------------------------|-------------------|------------------------------------------
+Generación de códigos QR/Barras   | Código abierto    | Librerías gratuitas para trazabilidad
+                                  |                   | de lotes y productos.
+----------------------------------|-------------------|------------------------------------------
+Impresora de etiquetas            | Hardware cliente  | Zebra, Brother, Dymo u otra compatible.
+                                  |                   | COSTO NO INCLUIDO - adquiere el cliente.
+----------------------------------|-------------------|------------------------------------------
+Exportación (PDF, Excel)          | Código abierto    | Gratuito. ReportLab, WeasyPrint,
+                                  |                   | OpenPyXL para generación de reportes.
+----------------------------------|-------------------|------------------------------------------
+Notificaciones (Email)            | Mixto             | SMTP gratuito (limitado) o servicios
+                                  |                   | pagos (SendGrid, Amazon SES).
+----------------------------------|-------------------|------------------------------------------
+Certificados SSL/TLS              | Mixto             | Let's Encrypt gratuito o certificados
+                                  |                   | comerciales según requerimiento.
+----------------------------------|-------------------|------------------------------------------
+Asistencia IA (Claude/GPT)        | Suscripción       | Herramienta de desarrollo incluida.
+                                  |                   | Acelera codificación y documentación.
+----------------------------------|-------------------|------------------------------------------
+Backup y recuperación             | Incluido          | Configuración de respaldos automáticos
+                                  |                   | en la infraestructura seleccionada.
+
+
+================================================================================
+TÉRMINOS Y CONDICIONES
+================================================================================
+
+TODAS LAS COMPRAS VIENEN CON 30 DÍAS DE SOPORTE GRATUITO + QA DE PARTE DE COMUNIDAD VIRTUAL.
+
+CADA COMPRA AL CONTADO RECIBE UN 5% DE DESCUENTO.
+
+PARA DAR INICIO AL PROYECTO, SE SOLICITA UN ABONO INICIAL DEL 50% MEDIANTE TRANSFERENCIA
+ELECTRÓNICA O WEBPAY DENTRO DE UN PLAZO MÁXIMO DE 3 DÍAS HÁBILES. EL SALDO RESTANTE
+DEBERÁ CANCELARSE CONTRA LA ENTREGA DEL PRODUCTO FINAL.
+
+LA HORA ADICIONAL DE SOPORTE SE CALCULA A 1.0 UF HORA POR PROFESIONAL ASISTIDOR.
+
+EL CRONOGRAMA PUEDE AUMENTAR O DISMINUIR EN UN 10% EN EL CÁLCULO ESTIMATIVO POR LA
+VARIABILIDAD DE LOS COSTOS DE IMPLEMENTACIÓN, RETRASOS TÉCNICOS, DE COMUNICACIÓN U OTRO.
+
+CUALQUIER DIFUSIÓN DE ESTE DOCUMENTO A OTRA ENTIDAD QUE NO SEA BIOCANNAPHRAMA ESTÁ
+ESTRICTAMENTE PROHIBIDA CONFORME A LEY 19.039 DE PROPIEDAD INDUSTRIAL Y EL CÓDIGO CIVIL.
+
+EL SISTEMA CUMPLE CON LOS REQUERIMIENTOS NORMATIVOS: BPM, ISO 9001, D.S. 594, D.S. 148,
+D.S. 43 Y D.S. 108 (REGLAMENTO CANNABIS).
+
+
+________________
+
+
+Firma Representante Legal -          |    Firma Representante Legal -
+BioCannaPhrama                       |    Comunidad Virtual
+                                     |
+                                     |
+_________________________________    |    _________________________________
+
+
+================================================================================
+RESUMEN EJECUTIVO
+================================================================================
+
+UF al 23/01/2026: $38.500,00 (valor referencial, ajustar según UF del día)
+
+--------------------------------------------------------------------------------
+FASE    | SPRINTS           | HORAS    | MONTO ESTIMADO   | DURACIÓN
+--------|-------------------|----------|------------------|----------------------
+Fase 1  | Sprint 1.1 + 1.2  | 105 HH   | $4.042.500       | 4 semanas
+Fase 2  | Sprint 2.1 + 2.2  | 72 HH    | $2.772.000       | 3 semanas
+Fase 3  | Sprint 3.1 + 3.2  | 65 HH    | $2.502.500       | 2.5 semanas
+--------|-------------------|----------|------------------|----------------------
+TOTAL   |                   | 242 HH   | $9.317.000       | 9.5 semanas
+--------------------------------------------------------------------------------
+
+Fechas Estimadas (sujetas a confirmación de inicio):
+   * Fecha de inicio: Por definir
+   * Fecha QA Fase 1: Inicio + 4 semanas
+   * Fecha QA Fase 2: Inicio + 7 semanas
+   * Fecha PROD Final: Inicio + 9.5 semanas
+
+ENTREGABLES POR FASE:
+
+   Fase 1: App PDA funcional + Dashboard web + Módulos de inventario y producción
+           → Cliente puede comenzar a operar con escaneo de MP, insumos y extractos
+
+   Fase 2: Módulos de compras + laboratorio integrados
+           → Sistema completo de adquisiciones y control de reactivos/equipos
+
+   Fase 3: Módulos ambientales + QA final + Documentación
+           → Sistema completo en producción con soporte
+
+HARDWARE REQUERIDO (NO INCLUIDO EN COTIZACIÓN - ADQUIERE EL CLIENTE):
+   * PDA Industrial: Zebra TC21/TC26, Honeywell CT40 o similar (~$400-800 USD c/u)
+   * Impresora de etiquetas: Zebra ZD220/ZD420 o similar (~$200-400 USD)
+   * Etiquetas térmicas/sintéticas para códigos QR/Barcode
+
+--------------------------------------------------------------------------------
+
+DISTRIBUCIÓN DEL EQUIPO:
+
+Rol                  | Dedicación estimada | Responsabilidades principales
+---------------------|---------------------|---------------------------------------
+Semi-Senior          | ~60% del proyecto   | Arquitectura, BD, APIs, App PDA,
+                     |                     | integraciones, code review, deploy
+---------------------|---------------------|---------------------------------------
+Trainee              | ~40% del proyecto   | Panel web, formularios, tablas,
+                     |                     | testing, documentación básica
+---------------------|---------------------|---------------------------------------
+IA (Claude/GPT)      | Transversal         | Generación de código boilerplate,
+                     |                     | conversión de maquetas, modelos,
+                     |                     | documentación, debugging
+
+--------------------------------------------------------------------------------
+
+NOTAS IMPORTANTES:
+
+1. Las horas de desarrollo corresponden a horas profesionales estimadas por fase,
+   ejecutadas de forma no continua, distribuidas según avance de hitos.
+
+2. No constituyen dedicación exclusiva ni ejecución en tiempo corrido, sino una
+   bolsa de horas asociada al cumplimiento de entregables.
+
+3. La estimación considera el uso de herramientas de IA para acelerar tareas
+   repetitivas como generación de CRUD y conversión de maquetas.
+
+4. El sistema requiere conectividad WiFi en las instalaciones para que las PDA
+   puedan sincronizar con el servidor central.
+
+5. Se recomienda al cliente adquirir al menos 2 PDAs para pruebas durante el
+   desarrollo y validación de flujos de trabajo.
+
+6. La impresora de etiquetas debe ser compatible con ZPL o similar para
+   integración directa con el sistema.
+
+================================================================================
