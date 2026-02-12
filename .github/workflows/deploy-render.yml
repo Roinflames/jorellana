@@ -1,0 +1,29 @@
+name: Deploy Render
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  deploy-api:
+    name: Deploy API Service
+    runs-on: ubuntu-latest
+    if: ${{ secrets.RENDER_API_DEPLOY_HOOK != '' }}
+    steps:
+      - name: Trigger Render API deploy hook
+        run: curl -fsS -X POST "$RENDER_API_DEPLOY_HOOK"
+        env:
+          RENDER_API_DEPLOY_HOOK: ${{ secrets.RENDER_API_DEPLOY_HOOK }}
+
+  deploy-web:
+    name: Deploy Web Static Site
+    runs-on: ubuntu-latest
+    if: ${{ secrets.RENDER_WEB_DEPLOY_HOOK != '' }}
+    steps:
+      - name: Trigger Render Web deploy hook
+        run: curl -fsS -X POST "$RENDER_WEB_DEPLOY_HOOK"
+        env:
+          RENDER_WEB_DEPLOY_HOOK: ${{ secrets.RENDER_WEB_DEPLOY_HOOK }}

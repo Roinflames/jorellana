@@ -1896,28 +1896,76 @@ function renderChartFracciones() {
     
     if (chartFracciones) chartFracciones.destroy();
     
+    const labels = Object.keys(TIPOS_FRACCION).map(k => TIPOS_FRACCION[k].nombre);
+    const values = Object.values(stockPorTipo).map(v => Number(v.toFixed(2)));
+    const total = values.reduce((sum, v) => sum + v, 0);
+    const hasData = total > 0;
+
+    const donutCenterText = {
+        id: 'donutCenterText',
+        afterDraw(chart) {
+            const meta = chart.getDatasetMeta(0);
+            if (!meta?.data?.length) return;
+            const x = meta.data[0].x;
+            const y = meta.data[0].y;
+            const chartCtx = chart.ctx;
+            chartCtx.save();
+            chartCtx.textAlign = 'center';
+            chartCtx.textBaseline = 'middle';
+            chartCtx.fillStyle = '#4B5563';
+            chartCtx.font = '600 12px Inter, sans-serif';
+            chartCtx.fillText('Stock total', x, y - 10);
+            chartCtx.fillStyle = '#111827';
+            chartCtx.font = '700 18px Inter, sans-serif';
+            chartCtx.fillText(`${total.toFixed(1)}g`, x, y + 12);
+            chartCtx.restore();
+        }
+    };
+
     chartFracciones = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: Object.keys(TIPOS_FRACCION).map(k => TIPOS_FRACCION[k].nombre),
+            labels: hasData ? labels : ['Sin datos'],
             datasets: [{
-                data: Object.values(stockPorTipo),
+                data: hasData ? values : [1],
                 backgroundColor: [
-                    '#7c3aed', '#f472b6', '#60a5fa', '#fbbf24', '#34d399', '#94a3b8'
+                    '#6D28D9', '#EC4899', '#0EA5E9', '#F59E0B', '#10B981', '#64748B'
                 ],
-                borderWidth: 0
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                hoverOffset: 10
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            cutout: '62%',
+            animation: { duration: 700 },
             plugins: {
                 legend: {
                     position: 'right',
-                    labels: { font: { size: 11 } }
+                    labels: {
+                        font: { size: 12, weight: 600 },
+                        color: '#374151',
+                        padding: 14
+                    }
+                },
+                tooltip: {
+                    backgroundColor: '#111827',
+                    titleFont: { size: 12, weight: '700' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        label(context) {
+                            if (!hasData) return 'Sin datos cargados';
+                            const value = context.raw || 0;
+                            const pct = total > 0 ? (value / total) * 100 : 0;
+                            return `${value.toFixed(2)}g (${pct.toFixed(1)}%)`;
+                        }
+                    }
                 }
             }
-        }
+        },
+        plugins: hasData ? [donutCenterText] : []
     });
 }
 
@@ -1938,6 +1986,11 @@ function renderChartProduccion() {
     
     if (chartProduccion) chartProduccion.destroy();
     
+    const canvasCtx = ctx.getContext('2d');
+    const barGradient = canvasCtx.createLinearGradient(0, 0, 0, 220);
+    barGradient.addColorStop(0, 'rgba(124, 58, 237, 0.95)');
+    barGradient.addColorStop(1, 'rgba(16, 185, 129, 0.75)');
+
     chartProduccion = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -1948,19 +2001,45 @@ function renderChartProduccion() {
             datasets: [{
                 label: 'Producción (g)',
                 data: valores,
-                backgroundColor: 'rgba(90, 44, 160, 0.7)',
-                borderColor: 'rgba(90, 44, 160, 1)',
-                borderWidth: 1
+                backgroundColor: barGradient,
+                borderColor: 'rgba(76, 29, 149, 1)',
+                borderWidth: 1.5,
+                borderRadius: 10,
+                borderSkipped: false,
+                maxBarThickness: 46
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: { duration: 700 },
             plugins: {
-                legend: { display: false }
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#111827',
+                    titleFont: { size: 12, weight: '700' },
+                    bodyFont: { size: 12 },
+                    callbacks: {
+                        label(context) {
+                            const val = context.raw || 0;
+                            return `Producción: ${Number(val).toFixed(2)}g`;
+                        }
+                    }
+                }
             },
             scales: {
-                y: { beginAtZero: true }
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#4B5563', font: { size: 11, weight: 600 } }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        color: '#4B5563',
+                        callback(value) { return `${value}g`; }
+                    },
+                    grid: { color: 'rgba(107, 114, 128, 0.18)' }
+                }
             }
         }
     });

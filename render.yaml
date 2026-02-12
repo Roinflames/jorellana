@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: jorellana-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: APP_ENV
+        value: prod
+      - key: DATABASE_URL
+        sync: false
+      - key: CORS_ORIGINS
+        value: '*'
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  - type: static
+    name: jorellana-web
+    rootDir: modulos
+    buildCommand: ""
+    publishPath: .
+    pullRequestPreviewsEnabled: true
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-store
